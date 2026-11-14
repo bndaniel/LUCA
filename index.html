@@ -1035,7 +1035,7 @@
   <button class="ghost" id="backBtn" type="button">Return to the vent field</button>
 </div>
 
-<script src="leaderboard.js"></script>
+<script src="assets/js/leaderboard.js"></script>
 <script>
 (function(){
   "use strict";
@@ -1276,7 +1276,7 @@
                 front:[0.88402,0.31385], rear:[0.10458,0.66371] };
   var cellPurple = new Image(), purpleReady = false;
   cellPurple.onload = function(){ purpleReady = true; };
-  cellPurple.src = 'microbe_purple_sulfur.png';
+  cellPurple.src = 'assets/images/microbe_purple_sulfur.png';
 
   // Oxygenic stage: water is everywhere, so each one is worth a whole bar and
   // fills at twice the rate. Every full bar buds another cell onto the chain.
@@ -1285,7 +1285,7 @@
                 front:[0.83,0.44], rear:[0.17,0.56] };
   var cellCyano = new Image(), cyanoReady = false;
   cellCyano.onload = function(){ cyanoReady = true; };
-  cellCyano.src = 'microbe_cyanobacterium.png';
+  cellCyano.src = 'assets/images/microbe_cyanobacterium.png';
   var chainSegs = [];
   // which body the cell is wearing. Derived from phase, this reverted to a
   // bare vesicle on every prompt phase nobody had remembered to list.
@@ -1307,7 +1307,7 @@
                 front:[0.86,0.40], rear:[0.14,0.60] };
   var cellSar = new Image(), sarReady = false;
   cellSar.onload = function(){ sarReady = true; };
-  cellSar.src = 'microbe_sar202.png';
+  cellSar.src = 'assets/images/microbe_sar202.png';
 
   // SAR11 crews the predation stage. Measured by gen_microbes.py from the
   // rendered alpha and emitted in sprites/sar11.json -- a capsule guessed by
@@ -1316,7 +1316,7 @@
                  front:[0.90354,0.36111], rear:[0.09325,0.36111] };
   var cellS11 = new Image(), s11Ready = false;
   cellS11.onload = function(){ s11Ready = true; };
-  cellS11.src = 'microbe_sar11.png';
+  cellS11.src = 'assets/images/microbe_sar11.png';
   // Predation, at the second vent field. No replication: the cell just has to
   // stay alive. Oxygen is the electron acceptor and sugar the fuel, so one of
   // each is one burn -- a sugar with nothing to dump electrons into is inert.
@@ -1331,7 +1331,7 @@
   var ASG_LIGHT = [-0.60, -0.80];
   var cellAsg = new Image(), asgReady = false;
   cellAsg.onload = function(){ asgReady = true; };
-  cellAsg.src = 'microbe_asgard_body.png';
+  cellAsg.src = 'assets/images/microbe_asgard_body.png';
   // Every 8 s survived, one of them splits in two, and it never stops. The
   // body cap is a frame-rate guard, not a difficulty one: past it the splits
   // keep counting and arrive as speed instead.
@@ -1421,34 +1421,34 @@
   var cell = null, cellReady = false, cellFullReady = false;
   var cellImg = new Image();
   cellImg.onload = function(){ cellReady = true; };
-  cellImg.src = 'cell_membrane.png';
+  cellImg.src = 'assets/images/cell_membrane.png';
   var cellFull = new Image();
   cellFull.onload = function(){ cellFullReady = true; };
-  cellFull.src = 'cell.png';
+  cellFull.src = 'assets/images/cell.png';
 
   var nutrients = [], collected = [], grabbed = null;
   var IMG = {};
   (function(){
-    var srcs = { lipid:'nutrient_phospholipid.png', h2:'nutrient_hydrogen.png',
-                 A:'nucleotide_a.png', G:'nucleotide_g.png',
-                 C:'nucleotide_c.png', T:'nucleotide_t.png',
-                 co2:'molecule_co2.png', sulfate:'molecule_sulfate.png',
-                 n2:'molecule_nitrogen.png',
-                 methane:'molecule_methane.png', h2s:'molecule_hydrogen_sulfide.png',
-                 ammonia:'molecule_ammonia.png',
-                 h2o:'molecule_water.png', o2:'molecule_oxygen.png',
-                 glucose:'molecule_glucose.png',
-                 phage:'microbe_bacteriophage.png',
-                 sar:'microbe_sar202.png',
-                 m_meth:'microbe_methanocaldococcus.png',
-                 m_sulf:'microbe_sulfate_reducer.png',
-                 m_fix:'microbe_nitrogen_fixer.png',
-                 m_purple:'microbe_purple_sulfur.png',
-                 m_cyano:'microbe_cyanobacterium.png',
-                 m_sar11:'microbe_sar11.png',
-                 pro_body:'microbe_protist_body.png',
-                 pro_skin:'microbe_protist_skin.png',
-                 pro_mito:'microbe_protist_mito.png' };
+    var srcs = { lipid:'assets/images/nutrient_phospholipid.png', h2:'assets/images/nutrient_hydrogen.png',
+                 A:'assets/images/nucleotide_a.png', G:'assets/images/nucleotide_g.png',
+                 C:'assets/images/nucleotide_c.png', T:'assets/images/nucleotide_t.png',
+                 co2:'assets/images/molecule_co2.png', sulfate:'assets/images/molecule_sulfate.png',
+                 n2:'assets/images/molecule_nitrogen.png',
+                 methane:'assets/images/molecule_methane.png', h2s:'assets/images/molecule_hydrogen_sulfide.png',
+                 ammonia:'assets/images/molecule_ammonia.png',
+                 h2o:'assets/images/molecule_water.png', o2:'assets/images/molecule_oxygen.png',
+                 glucose:'assets/images/molecule_glucose.png',
+                 phage:'assets/images/microbe_bacteriophage.png',
+                 sar:'assets/images/microbe_sar202.png',
+                 m_meth:'assets/images/microbe_methanocaldococcus.png',
+                 m_sulf:'assets/images/microbe_sulfate_reducer.png',
+                 m_fix:'assets/images/microbe_nitrogen_fixer.png',
+                 m_purple:'assets/images/microbe_purple_sulfur.png',
+                 m_cyano:'assets/images/microbe_cyanobacterium.png',
+                 m_sar11:'assets/images/microbe_sar11.png',
+                 pro_body:'assets/images/microbe_protist_body.png',
+                 pro_skin:'assets/images/microbe_protist_skin.png',
+                 pro_mito:'assets/images/microbe_protist_mito.png' };
     for(var k in srcs){
       (function(key){
         var im = new Image();
@@ -1555,13 +1555,13 @@
   // rejected; if it is, the first real interaction starts it instead.
   var MUSIC_VOL = 0.55;
   var muted = false, musicOn = false;
-  var trackBuild = new Audio('cellbuild.mp3');
-  var trackSwim  = new Audio('gotmytail.mp3');
-  var trackVirus = new Audio('virus_intro.mp3');
-  var trackSafe  = new Audio('deep_blue_chill.mp3');
-  var trackDeep  = new Audio('dungeon.mp3');
-  var trackEnd   = new Audio('end_credits.mp3');
-  var trackAnthro = new Audio('slow_shadow_awakens.mp3');
+  var trackBuild = new Audio('assets/music/cellbuild.mp3');
+  var trackSwim  = new Audio('assets/music/gotmytail.mp3');
+  var trackVirus = new Audio('assets/music/virus_intro.mp3');
+  var trackSafe  = new Audio('assets/music/deep_blue_chill.mp3');
+  var trackDeep  = new Audio('assets/music/dungeon.mp3');
+  var trackEnd   = new Audio('assets/music/end_credits.mp3');
+  var trackAnthro = new Audio('assets/music/slow_shadow_awakens.mp3');
   var current = trackBuild;
   var TRACKS = [trackBuild, trackSwim, trackVirus, trackSafe, trackDeep, trackEnd, trackAnthro];
   TRACKS.forEach(function(a){
@@ -2463,7 +2463,7 @@
         'went on making energy for its host \u2014 that is where mitochondria come ' +
         'from. Every plant, animal and fungus since descends from this one ' +
         'arrangement.', 'Continue', protistIntro, null,
-        { src:'gene_ui.png', alt:'A gene: a segment of double-stranded DNA',
+        { src:'assets/images/gene_ui.png', alt:'A gene: a segment of double-stranded DNA',
           title:'You\u2019ve evolved into a eukaryote!' });
       return;
     }
@@ -2474,7 +2474,7 @@
       phase = 'respIntro';
       paintGauge();
       showPrompt('Respiration', 'Lots of yummy carbon is released by viral lysis, and with oxygen available for respiration (just like us!), new heterotrophic bacteria evolved\u2026', 'Continue', startHetero, null,
-        { src:'gene_ui.png', alt:'A gene: a segment of double-stranded DNA',
+        { src:'assets/images/gene_ui.png', alt:'A gene: a segment of double-stranded DNA',
           title:'You\u2019ve evolved the genes for respiration!' });
       return;
     }
@@ -2485,7 +2485,7 @@
       phase = 'oxyIntro';
       paintGauge();
       showPrompt('Oxygenic photosynthesis', 'Oxygenic photosynthesis evolved when two different systems combined to make the most efficient solar energy system ever! These cells used light to split water - one of the most stable molecules in the universe! See if you can grow enough cyanobacteria to fill Earth with oxygen\u2026', 'Continue', startOxygenic,
-        null, { src:'gene_ui.png', alt:'A gene: a segment of double-stranded DNA',
+        null, { src:'assets/images/gene_ui.png', alt:'A gene: a segment of double-stranded DNA',
                 title:'You\u2019ve evolved the genes for oxygenic photosynthesis!' });
       return;
     }
@@ -2496,9 +2496,9 @@
       phase = 'photoIntro';          // the world holds while the card is up
       paintGauge();
       showPrompt('Leaving the vents', 'The different ways cells used electron acceptors made a diverse array of organisms at these hydrothermal vents. It\u2019s getting pretty crowded around here, so let\u2019s see what\u2019s going on at the surface!', 'Continue', startAscent,
-        [{ src:'microbe_methanocaldococcus.png', cap:'Methanogen' },
-         { src:'microbe_sulfate_reducer.png', cap:'Sulfate reducer' },
-         { src:'microbe_nitrogen_fixer.png', cap:'Nitrogen fixer' }]);
+        [{ src:'assets/images/microbe_methanocaldococcus.png', cap:'Methanogen' },
+         { src:'assets/images/microbe_sulfate_reducer.png', cap:'Sulfate reducer' },
+         { src:'assets/images/microbe_nitrogen_fixer.png', cap:'Nitrogen fixer' }]);
       return;
     }
 
@@ -3106,8 +3106,8 @@
     if(hetMade >= HET_MAX){
       phase = 'descentIntro';
       showPrompt('Back to the dark', 'Why don\u2019t we go back down into the depths? There\u2019s an archaeon and a bacterium I want you to meet\u2026', 'Continue', startDescent,
-        [{ src:'microbe_sar11.png', cap:'A bacterium' },
-         { src:asgardShadow() || 'microbe_asgard_body.png', cap:'An archaeon' }]);
+        [{ src:'assets/images/microbe_sar11.png', cap:'A bacterium' },
+         { src:asgardShadow() || 'assets/images/microbe_asgard_body.png', cap:'An archaeon' }]);
       return;
     }
 
@@ -3247,7 +3247,7 @@
   var asgStill = null;
   function asgardStill(){
     if(asgStill) return asgStill;
-    if(!asgReady) return 'microbe_asgard_body.png';
+    if(!asgReady) return 'assets/images/microbe_asgard_body.png';
     var side = 240, c2 = document.createElement('canvas');
     c2.width = c2.height = side;
     var g = c2.getContext('2d');
@@ -3431,7 +3431,7 @@
   // skin are three sprites layered live -- the skin goes on over the
   // mitochondria, which is what puts them inside the cell -- and the
   // flagellum and the feeding are drawn from the table, never baked.
-  var PRO = {"note":"Units are body radii (R) unless named; +x is the swimming direction.","width":484,"height":326,"anchor":[0.42884,0.51078],"R":0.35124,"outline":[[1.5054,0.0],[1.4961,0.1309],[1.4575,0.257],[1.3932,0.3733],[1.3088,0.4763],[1.2102,0.5643],[1.1029,0.6367],[0.9912,0.694],[0.8778,0.7366],[0.7646,0.7646],[0.6536,0.7789],[0.5474,0.7818],[0.4496,0.7788],[0.3622,0.7768],[0.2842,0.7809],[0.2121,0.7914],[0.1418,0.8042],[0.0712,0.814],[0.0,0.818],[-0.0714,0.8159],[-0.1426,0.8087],[-0.2137,0.7976],[-0.285,0.7831],[-0.3568,0.7652],[-0.4292,0.7435],[-0.5023,0.7174],[-0.5759,0.6863],[-0.6497,0.6497],[-0.7231,0.6067],[-0.7953,0.5568],[-0.8649,0.4994],[-0.9303,0.4338],[-0.989,0.3599],[-1.0381,0.2782],[-1.0747,0.1895],[-1.0961,0.0959],[-1.1004,0.0],[-1.0873,-0.0951],[-1.0582,-0.1866],[-1.0156,-0.2721],[-0.9628,-0.3504],[-0.903,-0.4211],[-0.8388,-0.4843],[-0.7721,-0.5407],[-0.7043,-0.591],[-0.6359,-0.6359],[-0.5673,-0.676],[-0.4984,-0.7118],[-0.4292,-0.7435],[-0.3596,-0.7712],[-0.2894,-0.7951],[-0.2184,-0.8152],[-0.1466,-0.8315],[-0.0738,-0.8441],[-0.0,-0.8529],[0.0751,-0.858],[0.1516,-0.8595],[0.2297,-0.8574],[0.31,-0.8517],[0.3928,-0.8423],[0.4785,-0.8288],[0.5678,-0.8109],[0.661,-0.7877],[0.7583,-0.7583],[0.8596,-0.7213],[0.9642,-0.6751],[1.0703,-0.6179],[1.1752,-0.548],[1.2748,-0.464],[1.3637,-0.3654],[1.4356,-0.2531],[1.4845,-0.1299]],"hit":{"front":1.5054,"rear":-1.1004,"half_thick":0.8595},"nucleus":{"at":[0.16,-0.06],"r":0.38},"mito":{"frames":10,"w":143,"h":76,"anchor":[0.49932,0.64288],"len":0.84118,"sprite":"microbe_protist_mito.png"},"mitos":[{"at":[-0.6,-0.17],"a":0.3,"s":1.0,"ph":0.0},{"at":[-0.46,0.4],"a":-0.4,"s":0.94,"ph":0.37},{"at":[0.34,0.52],"a":3.3,"s":0.9,"ph":0.74},{"at":[0.96,-0.12],"a":1.5,"s":0.8,"ph":1.11},{"at":[-0.18,-0.58],"a":2.95,"s":0.84,"ph":1.48}],"flagellum":{"root":[-1.0673,0.0],"len":2.6,"w0":0.06,"w1":0.014,"waves":1.4,"amp":0.24}};
+  var PRO = {"note":"Units are body radii (R) unless named; +x is the swimming direction.","width":484,"height":326,"anchor":[0.42884,0.51078],"R":0.35124,"outline":[[1.5054,0.0],[1.4961,0.1309],[1.4575,0.257],[1.3932,0.3733],[1.3088,0.4763],[1.2102,0.5643],[1.1029,0.6367],[0.9912,0.694],[0.8778,0.7366],[0.7646,0.7646],[0.6536,0.7789],[0.5474,0.7818],[0.4496,0.7788],[0.3622,0.7768],[0.2842,0.7809],[0.2121,0.7914],[0.1418,0.8042],[0.0712,0.814],[0.0,0.818],[-0.0714,0.8159],[-0.1426,0.8087],[-0.2137,0.7976],[-0.285,0.7831],[-0.3568,0.7652],[-0.4292,0.7435],[-0.5023,0.7174],[-0.5759,0.6863],[-0.6497,0.6497],[-0.7231,0.6067],[-0.7953,0.5568],[-0.8649,0.4994],[-0.9303,0.4338],[-0.989,0.3599],[-1.0381,0.2782],[-1.0747,0.1895],[-1.0961,0.0959],[-1.1004,0.0],[-1.0873,-0.0951],[-1.0582,-0.1866],[-1.0156,-0.2721],[-0.9628,-0.3504],[-0.903,-0.4211],[-0.8388,-0.4843],[-0.7721,-0.5407],[-0.7043,-0.591],[-0.6359,-0.6359],[-0.5673,-0.676],[-0.4984,-0.7118],[-0.4292,-0.7435],[-0.3596,-0.7712],[-0.2894,-0.7951],[-0.2184,-0.8152],[-0.1466,-0.8315],[-0.0738,-0.8441],[-0.0,-0.8529],[0.0751,-0.858],[0.1516,-0.8595],[0.2297,-0.8574],[0.31,-0.8517],[0.3928,-0.8423],[0.4785,-0.8288],[0.5678,-0.8109],[0.661,-0.7877],[0.7583,-0.7583],[0.8596,-0.7213],[0.9642,-0.6751],[1.0703,-0.6179],[1.1752,-0.548],[1.2748,-0.464],[1.3637,-0.3654],[1.4356,-0.2531],[1.4845,-0.1299]],"hit":{"front":1.5054,"rear":-1.1004,"half_thick":0.8595},"nucleus":{"at":[0.16,-0.06],"r":0.38},"mito":{"frames":10,"w":143,"h":76,"anchor":[0.49932,0.64288],"len":0.84118,"sprite":"assets/images/microbe_protist_mito.png"},"mitos":[{"at":[-0.6,-0.17],"a":0.3,"s":1.0,"ph":0.0},{"at":[-0.46,0.4],"a":-0.4,"s":0.94,"ph":0.37},{"at":[0.34,0.52],"a":3.3,"s":0.9,"ph":0.74},{"at":[0.96,-0.12],"a":1.5,"s":0.8,"ph":1.11},{"at":[-0.18,-0.58],"a":2.95,"s":0.84,"ph":1.48}],"flagellum":{"root":[-1.0673,0.0],"len":2.6,"w0":0.06,"w1":0.014,"waves":1.4,"amp":0.24}};
   var PRO_SCALE = 1.6;              // the protist's world scale, against cellSize()
   // The player's body against that scale. Prey, films, toxins and viruses are
   // sized off the world scale alone, so they keep their size.
@@ -3459,13 +3459,13 @@
   // The prey is every kind of cell the run has met. The first part of the
   // stage is a diet: three of each before the tally goes away.
   var PRO_KINDS = [
-    { key:'m_purple', name:'Purple sulfur',      src:'microbe_purple_sulfur.png' },
-    { key:'m_meth',   name:'Methanocaldococcus', src:'microbe_methanocaldococcus.png' },
-    { key:'m_fix',    name:'Nitrogen fixer',     src:'microbe_nitrogen_fixer.png' },
-    { key:'m_sulf',   name:'Archaeoglobus',      src:'microbe_sulfate_reducer.png' },
-    { key:'m_cyano',  name:'Cyanobacterium',     src:'microbe_cyanobacterium.png' },
-    { key:'sar',      name:'SAR202',             src:'microbe_sar202.png' },
-    { key:'m_sar11',  name:'SAR11',              src:'microbe_sar11.png' }
+    { key:'m_purple', name:'Purple sulfur',      src:'assets/images/microbe_purple_sulfur.png' },
+    { key:'m_meth',   name:'Methanocaldococcus', src:'assets/images/microbe_methanocaldococcus.png' },
+    { key:'m_fix',    name:'Nitrogen fixer',     src:'assets/images/microbe_nitrogen_fixer.png' },
+    { key:'m_sulf',   name:'Archaeoglobus',      src:'assets/images/microbe_sulfate_reducer.png' },
+    { key:'m_cyano',  name:'Cyanobacterium',     src:'assets/images/microbe_cyanobacterium.png' },
+    { key:'sar',      name:'SAR202',             src:'assets/images/microbe_sar202.png' },
+    { key:'m_sar11',  name:'SAR11',              src:'assets/images/microbe_sar11.png' }
   ];
   var PRO_NEED = 3;
   var PRO_NEEDED_BIAS = 0.7;        // share of arrivals drawn from kinds still owed
@@ -3554,10 +3554,10 @@
     showPrompt('Protist', 'With so much diversity in the ocean, there was a lot ' +
       'more available on the dinner plate for our new eukaryotic protist\u2026',
       'Continue', startProtist,
-      [{ src:'microbe_purple_sulfur.png', cap:'Purple sulfur' },
-       { src:'microbe_methanocaldococcus.png', cap:'Methanogen' },
-       { src:'microbe_cyanobacterium.png', cap:'Cyanobacterium' },
-       { src:'microbe_sar11.png', cap:'SAR11' }]);
+      [{ src:'assets/images/microbe_purple_sulfur.png', cap:'Purple sulfur' },
+       { src:'assets/images/microbe_methanocaldococcus.png', cap:'Methanogen' },
+       { src:'assets/images/microbe_cyanobacterium.png', cap:'Cyanobacterium' },
+       { src:'assets/images/microbe_sar11.png', cap:'SAR11' }]);
   }
 
   // retry: back after a death -- no pair to dissolve, and the diet so far kept
@@ -5016,7 +5016,7 @@
         var im = new Image();
         IMG['era_' + key] = { im:im, ok:false };
         im.onload = function(){ IMG['era_' + key].ok = true; };
-        im.src = 'era_' + key + '.png';
+        im.src = 'assets/images/era_' + key + '.png';
       })(k);
     }
   })();
@@ -6208,7 +6208,7 @@
       'The smallest and most efficient cells on Earth were the ' +
       'alphaproteobacteria\u2026',
       'Continue', function(){ phase = 'predation'; },
-      [{ src:'microbe_sar11.png', cap:'An alphaproteobacterium' }]);
+      [{ src:'assets/images/microbe_sar11.png', cap:'An alphaproteobacterium' }]);
   }
 
   function startDescent(){
@@ -6370,7 +6370,7 @@
       acquired.push('Photosynthesis');
       paintGauge();
       showPrompt('Photic zone', 'The first photosynthetic cells were anoxygenic: they didn\u2019t make oxygen. Their purple pigments caught sunlight, and hydrogen sulfide (H\u2082S) was their electron donor, giving up the electrons that light used to make energy. Collect H\u2082S from the dark water below, then make energy up in the sunlight!', 'Continue', startEuphotic, null,
-        { src:'gene_ui.png', alt:'A gene: a segment of double-stranded DNA',
+        { src:'assets/images/gene_ui.png', alt:'A gene: a segment of double-stranded DNA',
           title:'You\u2019ve evolved the genes for photosynthesis!' });
     }
   }
@@ -6935,7 +6935,7 @@
   function showPrompt(tag, body, label, onClose, figs, lede){
     elPromptTag.textContent = tag;
     elPromptBody.textContent = body;
-    var isGene = !!(lede && lede.src === 'gene_ui.png');
+    var isGene = !!(lede && lede.src === 'assets/images/gene_ui.png');
     elLedeImg.hidden = isGene;
     elGene.hidden = !isGene;
     if(isGene) geneStart();
@@ -7412,7 +7412,7 @@
         try { trackVirus.currentTime = 0; } catch(e){}
         playTrack(trackVirus);
         showPrompt('Viral lysis', 'Large colonies attracted viral infections which resulted in viral lysis and population collapses! These viral lysis events released sugars and other organic molecules into the water. Destroy your creation!!!', 'Continue', startVirus, null,
-          { src:'microbe_bacteriophage.png', alt:'A bacteriophage',
+          { src:'assets/images/microbe_bacteriophage.png', alt:'A bacteriophage',
             title:'Viral infection', alarm:true });
       }
     }
@@ -7452,7 +7452,7 @@
     if(phase === 'feed' && energy >= 1){
       phase = 'flagellum';
       showPrompt('Evolution', 'Early cells evolved flagella: whip-like tails that spin to push the cell along. This let them find food and move into the right conditions. (Click and drag the cell to move, and don\u2019t get too hot or too cold!)', 'Continue', startSwim, null,
-          { src:'gene_ui.png', alt:'A gene: a segment of double-stranded DNA',
+          { src:'assets/images/gene_ui.png', alt:'A gene: a segment of double-stranded DNA',
             title:'You\u2019ve evolved the genes for motility!' });
     }
 
@@ -7478,10 +7478,10 @@
           phase = 'genome';
           showBars('genome');
           paintGauge();
-        }, [{ src:'nucleotide_a.png', cap:'Adenine (A)' },
-            { src:'nucleotide_g.png', cap:'Guanine (G)' },
-            { src:'nucleotide_c.png', cap:'Cytosine (C)' },
-            { src:'nucleotide_t.png', cap:'Thymine (T)' }]);
+        }, [{ src:'assets/images/nucleotide_a.png', cap:'Adenine (A)' },
+            { src:'assets/images/nucleotide_g.png', cap:'Guanine (G)' },
+            { src:'assets/images/nucleotide_c.png', cap:'Cytosine (C)' },
+            { src:'assets/images/nucleotide_t.png', cap:'Thymine (T)' }]);
       }
     }
 
@@ -7497,8 +7497,8 @@
           phase = 'feed';
           showBars('energy');
           paintGauge();
-        }, [{ src:'nutrient_hydrogen.png', cap:'Hydrogen gas (H\u2082)' },
-             { src:'molecule_co2.png', cap:'Carbon dioxide (CO\u2082)' }]);
+        }, [{ src:'assets/images/nutrient_hydrogen.png', cap:'Hydrogen gas (H\u2082)' },
+             { src:'assets/images/molecule_co2.png', cap:'Carbon dioxide (CO\u2082)' }]);
       }
     }
 
@@ -8156,7 +8156,7 @@
       'of the earliest: a flat, quilted body that lay on the microbial mats of the ' +
       'sea floor and soaked up food through its underside.',
       'Continue', startCredits, null,
-      { src:'era_dickinsonia.png', alt:'Dickinsonia, an Ediacaran animal',
+      { src:'assets/images/era_dickinsonia.png', alt:'Dickinsonia, an Ediacaran animal',
         title:'Complex multicellularity has evolved!' });
   }
 
@@ -8355,7 +8355,7 @@
   // real measurements, what it does, and one detail only it has.
   function proStill(){
     var body = proImg('pro_body'), skin = proImg('pro_skin');
-    if(!body) return 'microbe_protist_body.png';
+    if(!body) return 'assets/images/microbe_protist_body.png';
     var w = 300, h = Math.round(w * PRO.height / PRO.width);
     var c2 = document.createElement('canvas');
     c2.width = w; c2.height = h;
@@ -8367,79 +8367,79 @@
       proMitos(w * PRO.R);
       if(skin) g.drawImage(skin, -PRO.anchor[0] * w, -PRO.anchor[1] * h, w, h);
     } finally { ctx = keep; }
-    try { return c2.toDataURL(); } catch(e){ return 'microbe_protist_body.png'; }
+    try { return c2.toDataURL(); } catch(e){ return 'assets/images/microbe_protist_body.png'; }
   }
 
   var VENT_W = ['#123A55', '#03101B'], SUN_W = ['#2A6E93', '#0A2A40'], DEEP_W = ['#20285A', '#060A1E'];
   var SPECIES = [
     { id:'luca', name:'LUCA', bin:'Last universal common ancestor', eyebrow:'The root of the tree',
-      src:'cell.png', water:VENT_W, facts:[
+      src:'assets/images/cell.png', water:VENT_W, facts:[
         ['Lived', '<b>~4.2</b> billion yrs ago'], ['Proteins', '<b>~2,600</b> families'],
         ['Fuel', '<b>H\u2082 + CO\u2082</b>'], ['Habitat', '<b>Hydrothermal vents</b>']],
       what:'The population of cells that every living thing descends from. It wasn\u2019t the first life, just the last ancestor that bacteria, archaea and we all share.',
       note:'A 2024 reconstruction of its genes put it at about 4.2 billion years old and found it already had an immune system against viruses.' },
     { id:'meth', name:'Methanocaldococcus', bin:'Methanocaldococcus jannaschii', eyebrow:'Archaea \u00B7 methanogen',
-      src:'microbe_methanocaldococcus.png', water:VENT_W, facts:[
+      src:'assets/images/microbe_methanocaldococcus.png', water:VENT_W, facts:[
         ['Cell', '<b>~1</b> \u00B5m, coccus'], ['Grows at', '<b>48\u201394</b> \u00B0C'],
         ['Found', '<b>2,600 m</b>, East Pacific'], ['Makes', '<b>Methane</b>']],
       what:'Makes methane from hydrogen and carbon dioxide: the methanogenesis branch you evolved. Methanogens still make most of Earth\u2019s methane, in places from rice paddies to cow stomachs.',
       note:'In 1996 it became the first archaeon to have its genome read. More than half its genes matched nothing known at the time.' },
     { id:'arch', name:'Archaeoglobus', bin:'Archaeoglobus fulgidus', eyebrow:'Archaea \u00B7 sulfate reducer',
-      src:'microbe_sulfate_reducer.png', water:VENT_W, facts:[
+      src:'assets/images/microbe_sulfate_reducer.png', water:VENT_W, facts:[
         ['Cell', '<b>~1</b> \u00B5m, irregular'], ['Best at', '<b>83</b> \u00B0C'],
         ['Found', '<b>Vulcano</b>, Italy'], ['Breathes', '<b>Sulfate</b>']],
       what:'Breathes sulfate instead of oxygen and turns it into hydrogen sulfide. That was your sulfate-reduction branch.',
       note:'Its name means \u201Cshining globe\u201D: it glows blue-green under ultraviolet light, from a coenzyme it shares with methanogens.' },
     { id:'fix', name:'Nitrogen fixer', bin:'Bacteria, diazotroph', eyebrow:'Bacteria \u00B7 diazotroph',
-      src:'microbe_nitrogen_fixer.png', water:VENT_W, facts:[
+      src:'assets/images/microbe_nitrogen_fixer.png', water:VENT_W, facts:[
         ['Enzyme', '<b>Nitrogenase</b>'], ['Cost', '<b>16 ATP</b> per N\u2082'],
         ['Makes', '<b>Ammonia</b>'], ['Poisoned by', '<b>Oxygen</b>']],
       what:'Breaks the triple bond in nitrogen gas to make ammonia, the form of nitrogen every cell needs to build proteins and DNA.',
       note:'Oxygen wrecks nitrogenase, so after oxygen rose, fixers had to hide it in thick-walled cells or switch it on only at night.' },
     { id:'purple', name:'Purple sulfur bacterium', bin:'Chromatium okenii', eyebrow:'Bacteria \u00B7 Gammaproteobacteria',
-      src:'microbe_purple_sulfur.png', water:SUN_W, facts:[
+      src:'assets/images/microbe_purple_sulfur.png', water:SUN_W, facts:[
         ['Cell', '<b>~5 \u00D7 15</b> \u00B5m rod'], ['Pigment', '<b>Bacteriochlorophyll</b>'],
         ['Uses', '<b>Light + H\u2082S</b>'], ['Stores', '<b>Sulfur</b>']],
       what:'Photosynthesis without oxygen: it uses sunlight and hydrogen sulfide, and the yellow granules inside are the sulfur left over. That was you in the sunlit zone.',
       note:'In Lake Cadagno in Switzerland, swarms of Chromatium okenii swimming up and down are enough to stir the water around them.' },
     { id:'cyano', name:'Cyanobacterium', bin:'Cyanobacteria, filamentous', eyebrow:'Bacteria \u00B7 Cyanobacteria',
-      src:'microbe_cyanobacterium.png', water:SUN_W, facts:[
+      src:'assets/images/microbe_cyanobacterium.png', water:SUN_W, facts:[
         ['Photosystems', '<b>2</b>'], ['Splits', '<b>Water</b>'],
         ['Releases', '<b>Oxygen</b>'], ['Oxygenated Earth', '<b>~2.4</b> billion yrs ago']],
       what:'Uses light to split water and gives off oxygen as waste. Its oxygen built up into the Great Oxidation Event that changed the planet.',
       note:'Every chloroplast in every plant and alga is a cyanobacterium that a eukaryote swallowed and kept, over a billion years ago.' },
     { id:'phage', name:'Cyanophage', bin:'Bacteriophage, tailed', eyebrow:'Virus \u00B7 not on the tree',
-      src:'microbe_bacteriophage.png', water:SUN_W, facts:[
+      src:'assets/images/microbe_bacteriophage.png', water:SUN_W, facts:[
         ['Size', '<b>~0.2</b> \u00B5m'], ['In seawater', '<b>~10 million</b> / mL'],
         ['Kills', '<b>~20</b> % of ocean microbes a day'], ['Alive?', '<b>Debated</b>']],
       what:'Injects its DNA into a cell, turns it into a virus factory and bursts it open. That viral lysis spills the cell\u2019s carbon back into the water for others to eat.',
       note:'Some cyanophages carry their own photosynthesis genes, keeping their host\u2019s light reactions running while they copy themselves.' },
     { id:'sar202', name:'SAR202', bin:'Chloroflexota, SAR202 clade', eyebrow:'Bacteria \u00B7 Chloroflexota',
-      src:'microbe_sar202.png', water:DEEP_W, facts:[
+      src:'assets/images/microbe_sar202.png', water:DEEP_W, facts:[
         ['Habitat', '<b>Dark ocean</b>'], ['Share', '<b>~10</b> % of deep cells'],
         ['Eats', '<b>Tough carbon</b>'], ['Named', '<b>1996</b>']],
       what:'Eats the tough, leftover organic carbon that sinks into the deep ocean, the kind most microbes can\u2019t break down.',
       note:'Its genomes are packed with oxygen-using enzymes for cracking that carbon, part of how the ocean stores carbon for thousands of years.' },
     { id:'sar11', name:'SAR11', bin:'Ca. Pelagibacter ubique', eyebrow:'Bacteria \u00B7 Alphaproteobacteria',
-      src:'microbe_sar11.png', water:SUN_W, facts:[
+      src:'assets/images/microbe_sar11.png', water:SUN_W, facts:[
         ['Cell', '<b>0.4</b> \u00B5m, crescent'], ['Genome', '<b>1.31</b> Mb'],
         ['Share', '<b>~25</b> % of plankton'], ['Described', '<b>1990</b>']],
       what:'The most abundant organism in the ocean, living on tiny amounts of dissolved carbon. Its group, the alphaproteobacteria, gave rise to mitochondria.',
       note:'The smallest genome of any free-living cell. The game makes you a SAR11; the real ancestor of mitochondria was a related alphaproteobacterium.' },
     { id:'asgard', name:'Asgard archaeon', bin:'Ca. Lokiarchaeum sp.', eyebrow:'Archaea \u00B7 Asgard',
-      still:asgardStill, src:'microbe_asgard_body.png', water:['#0A2133', '#02090F'], facts:[
+      still:asgardStill, src:'assets/images/microbe_asgard_body.png', water:['#0A2133', '#02090F'], facts:[
         ['Cell', '<b>0.5</b> \u00B5m, coccoid'], ['Protrusions', '<b>' + ASG.arms.length + '</b>, branching'],
         ['Habitat', '<b>Anoxic sediment</b>'], ['Type locality', '<b>Loki\u2019s Castle</b>']],
       what:'Archaea that carry genes once thought to belong only to eukaryotes. A cell like this became the host that engulfed the mitochondrion\u2019s ancestor: the start of all complex life.',
       note:'The first one grown in a lab, Prometheoarchaeum, took twelve years to culture, and it reached out long branching tentacles like the ones that caught you.' },
     { id:'protist', name:'Protist', bin:'Eukaryota, posterior flagellate', eyebrow:'Eukarya \u00B7 protist',
-      still:proStill, src:'microbe_protist_body.png', water:DEEP_W, facts:[
+      still:proStill, src:'assets/images/microbe_protist_body.png', water:DEEP_W, facts:[
         ['Cell', '<b>~10</b> \u00B5m'], ['Mitochondria', '<b>5</b>, alphaproteobacterial'],
         ['Flagellum', '<b>1</b>, posterior'], ['Lineage', '<b>Asgard</b> host']],
       what:'A single-celled eukaryote: a nucleus, mitochondria for power and a whip-like flagellum. It hunts by engulfing whole cells, as you did.',
       note:'Swallowing other cells is how eukaryotes took in mitochondria and, later, chloroplasts: the two biggest mergers in the history of life.' },
     { id:'dick', name:'Dickinsonia', bin:'Dickinsonia costata', eyebrow:'Eukarya \u00B7 early animal',
-      src:'era_dickinsonia.png', water:['#5A4A36', '#1C150E'], facts:[
+      src:'assets/images/era_dickinsonia.png', water:['#5A4A36', '#1C150E'], facts:[
         ['Lived', '<b>~558</b> million yrs ago'], ['Length', '<b>mm</b> to <b>1.4 m</b>'],
         ['Thickness', '<b>A few</b> mm'], ['Mouth or gut', '<b>None</b> found']],
       what:'One of the first large animals: a flat, quilted oval that lay on the microbial mats of the sea floor, absorbing food through its underside and gliding to the next patch.',
@@ -8857,7 +8857,7 @@
       'things happening in the deep ocean near these hydrothermal vents\u2026 see ' +
       'if you can build something out of some naturally occurring lipids\u2026',
       'Begin', function(){ phase = 'gather'; paintGauge(); },
-      [{ src:'nutrient_phospholipid.png', cap:'Phospholipid' }]);
+      [{ src:'assets/images/nutrient_phospholipid.png', cap:'Phospholipid' }]);
   });
   // ---- Leaderboards from the main menu ---------------------------------------
   // The evasion board is the credits' board; the mini game has its own
