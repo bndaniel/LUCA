@@ -275,6 +275,10 @@
 
   @keyframes bob{50%{transform:translateY(-5px) rotate(2deg)}}
   .cr__end{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:22px}
+  /* the mini game's result is the credits' score page on its own */
+  .credits.mini #crThanks, .credits.mini #crTree, .credits.mini [data-cr-next],
+  .credits.mini .cr__stars, .credits.mini .cr__stars + .cr__sub{display:none}
+  .credits:not(.mini) #crMiniEnd{display:none}
 
   /* a species page, in the specimen-plate format */
   .spec{
@@ -660,19 +664,17 @@
   .title__btn2{animation-delay:.42s}
   .boards{z-index:8}
   .boards__card{
-    width:min(820px,100%);max-height:calc(100dvh - 32px);overflow:auto;box-sizing:border-box;
+    width:min(460px,100%);max-height:calc(100dvh - 32px);overflow:auto;box-sizing:border-box;
     padding:clamp(18px,3vw,32px);background:#020B14;border:1px solid var(--rule);border-radius:6px;
     display:flex;flex-direction:column;align-items:center;text-align:center;
   }
   .boards__card h2{margin:6px 0 0;font-weight:400;font-size:clamp(22px,4vw,32px)}
-  .boards__cols{display:grid;grid-template-columns:1fr 1fr;gap:clamp(16px,3vw,32px);width:100%;margin-top:20px}
-  .boards__col{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+  .boards__col{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;width:100%;margin-top:18px}
   .boards__col h3{margin:0;font-weight:500;font-size:16px}
   .boards__sub{margin:0 0 6px;font-size:12px;line-height:1.5;color:var(--ink-dim)}
   .boards__col .ghost{margin-top:10px}
   .boards__col .ghost:disabled{opacity:.5;cursor:default}
   .boards__close{margin-top:22px}
-  @media (max-width:620px){ .boards__cols{grid-template-columns:1fr} }
   .title > *{animation:titleIn .9s ease-out both}
   .title__full{animation-delay:.1s}
   .title__sub{animation-delay:.18s}
@@ -799,6 +801,10 @@
     <p class="board__status" id="boardStatus" aria-live="polite"></p>
     <ol class="board" id="board" aria-label="Leaderboard"></ol>
     <button class="ghost" type="button" data-cr-next="crTree">Continue</button>
+    <div class="cr__end" id="crMiniEnd">
+      <button class="ghost" id="miniAgain" type="button">Play again</button>
+      <button class="ghost" id="miniMenu" type="button">Main menu</button>
+    </div>
   </section>
 
   <section class="cr" id="crTree">
@@ -838,30 +844,20 @@
   <p class="title__full">Last Universal Common Ancestor</p>
   <p class="title__sub">From the first cell to complex life</p>
   <button class="ghost title__btn" id="titleBtn" type="button">Begin</button>
-  <button class="ghost title__btn2" id="boardsBtn" type="button">Leaderboards &amp; mini game</button>
+  <button class="ghost title__btn2" id="boardsBtn" type="button">Leaderboard &amp; mini game</button>
 </div>
 
 <div class="spec boards" id="boards" hidden role="dialog" aria-modal="true" aria-labelledby="boardsTitle">
   <div class="boards__card">
     <p class="eyebrow">LUCA</p>
-    <h2 id="boardsTitle">Leaderboards</h2>
-    <div class="boards__cols">
-      <section class="boards__col">
-        <p class="eyebrow">Predation</p>
-        <h3>Time evaded</h3>
-        <p class="boards__sub">How long you held out against the Asgard archaea</p>
-        <ol class="board" id="boardsEvade" aria-label="Time evaded leaderboard"></ol>
-        <p class="board__status" id="boardsEvadeStatus" aria-live="polite"></p>
-      </section>
-      <section class="boards__col">
-        <p class="eyebrow">Mini game</p>
-        <h3>Protist predator</h3>
-        <p class="boards__sub">Hunt as a protist through levels of rising difficulty</p>
-        <ol class="board" id="boardsMini" aria-label="Mini game leaderboard"></ol>
-        <p class="board__status" id="boardsMiniStatus" aria-live="polite"></p>
-        <button class="ghost" id="miniBtn" type="button" disabled>Play mini game &middot; coming soon</button>
-      </section>
-    </div>
+    <h2 id="boardsTitle">Leaderboard</h2>
+    <section class="boards__col">
+      <h3>Time evaded</h3>
+      <p class="boards__sub">How long you held out against the Asgard archaea, in the game or the mini game</p>
+      <ol class="board" id="boardsEvade" aria-label="Time evaded leaderboard"></ol>
+      <p class="board__status" id="boardsEvadeStatus" aria-live="polite"></p>
+      <button class="ghost" id="miniBtn" type="button">Play the evasion mini game</button>
+    </section>
     <button class="ghost boards__close" id="boardsClose" type="button">Back</button>
   </div>
 </div>
@@ -3411,13 +3407,14 @@
     }
     if(engT >= ENG_SETTLE + ENG_GROW && !engShown){
       engShown = true;
-      showPrompt('Engulfed',
+      if(miniMode) miniResult();
+      else showPrompt('Engulfed',
         'The Asgard archaeon wrapped its protrusions around the cell and drew it ' +
         'inside.',
         'Continue', null);
     }
     // the others have dissipated and the pair has settled: offer the branch
-    if(engT >= ENGULF_WAIT && !endoReady){
+    if(!miniMode && engT >= ENGULF_WAIT && !endoReady){
       endoReady = true;
       elEvolve.textContent = 'Evolve?';
       elEvolve.hidden = false;
@@ -6123,6 +6120,7 @@
     debris.length = 0; shock = null;
     dying = 0; deadT = 0;
     startPredation();
+    if(miniMode) miniIntro();            // straight back to the chase
   }
 
   function stepPredation(dt, t){
@@ -6204,6 +6202,7 @@
     playTrack(trackDeep);
     startPredation();
     phase = 'predIntro';                 // the field holds while the card is up
+    if(miniMode){ miniIntro(); return; }
     showPrompt('Alphaproteobacteria',
       'The smallest and most efficient cells on Earth were the ' +
       'alphaproteobacteria\u2026',
@@ -8336,7 +8335,7 @@
     lbSave(ini).then(function(){
       elBoardInit.disabled = true;
       lbLoad();
-      crTimer = setTimeout(function(){ if(!crMoved) crGo('crTree'); }, 4200);
+      if(!miniMode) crTimer = setTimeout(function(){ if(!crMoved) crGo('crTree'); }, 4200);
     }).catch(function(e){
       lbSaving = false;
       document.getElementById('boardBtn').disabled = false;
@@ -8859,9 +8858,8 @@
       'Begin', function(){ phase = 'gather'; paintGauge(); },
       [{ src:'assets/images/nutrient_phospholipid.png', cap:'Phospholipid' }]);
   });
-  // ---- Leaderboards from the main menu ---------------------------------------
-  // The evasion board is the credits' board; the mini game has its own
-  // collection, empty until the game exists.
+  // ---- The leaderboard from the main menu -------------------------------------
+  // One board, time evaded: the full game and the mini game post to it alike.
   var elBoards = document.getElementById('boards');
   function boardsList(el, statusEl, rows, fmt, empty){
     var html = '';
@@ -8902,22 +8900,65 @@
   function openBoards(){
     elBoards.hidden = false;
     document.getElementById('boardsClose').focus();
-    var eS = document.getElementById('boardsEvadeStatus'), mS = document.getElementById('boardsMiniStatus');
-    var eL = document.getElementById('boardsEvade'), mL = document.getElementById('boardsMini');
-    eS.textContent = mS.textContent = 'Loading\u2026';
+    var eS = document.getElementById('boardsEvadeStatus'), eL = document.getElementById('boardsEvade');
+    eS.textContent = 'Loading\u2026';
     lbInit().then(function(){
       if(!lb.db){
         var b = localBest();
-        eL.innerHTML = mL.innerHTML = '';
+        eL.innerHTML = '';
         eS.textContent = (HOST.offline || 'Sign in to claude.ai to see the leaderboard.') + (b > 0 ? ' Your best on this device: ' + fmtClock(b) + '.' : '');
-        mS.textContent = HOST.offline || 'Sign in to claude.ai to see the leaderboard.';
         return;
       }
-      boardsLoad('scores', 'best', eL, eS, fmtClock, 'No times yet. Finish the game to set the first one.');
-      boardsLoad('minigame', 'best', mL, mS, function(v){ return String(Math.round(v)); },
-                 'No scores yet. The mini game is coming soon.');
+      boardsLoad('scores', 'best', eL, eS, fmtClock, 'No times yet. Play the mini game to set the first one.');
     });
   }
+
+  // ---- The evasion mini game ---------------------------------------------------
+  // The predation stage on its own, from the moment the Asgard arrives in the
+  // full game (energy at 80%): the same rules and the same clock, so its times
+  // go on the same board. Caught, it shows the score page; starved, it starts
+  // the chase again, as the full game does.
+  var miniMode = false;
+  function startMini(){
+    miniMode = true;
+    elBoards.hidden = true;
+    elCredits.hidden = true;
+    elCredits.classList.add('mini');
+    debris.length = 0; shock = null; dying = 0; deadT = 0;
+    sfxInit();
+    jumpToPredation();                   // to the second vent field, then miniIntro()
+  }
+  function miniIntro(){
+    phase = 'predIntro';                 // the field holds while the card is up
+    asgWarned = true;
+    energy = 0.80;
+    paintGauge();
+    showPrompt('Evasion',
+      'How long can you hold out? An Asgard archaeon is hunting you, and it ' +
+      'divides and speeds up as time goes on. Stay out of its reach. Collect ' +
+      'O\u2082 and sugar to keep your energy up: every full bar gives you a ' +
+      '6-second speed boost, and boosts stack. If your energy runs out, you starve.',
+      'Start', spawnAsgard, null,
+      { src: asgardStill(), alt:'An Asgard archaeon', title:'Asgard archaeon', alarm:true });
+  }
+  function miniResult(){
+    mode = 'credits';                    // the scene holds its last frame behind
+    elHint.classList.remove('on');
+    elEvClock.hidden = true;
+    document.getElementById('hud').hidden = true;
+    elCredits.hidden = false;
+    elCredits.scrollTop = 0;
+    document.getElementById('crTime').textContent = fmtClock(evadeSecs);
+    lbSaving = false;                    // a fresh name box for this run
+    elBoardInit.disabled = false;
+    document.getElementById('boardBtn').disabled = false;
+    lbInit().then(function(){
+      return lbSave(null).catch(function(e){ lb.saveErr = e && e.code; });
+    }).then(lbLoad);
+  }
+  document.getElementById('miniBtn').addEventListener('click', startMini);
+  document.getElementById('miniAgain').addEventListener('click', startMini);
+  document.getElementById('miniMenu').addEventListener('click', function(){ location.reload(); });
   function closeBoards(){
     if(elBoards.hidden) return;
     elBoards.hidden = true;
