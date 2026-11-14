@@ -12,8 +12,8 @@
    player their best on this device. */
 (function(){
   'use strict';
-  var SUPABASE_URL = '';
-  var SUPABASE_KEY = '';
+  var SUPABASE_URL = 'https://imesiyxvvkiqjyxjqihf.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_d2YpS03faI6HEnHmz3LqPg_4x0_hpPH';
 
   window.LUCA_HOST = {
     offline: 'The online leaderboard is unavailable right now.',
