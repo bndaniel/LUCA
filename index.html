@@ -6619,6 +6619,28 @@
     startEuphotic();
   }
 
+  // A death at the vents restarts the stage it happened in, never the whole
+  // run: the genome stays, and so does every pathway already evolved.
+  function ventStage(p){ return p === 'feed' || p === 'swim' || p === 'acceptor'; }
+  function resetVentStage(){
+    var st = diedIn;
+    debris.length = 0; shock = null; pops.length = 0; floats.length = 0;
+    dying = 0; deadT = 0; grabbed = null; swimDrag.on = false;
+    held.h2 = 0; held.co2 = 0; mBoostT = 0;
+    energy = E_START; temp = 0.5;
+    spawnMembrane();
+    phase = st;
+    if(st === 'feed'){
+      showBars('energy');
+    } else {                              // swim or acceptor: steerable again
+      cell.heading = cell.rot + GEO.axis;
+      cell.vx = 0; cell.vy = 0; cell.eff = 0; cell.wig = 0;
+      cell.spin = (Math.random() < 0.5 ? -1 : 1) * IDLE_SPIN;
+      showBars('swim');
+    }
+    paintGauge();
+  }
+
   function resetRun(){
     phase = 'gather';
     bodyKind = 'cell'; hasNucleus = false;
@@ -7713,12 +7735,12 @@
           'The membrane gave way and the cell\u2019s contents scattered into the ' +
           'water. Nothing down here lasts without a steady supply of energy and a ' +
           'temperature it can stand. Build another.',
-          (diedIn === 'euphotic' || diedIn === 'oxygenic' ||
-           diedIn === 'predation' || diedIn === 'protist') ? 'Try again' : 'Rebuild',
+          'Try again',
           diedIn === 'oxygenic' ? resetOxygenic
             : diedIn === 'euphotic' ? resetEuphotic
             : diedIn === 'predation' ? resetPredation
-            : diedIn === 'protist' ? resetProtist : resetRun);
+            : diedIn === 'protist' ? resetProtist
+            : ventStage(diedIn) ? resetVentStage : resetRun);
       }
     }
 
@@ -9184,8 +9206,9 @@
   }
 
   document.addEventListener('keydown', function(ev){
-    if(HOST.noDebugKeys) return;
-    if(ev.shiftKey && (ev.key === 'K' || ev.key === 'k')){
+    var skipKey = ev.shiftKey && (ev.key === 'K' || ev.key === 'k');
+    if(HOST.noDebugKeys && !(skipKey && HOST.allowSkip)) return;   // the web build can keep Shift+K
+    if(skipKey){
       ev.preventDefault();
       skipStage();
     }

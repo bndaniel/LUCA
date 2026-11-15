@@ -17,7 +17,8 @@
 
   window.LUCA_HOST = {
     offline: 'The online leaderboard is unavailable right now.',
-    noDebugKeys: true
+    noDebugKeys: true,     // Shift+E/S/P (jump to a stage) are off for players
+    allowSkip: true        // but Shift+K (finish the current stage) is on for now
   };
   if(!SUPABASE_URL || !SUPABASE_KEY) return;
 
