@@ -9,7 +9,8 @@
    -> API): the project URL and the anon / publishable key. That key is meant
    to be public; the rules in schema.sql only let players add runs and read
    the board. Left blank, the game runs with no online board and shows each
-   player their best on this device. */
+   player their best on this device. Protist Predator, the second mini game,
+   keeps its points in a second table (pp_scores, also in schema.sql). */
 (function(){
   'use strict';
   var SUPABASE_URL = 'https://imesiyxvvkiqjyxjqihf.supabase.co';
@@ -67,6 +68,14 @@
   }
   var NONE = { exists: false, data: function(){ return {}; } };
   var COLS = 'select=player,name,best';
+  // Two boards: time evaded ('scores', the game and the evasion mini game) and
+  // Protist Predator's points ('minigame'). schema.sql makes both. Until the
+  // Protist Predator table exists its board reads as empty rather than broken.
+  var TABLES = { scores: { table: 'scores', board: 'board' },
+                 minigame: { table: 'pp_scores', board: 'pp_board', whole: true } };
+  function missingOk(name){
+    return function(e){ if(name === 'minigame' && e && e.code === 'http_404') return []; throw e; };
+  }
 
   var db = {
     collection: function(name){
@@ -74,26 +83,30 @@
         orderBy: function(){ return q; },           // the board is always best first
         limit: function(k){ n = k; return q; },
         get: function(){
-          if(name !== 'scores') return Promise.resolve({ docs: [] });   // no mini game yet
-          return req('GET', 'board?' + COLS + '&order=best.desc,at.asc&limit=' + n)
+          var T = TABLES[name];
+          if(!T) return Promise.resolve({ docs: [] });
+          return req('GET', T.board + '?' + COLS + '&order=best.desc,at.asc&limit=' + n)
+            .catch(missingOk(name))
             .then(function(rows){ return { docs: rows.map(docOf) }; });
         }
       };
       return q;
     },
     doc: function(path){
-      var m = /^scores\/(.+)$/.exec(path), pid = m && m[1];
+      var m = /^(scores|minigame)\/(.+)$/.exec(path), T = m && TABLES[m[1]], pid = m && m[2];
       return {
         get: function(){
           if(!pid) return Promise.resolve(NONE);
-          return req('GET', 'board?' + COLS + '&player=eq.' + encodeURIComponent(pid))
+          return req('GET', T.board + '?' + COLS + '&player=eq.' + encodeURIComponent(pid))
+            .catch(missingOk(m[1]))
             .then(function(rows){ return rows.length ? docOf(rows[0]) : NONE; });
         },
         // a run is never overwritten; the board shows each player's best
         set: function(v){
           if(!pid) return Promise.reject({ code: 'unsupported' });
-          return req('POST', 'scores', { player: pid, name: String(v.initials || 'PLAYER'),
-                                         best: Number(v.best) || 0 });
+          var best = Number(v.best) || 0;
+          return req('POST', T.table, { player: pid, name: String(v.initials || 'PLAYER'),
+                                        best: T.whole ? Math.round(best) : best });
         }
       };
     }
