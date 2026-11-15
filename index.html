@@ -61,6 +61,16 @@
   .bases b{color:var(--ink);font-weight:500;font-style:normal}
   .bases .full b, .bases .full{color:var(--go)}
   .gauge{display:flex;flex-direction:column;gap:6px}
+  /* the predation boost, ready to fire */
+  .boostbtn{
+    display:block;margin:0 auto 12px;pointer-events:auto;
+    font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;
+    color:#1A0E00;background:#FFC857;border:0;border-radius:999px;padding:9px 22px;cursor:pointer;
+    box-shadow:0 0 0 1px rgba(255,200,87,.6), 0 0 26px rgba(255,190,70,.55);
+    animation:boostReady .9s ease-in-out infinite;
+  }
+  .boostbtn kbd{font:inherit;opacity:.65}
+  @keyframes boostReady{50%{transform:scale(1.07);box-shadow:0 0 0 6px rgba(255,200,87,.18), 0 0 42px rgba(255,190,70,.85)}}
   .gauge__head{
     display:flex;justify-content:space-between;align-items:baseline;gap:12px;
     font-family:var(--mono);font-size:10px;letter-spacing:.18em;
@@ -277,7 +287,14 @@
   .cr__end{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:22px}
   /* the mini game's result is the credits' score page on its own */
   .credits.mini #crThanks, .credits.mini #crTree, .credits.mini [data-cr-next],
-  .credits.mini .cr__stars, .credits.mini .cr__stars + .cr__sub{display:none}
+  .credits.mini .cr__stars, .credits.mini .cr__stars + .cr__sub, .credits.mini #crAI{display:none}
+  /* the closing note on how the game was made */
+  .cr.cr--note{min-height:0;justify-content:flex-start;gap:14px;
+               padding-top:clamp(40px,10vh,96px);padding-bottom:clamp(48px,12vh,110px)}
+  .cr__note{margin:0;font-size:15px;line-height:1.6;color:var(--ink);max-width:52ch}
+  .cr__note a{color:var(--go);text-decoration:underline;text-underline-offset:3px}
+  .cr__note a:hover{color:var(--ink)}
+  .cr__note a:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:2px}
   .credits:not(.mini) #crMiniEnd{display:none}
 
   /* a species page, in the specimen-plate format */
@@ -487,16 +504,21 @@
     font-family:var(--mono);font-size:10px;letter-spacing:.18em;
     text-transform:uppercase;color:var(--ink-dim);
   }
+  /* it only shows when evolving is the thing to do, so it calls for it */
   .evolve{
     margin-top:15px;align-self:flex-start;pointer-events:auto;
-    font-family:var(--mono);font-size:11px;letter-spacing:.20em;
+    font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.20em;
     text-transform:uppercase;
-    color:#04140C;background:var(--go);
-    border:0;border-radius:3px;padding:9px 18px;cursor:pointer;
-    box-shadow:0 0 0 1px rgba(95,208,138,.45), 0 0 24px rgba(95,208,138,.32);
-    animation:evolveIn .5s ease-out both;
+    color:#1A0E00;background:#FFB547;
+    border:0;border-radius:3px;padding:10px 20px;cursor:pointer;
+    box-shadow:0 0 0 1px rgba(255,181,71,.6), 0 0 26px rgba(255,150,40,.5);
+    animation:evolveIn .5s ease-out both, evolveCall 1.2s ease-in-out .5s infinite;
   }
-  .evolve:hover{background:#7CE0A2}
+  .evolve:hover{background:#FFC870}
+  @keyframes evolveCall{
+    0%,100%{transform:none;box-shadow:0 0 0 1px rgba(255,181,71,.6), 0 0 22px rgba(255,150,40,.45)}
+    50%{transform:scale(1.08);box-shadow:0 0 0 7px rgba(255,181,71,.16), 0 0 46px rgba(255,140,30,.85)}
+  }
   .evolve:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
   @keyframes evolveIn{
     from{opacity:0;transform:translateY(-7px)}
@@ -764,6 +786,7 @@
 
   @media (prefers-reduced-motion:reduce){
     .evolve{animation:none}
+    .boostbtn{animation:none}
     .prompt__lede--alarm{animation:none}
     .title > *{animation:none}
   }
@@ -819,6 +842,15 @@
       <button class="ghost" id="epilogueBtn" type="button">Epilogue: the next 541 million years</button>
       <button class="ghost" id="crMenuBtn" type="button">Main menu</button>
     </div>
+  </section>
+
+  <section class="cr cr--note" id="crAI">
+    <p class="eyebrow">Made with AI</p>
+    <p class="cr__note">AI (Claude) was used to help make this game, using ~250 million tokens
+      &asymp; 1 year of carbon capture by 1 tree aged 1&ndash;10 years.</p>
+    <p class="cr__note">We have donated 10 trees to be planted with
+      <a href="https://antomos.com/" target="_blank" rel="noopener">ANTOMOS</a>, a cool Canadian who plants
+      trees the right way.</p>
   </section>
 </div>
 
@@ -971,6 +1003,7 @@
       </div>
     </div>
 
+    <button class="boostbtn" id="boostBtn" type="button" hidden>Boost</button>
     <div class="gauge" id="gaugeEnergy" hidden>
       <div class="gauge__head">
         <span class="gauge__label">Energy</span>
@@ -1276,7 +1309,7 @@
 
   // Oxygenic stage: water is everywhere, so each one is worth a whole bar and
   // fills at twice the rate. Every full bar buds another cell onto the chain.
-  var OXY_RATE = PHOTO_RATE * 4, CHAIN_MAX = 15;
+  var OXY_RATE = PHOTO_RATE * 4, CHAIN_MAX = 10;
   var GEO_C = { axis:-0.14, half_len:0.33446, half_thick:0.33566,
                 front:[0.83,0.44], rear:[0.17,0.56] };
   var cellCyano = new Image(), cyanoReady = false;
@@ -1296,6 +1329,7 @@
 
   // Heterotroph stage: two bars, both filled by eating, both spent on dividing.
   var HET_MAX = 6, SUGAR_GAIN = 0.20, OXY_GAIN = 0.20, hetMade = 0;
+  var HET_SPLIT = 2, hetRx = 0;   // respiration: every 2 reactions divide the cell
   var HET_SUGAR_MAX = 90;
   var HET_MAXS = 104, HET_RESP = 0.58;   // smaller body, quicker on its feet
   var hetOxy = 0, hetReady = false;
@@ -1343,6 +1377,20 @@
   var BOOST_SECS = 6, BOOST_GAIN = 1.0, BOOST_KEEP = 0.3;
   var boosts = [];
   function boostN(){ return phase === 'predation' ? boosts.length : 0; }
+  var TOUCH = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  // A full bar is a boost the player fires: the space bar, or the button.
+  function boostReady(){
+    return phase === 'predation' && asgWarned && asgs.length > 0 && energy >= 1 - 1e-6;
+  }
+  function fireBoost(){
+    if(!boostReady() || mode !== 'field' || !elPrompt.hidden) return;
+    boosts.push(BOOST_SECS);
+    energy = BOOST_KEEP;
+    sfx('boost');
+    if(cell) pops.push({ x:cell.x, y:cell.y, r:cell.w * 0.9, col:'glucose', p:0 });
+    elBoost.classList.remove('boost--go'); void elBoost.offsetWidth; elBoost.classList.add('boost--go');
+    paintGauge();
+  }
   function boostMult(){ return 1 + BOOST_GAIN * boostN(); }
   var ASG_FADE = 2.6;                 // how long the others take to dissipate
   var ENGULF_WAIT = 8.0;              // before the branch is offered
@@ -1361,7 +1409,7 @@
 
   // --- swimming, once the cell earns a flagellum ------------------------
   var MAXS = 62, RESP = 0.85, TURN = 1.15, IDLE_SPIN = Math.PI*2/90;
-  var EUPHOTIC_SPEED = 1.5;   // the sunlit stages are a bigger field to cross
+  var EUPHOTIC_SPEED = 1.8;   // the sunlit stages are a bigger field to cross
   // Heating climbs steeply as the cell nears a vent mouth, and cooling as it
   // strays into the open water; in the band between, it settles back toward
   // optimal. Both are about three times as fast as they first were.
@@ -1401,7 +1449,10 @@
   // Feeding: energy comes from joining hydrogen to carbon dioxide, two H2 for
   // every CO2 (LUCA's likely route: 4H2 + 2CO2 -> acetate + 2H2O). The cell
   // holds one recipe at a time; a molecule it has no room for bounces off.
-  var RECIPE = { h2:2, co2:1 }, RX_GAIN = 0.35;   // three recipes nearly fill a bar
+  var RECIPE = { h2:2, co2:1 }, RX_GAIN = 0.35;
+  // While swimming (the first swimming stage and the plumes), each recipe is
+  // also a burst of speed. A new one restarts the timer; they never stack.
+  var M_BOOST = 4, M_BOOST_X = 1.75, mBoostT = 0;   // three recipes nearly fill a bar
   var held = { h2:0, co2:0 };
   var floats = [];        // short labels that rise off the cell and fade
 
@@ -1539,6 +1590,7 @@
   var elEnFill   = document.getElementById('enFill');
   var elEnState  = document.getElementById('enState');
   var elEvolve  = document.getElementById('evolveBtn');
+  var elBoostBtn = document.getElementById('boostBtn');
   var elStage   = document.getElementById('evolveView');
   var elTreeNodes = document.getElementById('treeNodes');
   var elTreeLinks = document.getElementById('treeLinks');
@@ -1710,6 +1762,9 @@
       } else if(name === 'shot'){             // a rifle, a little way off
         sNoise(now, 0.6, 0.2, 'lowpass', 2400, 240, 0.7);
         sTone('sine', 130, 48, now, 0.32, 0.18);
+      } else if(name === 'alert'){            // the Evolve button appears
+        sTone('triangle', 659, 659, now, 0.14, 0.16);
+        sTone('triangle', 988, 988, now + 0.15, 0.26, 0.16);
       } else if(name === 'tick'){             // a button
         sTone('sine', 1250, 1100, now, 0.035, 0.09);
       }
@@ -1953,10 +2008,11 @@
         held.h2 = 0; held.co2 = 0;
         rxBg.done = RX_DONE;                 // the big recipe runs into its energy flask
         energy = Math.min(1, energy + RX_GAIN);
+        if(swimming()) mBoostT = M_BOOST;    // and, once it can swim, a burst of speed
         if(cell){
           pops.push({ x:cell.x, y:cell.y, r:cell.w*0.42, col:'rx', p:0 });
           floats.length = 0;               // the complaint is answered
-          floatText(cell.x, cell.y - cell.w*0.32, '+ energy', '#F2C14E');
+          floatText(cell.x, cell.y - cell.w*0.32, swimming() ? '+ energy, speed boost' : '+ energy', '#F2C14E');
         }
         sfx('react');
       }
@@ -1964,89 +2020,197 @@
     }
   }
 
-  // ---- The recipe, large in the water behind everything ---------------------
-  // 2 H2 + CO2 -> energy, as flasks across the upper water, while feeding and
-  // swimming; it fades out at the plume stage. Each flask fills
-  // as its molecule is taken in; a full set runs the arrow into the energy
-  // flask, which flashes, and then the flasks drain for the next round.
+  // ---- Reactions on screen ---------------------------------------------------
+  // Every stage that makes energy runs one real reaction, drawn as flasks: one
+  // per molecule that goes in, a sun when light is an ingredient, then the
+  // products. Each flask fills as its molecule is taken in; when the reaction
+  // runs, the arrow fills, the products fill and ring out, and the flasks
+  // drain for the next round. The vents and the sunlit stages draw it large
+  // across the upper water; the plume stage and predation draw it small, just
+  // above the gauges.
   var RX_DONE = 1.6;
-  var rxBg = { a:0, lv:[0, 0, 0], arrow:0, en:0, done:0, last:0 };
-  var RX_TINT = [[205,228,255], [205,228,255], [226,108,90]], RX_GOLD = [242,193,78];
+  var RX_GOLD = [242,193,78];
   var RX_FONT = '"IBM Plex Mono", ui-monospace, Menlo, monospace';
+  var RX_H2  = { key:'h2',  label:'H\u2082',  tint:[205,228,255] };
+  var RX_CO2 = { key:'co2', label:'CO\u2082', tint:[226,108,90] };
+  var RX_H2S = { key:'h2s', label:'H\u2082S', tint:[236,214,102] };
+  var RX_H2O = { key:'h2o', label:'H\u2082O', tint:[150,205,255] };
+  var RX_O2  = { key:'o2',  label:'O\u2082',  tint:[230,96,84], icon:'o2' };
+  var RX_SUG = { key:'glucose', label:'Sugar', tint:[242,193,78], icon:'sugar' };
+  var RX_ENERGY = { label:'Energy', tint:RX_GOLD, mark:'bolt' };
+  var RX_SUGAR  = { label:'Sugar', tint:RX_GOLD, icon:'sugar' };
+  var RX_SPECS = {
+    vent:   { ins:[RX_H2, RX_H2, RX_CO2], out:[RX_ENERGY] },
+    purple: { ins:[RX_H2S, RX_H2S, RX_CO2], light:true,
+              out:[RX_SUGAR, { label:'2 S', tint:[240,214,80], mark:'dots' }] },
+    cyano:  { ins:[RX_H2O, RX_CO2], light:true,
+              out:[RX_SUGAR, { label:'O\u2082', tint:[230,96,84], icon:'o2' }] },
+    resp:   { ins:[RX_SUG, RX_O2],
+              out:[RX_ENERGY, { label:'CO\u2082 + H\u2082O', tint:[190,206,216] }] }
+  };
+  // which reaction is on screen now, and whether it sits small at the bottom
+  function rxShown(){
+    if(phase === 'feed' || phase === 'swim') return { spec:RX_SPECS.vent };
+    if(phase === 'acceptorIntro' || phase === 'acceptor') return { spec:RX_SPECS.vent, small:true };
+    if(phase === 'euphotic') return { spec:RX_SPECS.purple };
+    if(phase === 'oxygenic') return { spec:RX_SPECS.cyano };
+    if(phase === 'hetero') return { spec:RX_SPECS.resp };
+    if(phase === 'predation') return { spec:RX_SPECS.resp, small:true };
+    return null;
+  }
+  // what is in hand, keyed like the flasks
+  function rxHand(){
+    if(phase === 'feed' || swimming() || phase === 'acceptorIntro') return held;
+    if(phase === 'predation') return { o2:acceptors };      // sugar is burned on the spot
+    return rxHeld;
+  }
+  function rxImg(o){
+    if(o.icon === 'o2') return ICON.o2;
+    if(o.icon === 'sugar') return ICON.sugar;
+    var sl = o.key && IMG[o.key];
+    return sl && sl.ok ? sl.im : null;
+  }
+  var rxBg = { a:0, spec:null, lv:[], sun:0, arrow:0, en:0, done:0, last:0, sk:0, hudTop:0, hudAt:-1e9 };
+  var elGaugesBox = document.querySelector('.gauges');
   function rxa(c, a){ return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + Math.max(0, a).toFixed(3) + ')'; }
 
   function drawRecipeBg(t){
     var dt = rxBg.last ? Math.min(0.1, Math.max(0, (t - rxBg.last) / 1000)) : 0;
     rxBg.last = t;
-    var want = (phase === 'feed' || phase === 'swim') ? 1 : 0;   // gone by the plume stage
-    rxBg.a += (want - rxBg.a) * (1 - Math.exp(-dt / 0.6));
+    var show = rxShown(), i, j;
+    if(show && show.spec !== rxBg.spec){
+      if(rxBg.spec && rxBg.a > 0.02) show = null;            // the old one fades out first
+      else {
+        rxBg.spec = show.spec; rxBg.lv = [];
+        for(i = 0; i < show.spec.ins.length; i++) rxBg.lv.push(0);
+        rxBg.arrow = 0; rxBg.en = 0; rxBg.sun = 0; rxBg.done = 0;
+        rxBg.sk = show.small ? 1 : 0;
+      }
+    }
+    rxBg.a += ((show ? 1 : 0) - rxBg.a) * (1 - Math.exp(-dt / 0.6));
+    if(show) rxBg.sk += ((show.small ? 1 : 0) - rxBg.sk) * (1 - Math.exp(-dt / 0.5));
+    var spec = rxBg.spec;
+    if(!spec) return;
     if(rxBg.done > 0) rxBg.done = Math.max(0, rxBg.done - dt);
     var paying = rxBg.done > 0, pk = RX_DONE - rxBg.done;
-    var have = [held.h2 >= 1, held.h2 >= 2, held.co2 >= 1];
-    for(var i = 0; i < 3; i++){
-      var tg = (paying && pk < 1.0) || have[i] ? 1 : 0;
+    var hand = show ? rxHand() : {};
+    for(i = 0; i < spec.ins.length; i++){
+      var key = spec.ins[i].key, before = 0;
+      for(j = 0; j < i; j++) if(spec.ins[j].key === key) before++;
+      var tg = (paying && pk < 1.0) || (hand[key] || 0) > before ? 1 : 0;
       rxBg.lv[i] += (tg - rxBg.lv[i]) * (1 - Math.exp(-dt / (tg > rxBg.lv[i] ? 0.14 : 0.32)));
     }
-    var arT = paying && pk < 1.1 ? Math.min(1, pk / 0.38) : 0;
-    rxBg.arrow = arT > rxBg.arrow ? arT : Math.max(0, rxBg.arrow - dt / 0.4);
-    var enT = paying && pk > 0.3 && pk < 1.25;
+    var sunT = spec.light && show && inLight() ? 0.3 + 0.7 * lightLevel() : 0;
+    rxBg.sun += (sunT - rxBg.sun) * (1 - Math.exp(-dt / 0.25));
+    var arT = paying && pk < 1.1 ? (spec.light ? 1 : Math.min(1, pk / 0.38)) : 0;
+    if(spec.light && !paying) arT = rxRunK;                  // the reaction running in the light
+    rxBg.arrow = arT > rxBg.arrow ? arT : Math.max(arT, rxBg.arrow - dt / 0.4);
+    var enT = paying && pk > (spec.light ? 0.05 : 0.3) && pk < 1.25;
     rxBg.en = enT ? Math.min(1, rxBg.en + dt / 0.22) : Math.max(0, rxBg.en - dt / 0.45);
-    if(rxBg.a < 0.01) return;
+    if(rxBg.sk < 0.5) rxRender(t);          // large, it sits behind the scene
+  }
+  // small, it sits in front of the vents, on a soft dark backing
+  function drawRecipeFront(t){ if(rxBg.sk >= 0.5) rxRender(t); }
+
+  function rxRender(t){
+    var spec = rxBg.spec, i, paying = rxBg.done > 0, pk = RX_DONE - rxBg.done;
+    if(!spec || rxBg.a < 0.01) return;
+    // the row: flasks, a tight gap between two of the same, "+" between
+    // different ones, the arrow, then the products
+    var toks = [], units = 0;
+    for(i = 0; i < spec.ins.length; i++){
+      if(i){ var gw = spec.ins[i].key === spec.ins[i-1].key ? 0.3 : 0.8;
+             toks.push({ t: gw < 0.5 ? 'gap' : 'plus', w:gw }); units += gw; }
+      toks.push({ t:'in', i:i, w:1 }); units += 1;
+    }
+    if(spec.light){ toks.push({ t:'plus', w:0.8 }, { t:'sun', w:1 }); units += 1.8; }
+    toks.push({ t:'arrow', w:1.1 }); units += 1.1;
+    for(i = 0; i < spec.out.length; i++){
+      if(i){ toks.push({ t:'plus', w:0.7 }); units += 0.7; }
+      toks.push({ t:'out', i:i, w:i ? 0.72 : 1 }); units += i ? 0.72 : 1;
+    }
 
     var Wc = cv.width / S.dpr, Hc = cv.height / S.dpr, A = rxBg.a;
-    var D = Math.min(112, (Wc - 48) / 6.2, Hc * 0.13), r = D / 2;
-    var cy = Hc * 0.27;
-    var c0 = Wc / 2 - 3.1 * D + r, c1 = c0 + 1.3 * D, c2 = c1 + 1.8 * D, c3 = c2 + 2.1 * D;
+    if(t - rxBg.hudAt > 250){
+      rxBg.hudAt = t;
+      var gb = elGaugesBox.getBoundingClientRect();
+      rxBg.hudTop = gb.height > 20 ? gb.top : Hc * 0.85;
+    }
+    var Dbig = Math.min(112, (Wc - 48) / units, Hc * 0.13);
+    var Dsm = Math.min(46, (Wc - 32) / units);
+    var ybig = Hc * (spec.light ? 0.66 : 0.27);   // photosynthesis keeps the sunlit zone clear
+    var ysm = rxBg.hudTop - Dsm * 0.6 - Math.max(11, Dsm * 0.17) - 12;
+    var ek = rxBg.sk * rxBg.sk * (3 - 2 * rxBg.sk);
+    var D = Dbig + (Dsm - Dbig) * ek, r = D / 2, cy = ybig + (ysm - ybig) * ek;
+
     ctx.save();
     ctx.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
     ctx.textAlign = 'center';
-
-    ctx.globalAlpha = A * 0.45;
-    ctx.fillStyle = '#CFE3EC';
-    ctx.font = '500 ' + Math.max(10, Math.round(D * 0.13)) + 'px ' + RX_FONT;
-    ctx.textBaseline = 'alphabetic';
-    if('letterSpacing' in ctx) ctx.letterSpacing = Math.round(D * 0.04) + 'px';
-    ctx.fillText('RECIPE', Wc / 2, cy - r - D * 0.24);
-    if('letterSpacing' in ctx) ctx.letterSpacing = '0px';
-
-    rxFlask(c0, cy, r, rxBg.lv[0], RX_TINT[0], IMG.h2, 'H\u2082', A, t, 0, false);
-    rxFlask(c1, cy, r, rxBg.lv[1], RX_TINT[1], IMG.h2, 'H\u2082', A, t, 1, false);
-    rxFlask(c2, cy, r, rxBg.lv[2], RX_TINT[2], IMG.co2, 'CO\u2082', A, t, 2, false);
-    rxFlask(c3, cy, r, rxBg.en, RX_GOLD, null, 'Energy', A, t, 3, true);
-
-    ctx.globalAlpha = A * 0.5;
-    ctx.fillStyle = '#CFE3EC';
-    ctx.font = '300 ' + Math.round(D * 0.5) + 'px ' + RX_FONT;
-    ctx.textBaseline = 'middle';
-    ctx.fillText('+', (c1 + c2) / 2, cy);
-
-    // the arrow, which fills with gold when a set is complete
-    var ax0 = c2 + r + D * 0.16, ax1 = c3 - r - D * 0.2, hw = D * 0.11;
-    ctx.lineCap = 'round';
-    ctx.globalAlpha = A;
-    ctx.strokeStyle = 'rgba(207,227,236,0.28)';
-    ctx.lineWidth = Math.max(1.5, D * 0.035);
-    ctx.beginPath(); ctx.moveTo(ax0, cy); ctx.lineTo(ax1 - hw, cy); ctx.stroke();
-    if(rxBg.arrow > 0.01){
-      ctx.strokeStyle = rxa(RX_GOLD, 0.95);
-      ctx.lineWidth = Math.max(2, D * 0.06);
-      ctx.beginPath(); ctx.moveTo(ax0, cy); ctx.lineTo(ax0 + (ax1 - hw - ax0) * rxBg.arrow, cy); ctx.stroke();
+    if(ek > 0.5){
+      var bw = units * D + D * 0.7, bh = D * 1.9, bx = Wc / 2 - bw / 2, by = cy - D * 0.72;
+      ctx.globalAlpha = A * (ek - 0.5) * 2;
+      ctx.fillStyle = 'rgba(2,10,18,0.55)';
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(bx, by, bw, bh, D * 0.3); else ctx.rect(bx, by, bw, bh);
+      ctx.fill();
     }
-    ctx.fillStyle = rxBg.arrow > 0.97 ? rxa(RX_GOLD, 0.95) : 'rgba(207,227,236,0.32)';
-    ctx.beginPath(); ctx.moveTo(ax1, cy); ctx.lineTo(ax1 - hw * 1.6, cy - hw); ctx.lineTo(ax1 - hw * 1.6, cy + hw); ctx.closePath(); ctx.fill();
-
-    // the payoff rings out from the energy flask
+    if(ek < 0.5){
+      ctx.globalAlpha = A * 0.45 * (1 - ek * 2);
+      ctx.fillStyle = '#CFE3EC';
+      ctx.font = '500 ' + Math.max(10, Math.round(D * 0.13)) + 'px ' + RX_FONT;
+      ctx.textBaseline = 'alphabetic';
+      if('letterSpacing' in ctx) ctx.letterSpacing = Math.round(D * 0.04) + 'px';
+      ctx.fillText(spec.light ? 'PHOTOSYNTHESIS' : spec === RX_SPECS.resp ? 'RESPIRATION' : 'RECIPE',
+                   Wc / 2, cy - r - D * 0.24);
+      if('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+    }
+    var x = Wc / 2 - units * D / 2, mainX = 0;
+    for(i = 0; i < toks.length; i++){
+      var o = toks[i], w = o.w * D, cx = x + w / 2;
+      if(o.t === 'in'){
+        var si = spec.ins[o.i];
+        rxFlask(cx, cy, r, rxBg.lv[o.i], si.tint, rxImg(si), si.label, A, t, o.i, null);
+      } else if(o.t === 'sun'){
+        rxFlask(cx, cy, r, rxBg.sun, [255,214,110], null, 'Light', A, t, 6, 'sun');
+      } else if(o.t === 'out'){
+        var so = spec.out[o.i];
+        rxFlask(cx, cy, r * (o.i ? 0.72 : 1), rxBg.en, so.tint, rxImg(so), so.label, A, t, 4 + o.i, so.mark || null);
+        if(!o.i) mainX = cx;
+      } else if(o.t === 'plus'){
+        ctx.globalAlpha = A * 0.5;
+        ctx.fillStyle = '#CFE3EC';
+        ctx.font = '300 ' + Math.round(D * (o.w < 0.75 ? 0.4 : 0.5)) + 'px ' + RX_FONT;
+        ctx.textBaseline = 'middle';
+        ctx.fillText('+', cx, cy);
+      } else if(o.t === 'arrow'){
+        var ax0 = x + D * 0.16, ax1 = x + w - D * 0.2, hw = D * 0.11;
+        ctx.lineCap = 'round';
+        ctx.globalAlpha = A;
+        ctx.strokeStyle = 'rgba(207,227,236,0.28)';
+        ctx.lineWidth = Math.max(1.5, D * 0.035);
+        ctx.beginPath(); ctx.moveTo(ax0, cy); ctx.lineTo(ax1 - hw, cy); ctx.stroke();
+        if(rxBg.arrow > 0.01){
+          ctx.strokeStyle = rxa(RX_GOLD, 0.95);
+          ctx.lineWidth = Math.max(2, D * 0.06);
+          ctx.beginPath(); ctx.moveTo(ax0, cy); ctx.lineTo(ax0 + (ax1 - hw - ax0) * Math.min(1, rxBg.arrow), cy); ctx.stroke();
+        }
+        ctx.fillStyle = rxBg.arrow > 0.97 ? rxa(RX_GOLD, 0.95) : 'rgba(207,227,236,0.32)';
+        ctx.beginPath(); ctx.moveTo(ax1, cy); ctx.lineTo(ax1 - hw * 1.6, cy - hw); ctx.lineTo(ax1 - hw * 1.6, cy + hw); ctx.closePath(); ctx.fill();
+      }
+      x += w;
+    }
+    // the payoff rings out from the main product
     if(paying && pk > 0.3 && pk < 1.2){
       var fk = (pk - 0.3) / 0.9;
       ctx.globalAlpha = A * (1 - fk) * 0.7;
       ctx.strokeStyle = rxa(RX_GOLD, 1);
       ctx.lineWidth = Math.max(1.5, D * 0.04 * (1 - fk) + 1);
-      ctx.beginPath(); ctx.arc(c3, cy, r * (1.02 + fk * 0.9), 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(mainX, cy, r * (1.02 + fk * 0.9), 0, Math.PI * 2); ctx.stroke();
     }
     ctx.restore();
   }
 
-  function rxFlask(x, y, r, lv, tint, slot, label, A, t, k, bolt){
+  function rxFlask(x, y, r, lv, tint, img, label, A, t, k, mark){
     var two = Math.PI * 2;
     if(lv > 0.003){                          // the liquid, with a moving surface
       ctx.save();
@@ -2071,15 +2235,16 @@
     ctx.strokeStyle = 'rgba(255,255,255,' + (0.10 + 0.14 * lv).toFixed(3) + ')';
     ctx.lineWidth = Math.max(1, r * 0.06);
     ctx.beginPath(); ctx.arc(x, y, r * 0.8, Math.PI * 1.08, Math.PI * 1.36); ctx.stroke();
-    if(slot && slot.ok){                     // what goes in
+    if(img){                                 // what goes in, or comes out
       ctx.globalAlpha = A * (0.2 + 0.75 * lv);
       var sz = r * 1.7;
-      ctx.drawImage(slot.im, x - sz / 2, y - sz / 2, sz, sz);
+      ctx.drawImage(img, x - sz / 2, y - sz / 2, sz, sz);
     }
-    if(bolt){
+    var on = lv > 0.05;
+    if(mark === 'bolt'){
       var b = r * 0.6;
       ctx.globalAlpha = A * (0.3 + 0.7 * lv);
-      ctx.fillStyle = lv > 0.05 ? rxa(RX_GOLD, 0.5 + 0.5 * lv) : 'rgba(207,227,236,0.45)';
+      ctx.fillStyle = on ? rxa(RX_GOLD, 0.5 + 0.5 * lv) : 'rgba(207,227,236,0.45)';
       ctx.beginPath();
       ctx.moveTo(x + b * 0.14, y - b);
       ctx.lineTo(x - b * 0.44, y + b * 0.14);
@@ -2088,13 +2253,172 @@
       ctx.lineTo(x + b * 0.46, y - b * 0.2);
       ctx.lineTo(x + b * 0.04, y - b * 0.2);
       ctx.closePath(); ctx.fill();
+    } else if(mark === 'sun'){               // light as an ingredient
+      ctx.globalAlpha = A * (0.35 + 0.65 * lv);
+      var sc = on ? 'rgba(255,222,120,' + (0.6 + 0.4 * lv).toFixed(3) + ')' : 'rgba(207,227,236,0.45)';
+      ctx.fillStyle = sc; ctx.strokeStyle = sc;
+      ctx.lineWidth = Math.max(1.2, r * 0.07); ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(x, y, r * 0.26, 0, two); ctx.fill();
+      for(var ri = 0; ri < 8; ri++){
+        var ra = ri * Math.PI / 4 + t * 0.0004 * lv;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(ra) * r * 0.38, y + Math.sin(ra) * r * 0.38);
+        ctx.lineTo(x + Math.cos(ra) * r * 0.56, y + Math.sin(ra) * r * 0.56);
+        ctx.stroke();
+      }
+    } else if(mark === 'dots'){              // sulfur, stored as globules
+      ctx.globalAlpha = A * (0.35 + 0.65 * lv);
+      ctx.fillStyle = on ? '#F2D65A' : 'rgba(207,227,236,0.45)';
+      ctx.beginPath(); ctx.arc(x - r * 0.24, y, r * 0.2, 0, two); ctx.fill();
+      ctx.beginPath(); ctx.arc(x + r * 0.24, y, r * 0.2, 0, two); ctx.fill();
     }
     ctx.globalAlpha = A * (0.5 + 0.4 * lv);   // the name under it
     ctx.fillStyle = '#DCEBF2';
-    ctx.font = '500 ' + Math.max(11, Math.round(r * 0.34)) + 'px ' + RX_FONT;
+    ctx.font = '500 ' + Math.max(10, Math.round(r * 0.34)) + 'px ' + RX_FONT;
     ctx.textBaseline = 'top';
-    ctx.fillText(label, x, y + r + r * 0.2);
+    ctx.fillText(label, x, y + r + Math.max(4, r * 0.2));
     ctx.globalAlpha = A;
+  }
+
+  // ---- The sunlit reactions -----------------------------------------------------
+  // Purple sulfur bacteria: 2 H2S + CO2 + light -> sugar + 2 S, the sulfur kept
+  // as yellow globules in the cell. Cyanobacteria: H2O + CO2 + light -> sugar
+  // + O2. Respiration: sugar + O2 -> CO2 + H2O + energy. A molecule is taken in
+  // only while the reaction still needs it. Photosynthesis runs only in the
+  // light, and faster the brighter it is.
+  var SUN_RX = {
+    euphotic: { need:{ h2s:2, co2:1 }, light:true,  gain:0.34 },
+    oxygenic: { need:{ h2o:1, co2:1 }, light:true,  bud:true },   // each reaction grows the chain
+    hetero:   { need:{ glucose:1, o2:1 }, light:false, split:true }  // counts toward a division
+  };
+  var PHOTO_RUN = 1.5;             // seconds per reaction in full light
+  var SULF_MAX = 10;               // sulfur globules the cell shows at most
+  var rxHeld = {}, rxRunK = 0, sulfurN = 0, photoGlow = 0;
+  function sunRx(){ return SUN_RX[phase] || null; }
+  function rxWants(k){
+    var r = sunRx();
+    return !!(r && r.need[k] && (rxHeld[k] || 0) < r.need[k]);
+  }
+  function rxReady(){
+    var r = sunRx();
+    if(!r) return false;
+    for(var k in r.need) if((rxHeld[k] || 0) < r.need[k]) return false;
+    return true;
+  }
+  function rxReset(){ rxHeld = {}; rxRunK = 0; }
+  // 0 at the edge of the sunlit zone, 1 at the surface
+  function lightLevel(){
+    if(!cell || !inLight()) return 0;
+    var L = lightBand();
+    return clamp((L.y1 - cell.y) / (L.y1 - L.y0), 0, 1);
+  }
+  function takeMotes(list, k){
+    for(var i = list.length - 1; i >= 0; i--){
+      var m = list[i];
+      if(rxWants(k) && cellHit(m.x, m.y, m.size * 0.30)){
+        pops.push({ x:m.x, y:m.y, r:m.size * 0.55, col:k, p:0 });
+        list.splice(i, 1);
+        rxHeld[k] = (rxHeld[k] || 0) + 1;
+        sfx('pick', k === 'h2s' ? 0 : k === 'h2o' ? 3 : 4);
+      }
+    }
+  }
+  function stepSunRx(dt){
+    var r = sunRx();
+    if(!r || !rxReady()) return;
+    if(r.light){
+      if(!inLight()) return;                         // it waits for the light
+      rxRunK = Math.min(1, rxRunK + dt * (0.4 + 0.6 * lightLevel()) / PHOTO_RUN);
+      if(rxRunK < 1) return;
+    }
+    rxReset();
+    if(r.bud) budCell();                       // cyanobacteria: a new cell on the chain
+    else if(r.split) hetRx++;                  // respiration: stepHetero divides at HET_SPLIT
+    else energy = Math.min(1, energy + r.gain);
+    rxBg.done = RX_DONE;
+    sfx('react');
+    if(!cell) return;
+    pops.push({ x:cell.x, y:cell.y, r:cell.w * 0.42, col:'rx', p:0 });
+    floatText(cell.x, cell.y - cell.w * 0.32,
+              r.split ? (hetRx >= HET_SPLIT ? '+ new cell' : '+ energy')
+                      : r.bud ? '+ new cell' : '+ sugar', '#F2C14E');
+    if(phase === 'euphotic') sulfurN = Math.min(SULF_MAX, sulfurN + 2);
+    if(phase === 'oxygenic'){
+      for(var i = 0; i < 3; i++)
+        o2Puffs.push({ x:cell.x, y:cell.y, vx:(Math.random() - 0.5) * 24, vy:-18 - Math.random() * 16,
+                       p:0, rot:Math.random() * 6, size:cell.w * 0.24 });
+    }
+    if(phase === 'hetero'){
+      pops.push({ x:cell.x + cell.w * 0.3, y:cell.y, r:cell.w * 0.25, col:'co2', p:0 });
+      pops.push({ x:cell.x - cell.w * 0.3, y:cell.y, r:cell.w * 0.25, col:'h2o', p:0 });
+    }
+  }
+
+  // Dissolved CO2 for the two photosynthesis stages: it is everywhere in the
+  // water, top to bottom, unlike the sulfide, which stays deep.
+  var co2Motes = [];
+  function co2Target(){ return phase === 'oxygenic' ? 16 : 7; }
+  function spawnCo2(startP){
+    var size = cell ? cell.w * 0.40 : 80;
+    var mx = S.vx0 + Math.random() * (S.vx1 - S.vx0);
+    var lo = S.vy0 + (S.vy1 - S.vy0) * 0.08;
+    var hi = Math.max(lo, Math.min(S.vy1 - (S.vy1 - S.vy0) * 0.06, waterFloor(mx, size * 0.75)));
+    co2Motes.push({ x:mx, y:lo + Math.random() * (hi - lo), size:size,
+      dir:Math.random() * Math.PI * 2, sp:6 + Math.random() * 10,
+      wf:0.15 + Math.random() * 0.45, ph:Math.random() * Math.PI * 2,
+      rot:Math.random() * Math.PI * 2, rsp:(Math.random() - 0.5) * 0.4, p:startP || 0 });
+  }
+  function stepCo2Motes(dt, t){
+    for(var i = 0; i < co2Motes.length; i++){
+      var m = co2Motes[i];
+      m.p = Math.min(1, m.p + dt / 0.5);
+      m.dir += Math.sin(t * 0.00042 * m.wf + m.ph) * dt * 0.55;
+      m.x += Math.cos(m.dir) * m.sp * dt;
+      m.y += Math.sin(m.dir) * m.sp * dt;
+      m.rot += m.rsp * dt;
+      if(m.y < S.vy0 + 4){ m.y = S.vy0 + 4; m.dir = Math.abs(Math.sin(m.dir)) * 1.2; }
+      var bot = waterFloor(m.x, m.size * 0.55);
+      if(m.y > bot){ m.y = bot; m.dir = -Math.abs(Math.sin(m.dir)) * 1.2; }
+      if(m.x < S.vx0){ m.x = S.vx0; m.dir = Math.PI - m.dir; }
+      if(m.x > S.vx1){ m.x = S.vx1; m.dir = Math.PI - m.dir; }
+    }
+    if(co2Motes.length < co2Target() && Math.random() < dt * (phase === 'oxygenic' ? 1.4 : 0.6)) spawnCo2(0);
+  }
+
+  // The sulfur a purple sulfur bacterium stores, as globules along its body,
+  // in the sprite's own frame (it is drawn with the body).
+  var SULF_AT = [[0.30,-0.05],[0.62,0.06],[0.45,0.10],[0.78,-0.04],[0.22,0.08],
+                 [0.55,-0.10],[0.38,-0.02],[0.70,0.12],[0.50,0.02],[0.84,0.05]];
+  function drawSulfur(g, w, h){
+    var rx = (g.rear[0] - 0.5) * w, ry = (g.rear[1] - 0.5) * h;
+    var ux = (g.front[0] - 0.5) * w - rx, uy = (g.front[1] - 0.5) * h - ry;
+    var L = Math.hypot(ux, uy) || 1, nx = -uy / L, ny = ux / L, th = g.half_thick * w * 2.2;
+    var gr = w * 0.034;
+    for(var i = 0; i < Math.min(sulfurN, SULF_AT.length); i++){
+      var a = SULF_AT[i], px = rx + ux * a[0] + nx * a[1] * th, py = ry + uy * a[0] + ny * a[1] * th;
+      var sg = ctx.createRadialGradient(px - gr * 0.3, py - gr * 0.3, 0, px, py, gr);
+      sg.addColorStop(0, '#FFF1A8'); sg.addColorStop(0.6, '#F2D054'); sg.addColorStop(1, '#C9A02E');
+      ctx.fillStyle = sg;
+      ctx.beginPath(); ctx.arc(px, py, gr, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  // Photosynthetic pigments catching the light: the cell glows a little in
+  // the sunlit water, more the brighter it is, and most while it reacts.
+  function drawPhotoGlow(c, cw, t){
+    var lit = inLight(), run = lit && rxReady();
+    var want = lit ? 0.3 + 0.55 * lightLevel() : 0;
+    if(run) want = Math.min(1, want + 0.3);
+    photoGlow += (want - photoGlow) * 0.08;
+    if(photoGlow < 0.02) return;
+    var col = phase === 'oxygenic' ? '150,255,170' : '255,160,235';
+    var pulse = run ? 0.82 + 0.18 * Math.sin(t * 0.009) : 1;
+    var rr = cw * (0.7 + 0.3 * photoGlow);
+    var g = ctx.createRadialGradient(c.x, c.y, cw * 0.15, c.x, c.y, rr);
+    g.addColorStop(0, 'rgba(' + col + ',' + (0.4 * photoGlow * pulse).toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(' + col + ',0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(c.x, c.y, rr, 0, Math.PI * 2); ctx.fill();
   }
 
   // A molecule the cell cannot use right now slips out of the fingers and
@@ -2168,7 +2492,8 @@
   function swimBoost(){ return surfaceStage() ? EUPHOTIC_SPEED : 1; }
   function swimTop(){
     return heteroStage() ? HET_MAXS * swimBoost() * boostMult()
-         : phase === 'protist' ? proByCount(PRO_SPEED_BY) : MAXS * swimBoost();
+         : phase === 'protist' ? proByCount(PRO_SPEED_BY)
+         : MAXS * swimBoost() * (swimming() && mBoostT > 0 ? M_BOOST_X : 1);
   }
 
   function swimCell(c, dt, t){
@@ -2740,7 +3065,7 @@
   }
 
   function lethal(){
-    if(phase === 'feed' || phase === 'euphotic' || phase === 'oxygenic' ||
+    if(phase === 'feed' || phase === 'euphotic' ||
        phase === 'predation' || phase === 'protist')
       return energy <= 0;
     if(swimming()) return energy <= 0 || temp <= 0 || temp >= 1;
@@ -3054,7 +3379,8 @@
   function startHetero(){
     phase = 'hetero';
     energy = E_START; hetOxy = E_START;
-    chainSegs.length = 0; hetMade = 0;
+    rxReset();
+    chainSegs.length = 0; hetMade = 0; hetRx = 0;
     for(var q=colony.length-1;q>=0;q--){     // leftover decorative O2 would
       if(colony[q].key === 'o2') colony.splice(q, 1);   // look collectable
     }
@@ -3078,27 +3404,19 @@
 
   function stepHetero(dt, t){
     stepAccMotes(dt, t);
-
-    for(var i=accMotes.length-1;i>=0;i--){
-      var m = accMotes[i];
-      if(hetOxy < 1 && cellHit(m.x, m.y, m.size * 0.30)){
-        pops.push({ x:m.x, y:m.y, r:m.size*0.55, col:'o2', p:0 });
-        accMotes.splice(i, 1);
-        hetOxy = Math.min(1, hetOxy + OXY_GAIN);
-        sfx('pick', 4);
-      }
-    }
+    takeMotes(accMotes, 'o2');           // sugar + O2 -> CO2 + H2O + energy
     for(var j=colony.length-1;j>=0;j--){
       var c = colony[j];
       if(c.key !== 'glucose') continue;
-      if(energy < 1 && cellHit(c.x, c.y, c.size * 0.30)){
+      if(rxWants('glucose') && cellHit(c.x, c.y, c.size * 0.30)){
         pops.push({ x:c.x, y:c.y, r:c.size*0.55, col:'glucose', p:0 });
         colony.splice(j, 1);
-        energy = Math.min(1, energy + SUGAR_GAIN);
+        rxHeld.glucose = (rxHeld.glucose || 0) + 1;
         sfx('pick', 0);
       }
     }
-    // a full bar of each is one division, and it costs both
+    stepSunRx(dt);
+    // no energy bar here: every HET_SPLIT reactions divide the cell
     if(hetMade >= HET_MAX){
       phase = 'descentIntro';
       showPrompt('Back to the dark', 'Why don\u2019t we go back down into the depths? There\u2019s an archaeon and a bacterium I want you to meet\u2026', 'Continue', startDescent,
@@ -3107,7 +3425,7 @@
       return;
     }
 
-    if(energy >= 1 - 1e-6 && hetOxy >= 1 - 1e-6 && hetMade < HET_MAX){
+    if(hetRx >= HET_SPLIT && hetMade < HET_MAX){
       var back = bodyAngle() + Math.PI;
       var a = back + (Math.random() - 0.5) * 0.9;
       colony.push({ key:'sar',
@@ -3120,8 +3438,8 @@
         dir: a, sp: 5 + Math.random() * 8,
         wf: 0.15 + Math.random() * 0.45, ph: Math.random() * Math.PI * 2, p: 0 });
       hetMade++;
+      hetRx = 0;
       sfx('pop');
-      energy = E_START; hetOxy = E_START;
     }
     seedSugar(14);
     paintGauge();
@@ -3719,7 +4037,7 @@
       p.y += Math.sin(p.dir) * sp * dt;
       if(p.kick) p.kick *= Math.exp(-dt / 0.5);
       if(p.cd > 0) p.cd -= dt;
-      // nitrogen fixers, once antibiotics are live, may each let one go
+      // cyanobacteria, once cyanotoxins are live, may each let one go
       if(p.abAt && proLevel >= 3 && !p.abDone && p.age >= p.abAt &&
          p.x > S.vx0 && p.x < S.vx1 && p.y > S.vy0 && p.y < S.vy1){
         p.abDone = true;
@@ -3825,7 +4143,7 @@
   var PRO_THREATS = [
     { name:'Biofilm', line:'Purple sulfur bacteria clump into sticky mats. Touch one and you are stuck.' },
     { name:'Spines', line:'Some heterotrophs grow spines. Biting one costs 40% of your energy.' },
-    { name:'Antibiotics', line:'Nitrogen fixers release antibiotics. A single touch is lethal.' },
+    { name:'Cyanotoxins', line:'Cyanobacteria release cyanotoxins such as microcystin. A single touch is lethal.' },
     { name:'Viruses', line:'Phages cross the water in straight lines. Contact lyses the cell.' }
   ];
   var PRO_THREAT_STEP = 12;          // seconds between introductions
@@ -3845,7 +4163,7 @@
 
   function proDefenses(){
     showPrompt('Prey defenses', 'Prey evolved defenses! Watch out for biofilms, ' +
-      'structural defenses, and antibiotics while you eat your prey\u2026',
+      'structural defenses, and cyanotoxins while you eat your prey\u2026',
       'Continue', function(){
         proLevel = 0; proThreatT = 0;
         proNextThreat();
@@ -3898,24 +4216,17 @@
     });
     var drug = pane(function(g){
       var rg = g.createRadialGradient(0, 0, 0, 0, 0, 74);
-      rg.addColorStop(0, 'rgba(224,72,60,0.55)'); rg.addColorStop(0.5, 'rgba(224,72,60,0.22)');
-      rg.addColorStop(1, 'rgba(224,72,60,0)');
+      rg.addColorStop(0, 'rgba(120,230,80,0.55)'); rg.addColorStop(0.5, 'rgba(110,220,70,0.22)');
+      rg.addColorStop(1, 'rgba(110,220,70,0)');
       g.fillStyle = rg; g.fillRect(-80, -80, 160, 160);
-      var r = 62;
-      g.strokeStyle = '#FF7A6A'; g.lineWidth = 5; g.lineJoin = 'round'; g.lineCap = 'round';
-      g.shadowColor = 'rgba(255,90,70,0.9)'; g.shadowBlur = 12;
-      function poly(P, ox, oy){
-        g.beginPath(); g.moveTo((P[0][0] + ox) * r, (P[0][1] + oy) * r);
-        for(var i=1;i<P.length;i++) g.lineTo((P[i][0] + ox) * r, (P[i][1] + oy) * r);
-        g.closePath(); g.stroke();
-      }
-      poly(TOX_RING4, 0.08, 0.12); poly(TOX_RING5, 0.08, 0.12);
-      var hex = [];
-      for(var h=0;h<6;h++) hex.push([-0.62 + Math.cos(h * Math.PI / 3) * 0.22, -0.56 + Math.sin(h * Math.PI / 3) * 0.22]);
-      poly(hex, 0.08, 0.12);
+      g.strokeStyle = '#9BF06A'; g.fillStyle = '#E2FFC9';
+      g.lineWidth = 4.5; g.lineJoin = 'round'; g.lineCap = 'round';
+      g.shadowColor = 'rgba(140,255,90,0.9)'; g.shadowBlur = 12;
+      g.translate(-6, 4);
+      microcystin(g, 66, 5);
     });
     defFigs = [{ src:film, cap:'Biofilm' }, { src:spines, cap:'Spines' },
-               { src:drug, cap:'Antibiotics' }];
+               { src:drug, cap:'Cyanotoxins' }];
     return defFigs;
   }
 
@@ -3928,18 +4239,18 @@
     // the new one shows up promptly, rather than whenever its timer comes round
     if(proLevel === 1) proFilmT = PRO_FILM_EVERY - 2;
     if(proLevel === 2) proSpineWave();
-    if(proLevel === 3) proFixerWave();
+    if(proLevel === 3) proCyanoWave();
     if(proLevel === 4) proVirusT = PRO_VIRUS_EVERY - 2;
   }
 
-  // Antibiotics come from nitrogen fixers, so their arrival brings some in:
+  // Cyanotoxins come from cyanobacteria, so their arrival brings some in:
   // three swim in from the edges, past the prey cap, and each is sure to
   // release once it is in view.
-  function proFixerWave(){
+  function proCyanoWave(){
     for(var i = 0; i < 3; i++){
       spawnProPrey();
       var p = proPrey[proPrey.length - 1];
-      p.key = 'm_fix';
+      p.key = 'm_cyano';
       p.spiny = false;
       p.abAt = 3 + i * 1.5 + Math.random();
     }
@@ -4092,7 +4403,7 @@
     c.restore();
   }
 
-  // --- antibiotics: large, glowing, drifting -- and lethal ----------------
+  // --- cyanotoxins: large, glowing, drifting -- and lethal ----------------
   function releaseProToxin(p){
     var R = proBR(), a = Math.random() * Math.PI * 2;
     proToxins.push({ x:p.x, y:p.y, r:R * (1.25 + Math.random() * 0.25), g:0,
@@ -4102,9 +4413,45 @@
     pops.push({ x:p.x, y:p.y, r:R * 0.5, col:'toxin', p:0 });
   }
 
-  // a beta-lactam: the four-membered ring fused to a five, with a side chain
-  var TOX_RING4 = [[-0.30,-0.16],[0.02,-0.16],[0.02,0.16],[-0.30,0.16]];
-  var TOX_RING5 = [[0.02,-0.16],[0.30,-0.30],[0.50,-0.02],[0.30,0.26],[0.02,0.16]];
+  // Microcystin: a ring of seven amino acids, with the long Adda side chain
+  // (a zigzag ending in a benzene ring) and short stubs off the ring. Drawn in
+  // the toxic green of the cyanobacteria that make it.
+  var MC_RING = [], MC_STUB = [2, 4, 6];
+  (function(){
+    for(var i = 0; i < 7; i++){
+      var a = -Math.PI / 2 + i * Math.PI * 2 / 7;
+      MC_RING.push([-0.12 + Math.cos(a) * 0.36, Math.sin(a) * 0.36]);
+    }
+  })();
+  var MC_ADDA = [[0.23,-0.11],[0.42,-0.24],[0.56,-0.06],[0.75,-0.18]];
+  function microcystin(g, r, dotR){
+    g.beginPath();
+    g.moveTo(MC_RING[0][0] * r, MC_RING[0][1] * r);
+    for(var i = 1; i < 7; i++) g.lineTo(MC_RING[i][0] * r, MC_RING[i][1] * r);
+    g.closePath(); g.stroke();
+    g.beginPath();                                   // the Adda chain off the ring
+    g.moveTo(MC_RING[1][0] * r, MC_RING[1][1] * r);
+    for(i = 0; i < MC_ADDA.length; i++) g.lineTo(MC_ADDA[i][0] * r, MC_ADDA[i][1] * r);
+    g.stroke();
+    var bx = 0.75 + 0.15, by = -0.18;                // its benzene ring
+    g.beginPath();
+    for(i = 0; i < 6; i++){
+      var ha = i * Math.PI / 3;
+      var hx = (bx + Math.cos(ha) * 0.13) * r, hy = (by + Math.sin(ha) * 0.13) * r;
+      if(i) g.lineTo(hx, hy); else g.moveTo(hx, hy);
+    }
+    g.closePath(); g.stroke();
+    g.beginPath();                                   // stubs off the ring
+    for(i = 0; i < MC_STUB.length; i++){
+      var p = MC_RING[MC_STUB[i]], ox = p[0] + 0.12, oy = p[1], d = Math.hypot(ox, oy) || 1;
+      g.moveTo(p[0] * r, p[1] * r);
+      g.lineTo((p[0] + ox / d * 0.2) * r, (p[1] + oy / d * 0.2) * r);
+    }
+    g.stroke();
+    for(i = 0; i < 7; i++){                          // the amino acids
+      g.beginPath(); g.arc(MC_RING[i][0] * r, MC_RING[i][1] * r, dotR, 0, Math.PI * 2); g.fill();
+    }
+  }
   function drawProToxin(tx){
     var k = Math.min(1, tx.t / 1.2), fade = Math.min(1, (tx.life - tx.t) / 2);
     var r = tx.r * (0.35 + 0.65 * k), a = Math.max(0, fade);
@@ -4114,35 +4461,22 @@
     // the glow is added light, so it reads as a hazard even over the vents
     ctx.globalCompositeOperation = 'lighter';
     var g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.6);
-    g.addColorStop(0, 'rgba(224,72,60,' + (0.55 * pulse * a) + ')');
-    g.addColorStop(0.45, 'rgba(224,72,60,' + (0.26 * pulse * a) + ')');
-    g.addColorStop(1, 'rgba(224,72,60,0)');
+    g.addColorStop(0, 'rgba(120,230,80,' + (0.55 * pulse * a) + ')');
+    g.addColorStop(0.45, 'rgba(110,220,70,' + (0.26 * pulse * a) + ')');
+    g.addColorStop(1, 'rgba(110,220,70,0)');
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(0, 0, r * 1.6, 0, Math.PI * 2); ctx.fill();
     ctx.globalCompositeOperation = 'source-over';
     ctx.rotate(tx.rot);
     ctx.globalAlpha = a * proWorldA;
-    ctx.shadowColor = 'rgba(255,90,70,0.9)'; ctx.shadowBlur = r * 0.25;
-    ctx.strokeStyle = '#FF7A6A'; ctx.fillStyle = '#FFC2B8';
-    ctx.lineWidth = Math.max(2, r * 0.085);
+    ctx.shadowColor = 'rgba(140,255,90,0.9)'; ctx.shadowBlur = r * 0.25;
+    ctx.strokeStyle = '#9BF06A'; ctx.fillStyle = '#E2FFC9';
+    ctx.lineWidth = Math.max(2, r * 0.075);
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    function poly(P){ ctx.beginPath(); ctx.moveTo(P[0][0]*r, P[0][1]*r);
-      for(var i = 1; i < P.length; i++) ctx.lineTo(P[i][0]*r, P[i][1]*r); ctx.closePath(); ctx.stroke(); }
-    poly(TOX_RING4); poly(TOX_RING5);
-    var hex = [];
-    for(var h = 0; h < 6; h++) hex.push([-0.62 + Math.cos(h * Math.PI / 3) * 0.22, -0.56 + Math.sin(h * Math.PI / 3) * 0.22]);
-    poly(hex);
-    ctx.beginPath();                                  // side chain and carbonyls
-    ctx.moveTo(-0.30*r, -0.16*r); ctx.lineTo(-0.40*r, -0.34*r); ctx.lineTo(-0.40*r, -0.56*r);
-    ctx.moveTo(-0.30*r, 0.16*r);  ctx.lineTo(-0.52*r, 0.34*r);
-    ctx.moveTo(0.50*r, -0.02*r);  ctx.lineTo(0.78*r, 0.06*r);
-    ctx.stroke();
-    var atoms = TOX_RING4.concat(TOX_RING5).concat([[-0.52,0.34],[0.78,0.06]]);
-    for(var j = 0; j < atoms.length; j++){
-      ctx.beginPath(); ctx.arc(atoms[j][0]*r, atoms[j][1]*r, r * 0.085, 0, Math.PI * 2); ctx.fill();
-    }
+    microcystin(ctx, r, r * 0.075);
     ctx.restore();
   }
+
 
   // --- viruses: straight across, fast, and fatal --------------------------
   function spawnProVirus(){
@@ -4484,7 +4818,7 @@
       if(tx.y < S.vy0 + tx.r){ tx.vy = Math.abs(tx.vy); }
       if(tx.t >= tx.life){ proToxins.splice(i, 1); i--; continue; }
       var live = Math.min(1, tx.t / 1.2);
-      if(proKillT < 0 && live > 0.5 && proHit(tx.x, tx.y, tx.r * 0.55 * live)) proKill('antibiotic');
+      if(proKillT < 0 && live > 0.5 && proHit(tx.x, tx.y, tx.r * 0.55 * live)) proKill('toxin');
     }
 
     if(proStuck){
@@ -4803,7 +5137,7 @@
     var body = proImg('pro_body'), skin = proImg('pro_skin');
     var ox = -PRO.anchor[0] * bw, oy = -PRO.anchor[1] * bh;
     // red: the slow pulses before failing, a sting from a spine, or a
-    // fast flicker as an antibiotic kills it
+    // fast flicker as a cyanotoxin kills it
     var red = dying > 0 ? Math.abs(Math.sin(dying * Math.PI / 0.8)) * 0.88 : 0;
     if(proHurtT > 0) red = Math.max(red, Math.abs(Math.sin(proHurtT * Math.PI / 0.2)) * 0.8);
     if(proKillT >= 0 && proKillT < 99) red = Math.max(red, 0.55 + 0.4 * Math.abs(Math.sin(proKillT * Math.PI / 0.12)));
@@ -4932,13 +5266,29 @@
     proBannerT = PRO_BANNER;
   }
 
+  // The multicellular body's progress: cells so far against the goal. At the
+  // goal, one more full bar forms the body (proStartFinale).
+  function paintMulti(){
+    var on = phase === 'protist' && proMulti && !proFinale;
+    elGaugeCol.hidden = !on;
+    if(!on) return;
+    var goal = PRO_SLOTS.length + 1, n = Math.min(goal, proCells.length);
+    elColLabel.textContent = 'Multicellular body';
+    elColMax.textContent = goal;
+    elColVal.textContent = n;
+    elColFill.style.width = (n / goal * 100) + '%';
+    elGaugeCol.style.setProperty('--bar', '#B08AE0');
+    elColState.textContent = n < goal ? 'Dividing' : 'Fill energy to finish';
+  }
+
   function stepProGroup(dt){
     if(proPart === 2 && proLevel >= PRO_THREATS.length && !proMulti){
       proMultiT += dt;
       if(proMultiT >= PRO_MULTI_WAIT){
         proMulti = true;
         proBanner('New ability', 'Multicellularity',
-                  'Fill your energy to divide. Daughter cells stay attached.');
+                  'Fill your energy to divide. Daughter cells stay attached. Reach ' +
+                  (PRO_SLOTS.length + 1) + ' cells.');
       }
     }
     if(proMulti && energy >= 1 - 1e-6 && proKillT < 0 && !proStuck){
@@ -4946,6 +5296,7 @@
       else { proStartFinale(); return; }    // five cells and full: the body forms
     }
 
+    paintMulti();
     // shrink toward this group size's cell, and bud the daughters out
     var want = PRO_SHRINK[Math.min(PRO_SHRINK.length, proCells.length) - 1];
     proScale += (want - proScale) * (1 - Math.exp(-dt / 0.35));
@@ -6152,14 +6503,8 @@
       boosts[bi] -= dt;
       if(boosts[bi] <= 0) boosts.splice(bi, 1);
     }
-    if(asgWarned && energy >= 1){         // a full bar becomes a burst of speed
-      boosts.push(BOOST_SECS);
-      energy = BOOST_KEEP;
-      sfx('boost');
-      pops.push({ x:cell.x, y:cell.y, r:cell.w * 0.9, col:'glucose', p:0 });
-      elBoost.classList.remove('boost--go'); void elBoost.offsetWidth; elBoost.classList.add('boost--go');
-    }
-    energy = Math.max(0, energy - PRED_DRAIN * dt);
+    // a full bar waits, without draining, until the player fires it (fireBoost)
+    if(energy < 1 - 1e-6) energy = Math.max(0, energy - PRED_DRAIN * dt);
     seedSugar(PRED_SUGAR);
     paintGauge();
 
@@ -6169,8 +6514,8 @@
       swimDrag.on = false;
       showPrompt('Predator',
         'There is a predator approaching called an Asgard archaeon. Don\u2019t get ' +
-        'touched or it might engulf you. Every time you fill your energy bar, you get ' +
-        'a 6-second speed boost, and boosts stack!',
+        'touched or it might engulf you. When your energy bar is full, ' +
+        (TOUCH ? 'tap Boost' : 'press the space bar') + ' for a 6-second speed boost.',
         'Continue', spawnAsgard, null,
         { src: asgardStill(), alt:'An Asgard archaeon',
           title:'Asgard archaeon', alarm:true });
@@ -6368,7 +6713,7 @@
       acquired.length = 0;
       acquired.push('Photosynthesis');
       paintGauge();
-      showPrompt('Photic zone', 'The first photosynthetic cells were anoxygenic: they didn\u2019t make oxygen. Their purple pigments caught sunlight, and hydrogen sulfide (H\u2082S) was their electron donor, giving up the electrons that light used to make energy. Collect H\u2082S from the dark water below, then make energy up in the sunlight!', 'Continue', startEuphotic, null,
+      showPrompt('Photic zone', 'The first photosynthetic cells were anoxygenic: they didn\u2019t make oxygen. Their purple pigments caught sunlight, and hydrogen sulfide (H\u2082S) was their electron donor, giving up the electrons that light used to make energy. Collect H\u2082S from the dark water below and CO\u2082 from anywhere, then bring them up into the sunlight to make sugar!', 'Continue', startEuphotic, null,
         { src:'assets/images/gene_ui.png', alt:'A gene: a segment of double-stranded DNA',
           title:'You\u2019ve evolved the genes for photosynthesis!' });
     }
@@ -6546,6 +6891,9 @@
     chainSegs.length = 0; colony.length = 0;
     accMotes.length = 0;
     for(var i=0;i<10;i++) spawnAccMote(1);
+    rxReset(); photoGlow = 0;
+    co2Motes.length = 0;
+    for(i = 0; i < co2Target(); i++) spawnCo2(1);
     elAccLabel.textContent = 'Electron donor \u00B7 H\u2082O';
     o2World = 0; anaerSaid = false; o2Puffs.length = 0;
     seedAnaerobes();
@@ -6637,6 +6985,9 @@
     acceptors = 0; accUsed = 0;
     accMotes.length = 0;
     for(var i=0;i<5;i++) spawnAccMote(1);
+    rxReset(); sulfurN = 0; photoGlow = 0;
+    co2Motes.length = 0;
+    for(i = 0; i < co2Target(); i++) spawnCo2(1);
     showBars('euphotic');
     paintGauge();
   }
@@ -6720,7 +7071,7 @@
     if(kind === 'lyse') return css(C.virus);
     if(kind === 'o2') return '#DE5648';
     if(kind === 'glucose') return '#9AA6B4';
-    if(kind === 'toxin') return '#E0483C';
+    if(kind === 'toxin') return '#8EE65E';
     return BASE_COL[kind] || css(C.memb);
   }
 
@@ -6785,7 +7136,19 @@
       elColFill.style.width = (targetTotal ? gone / targetTotal * 100 : 0) + '%';
       elGaugeCol.style.setProperty('--bar', '#C2306B');
       elColState.textContent = gone >= targetTotal ? 'Collapsed' : 'Lysing';
+    } else if(phase === 'protist'){
+      paintMulti();                        // the same gauge, as the multicellular body
+    } else if(phase === 'hetero'){
+      elColLabel.textContent = 'Cell divisions';
+      elColMax.textContent = HET_MAX;
+      elColVal.textContent = hetMade;
+      elColFill.style.width = (Math.min(1, (hetMade + hetRx / HET_SPLIT) / HET_MAX) * 100) + '%';
+      elGaugeCol.style.setProperty('--bar', '#4FA45E');
+      elColState.textContent = hetMade >= HET_MAX ? 'Done'
+        : hetRx ? '1 more reaction' : 'Respiring';
     } else {
+      elColLabel.textContent = 'Colony';
+      elColMax.textContent = CHAIN_MAX;
       elColVal.textContent = chainSegs.length;
       elColFill.style.width = (chainSegs.length / CHAIN_MAX * 100) + '%';
       elGaugeCol.style.setProperty('--bar', '#4FA45E');
@@ -6802,21 +7165,21 @@
     elTrait.textContent = acquired.length ? acquired.join(', ') : 'None';
     elEnState.textContent = energy >= 1 ? 'Ready'
       : energy > 0.55 ? 'Stable' : energy > 0.25 ? 'Low' : 'Starving';
+    elBoostBtn.hidden = !boostReady() || mode !== 'field';
   }
 
   function showBars(which){
     elGaugeLipid.hidden  = which !== 'lipid';
     elGaugeGenome.hidden = which !== 'genome';
     elGaugeEnergy.hidden = !(which === 'energy' || which === 'swim' ||
-                             which === 'euphotic' || which === 'oxygenic' ||
-                             which === 'hetero' || which === 'predation' ||
+                             which === 'euphotic' ||
+                             which === 'predation' ||
                              which === 'protist');
     elTally.hidden       = !(which === 'protist' && proPart === 1);
     if(which !== 'protist') elThreat.hidden = true;
     elGaugeTemp.hidden   = which !== 'swim';
-    elGaugeAcc.hidden    = !(which === 'euphotic' || which === 'oxygenic' ||
-                             which === 'hetero' || which === 'predation');
-    elGaugeCol.hidden    = !(which === 'oxygenic' || which === 'virus');
+    elGaugeAcc.hidden    = which !== 'predation';   // the sunlit stages show their reaction instead
+    elGaugeCol.hidden    = !(which === 'oxygenic' || which === 'virus' || which === 'hetero');
     elGaugeO2.hidden     = which !== 'oxygenic';
     elGaugeTim.hidden    = true;          // the big clock at the top has replaced it
   }
@@ -7384,26 +7747,10 @@
       stepChain();
       stepO2World(dt, t);
       stepAccMotes(dt, t);
-      for(var oi=accMotes.length-1; oi>=0; oi--){
-        var om = accMotes[oi];
-        if(acceptors < ACC_CAP && cellHit(om.x, om.y, om.size * 0.30)){
-          pops.push({ x:om.x, y:om.y, r:om.size*0.55, col:'h2o', p:0 });
-          accMotes.splice(oi, 1);
-          acceptors++;
-          sfx('pick', 3);
-        }
-      }
-      // one water is a whole bar, and it fills at twice the sulfide rate
-      if(inLight() && acceptors > 0 && energy < 1){
-        var g2 = Math.min(OXY_RATE * dt, 1 - accUsed, 1 - energy);
-        energy += g2; accUsed += g2;
-        if(accUsed >= 1 - 1e-6){ acceptors--; accUsed = 0; }
-      }
-      if(energy >= 1 - 1e-6){          // a full bar buds another cell
-        budCell();
-        energy = 0; accUsed = 0;
-      }
-      if(energy < 1) energy = Math.max(0, energy - E_DRAIN_PHOTIC * dt);
+      stepCo2Motes(dt, t);
+      takeMotes(accMotes, 'h2o');          // H2O + CO2 + light -> sugar + O2
+      takeMotes(co2Motes, 'co2');
+      stepSunRx(dt);                       // no energy bar here: each reaction is a cell
       paintGauge();
 
       if(chainSegs.length >= CHAIN_MAX){
@@ -7428,22 +7775,10 @@
 
     if(phase === 'euphotic' && cell){
       stepAccMotes(dt, t);
-      for(var ai=accMotes.length-1; ai>=0; ai--){
-        var am = accMotes[ai];
-        if(acceptors < ACC_CAP && cellHit(am.x, am.y, am.size * 0.30)){
-          pops.push({ x:am.x, y:am.y, r:am.size*0.55, col:'h2s', p:0 });
-          accMotes.splice(ai, 1);
-          acceptors++;
-          sfx('pick', 0);
-        }
-      }
-      // light is only worth anything with an electron donor in hand
-      if(inLight() && acceptors > 0 && energy < 1){
-        var rem = ACC_UNIT - accUsed;
-        var g = Math.min(PHOTO_RATE * dt, rem, 1 - energy);
-        energy += g; accUsed += g;
-        if(accUsed >= ACC_UNIT - 1e-6){ acceptors--; accUsed = 0; }
-      }
+      stepCo2Motes(dt, t);
+      takeMotes(accMotes, 'h2s');          // 2 H2S + CO2 + light -> sugar + 2 S
+      takeMotes(co2Motes, 'co2');
+      stepSunRx(dt);
       if(energy < 1) energy = Math.max(0, energy - E_DRAIN_PHOTIC * dt);
       paintGauge();
     }
@@ -7460,6 +7795,7 @@
     if(steerable() && cell){
       swimCell(cell, dt, t);
       if(swimming()) stepTemperature(cell, dt);
+      if(mBoostT > 0) mBoostT = swimming() ? Math.max(0, mBoostT - dt) : 0;
       for(var gi=nutrients.length-1; gi>=0; gi--){      // gathered on contact now
         var gn = nutrients[gi];
         if(cellHit(gn.x, gn.y, gn.size*0.30)) intoCell(gn);
@@ -7758,6 +8094,19 @@
       ctx.globalAlpha = 1;
     }
 
+    if((phase === 'euphotic' || phase === 'oxygenic') && IMG.co2 && IMG.co2.ok){
+      for(var kc = 0; kc < co2Motes.length; kc++){
+        var km = co2Motes[kc];
+        ctx.globalAlpha = Math.min(1, km.p);
+        ctx.save();
+        ctx.translate(km.x, km.y);
+        ctx.rotate(km.rot);
+        ctx.drawImage(IMG.co2.im, -km.size/2, -km.size/2, km.size, km.size);
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+    }
+
     for(var cj=0; cj<colony.length; cj++){
       var cq = colony[cj];
       var cs = IMG[cq.key];
@@ -7887,11 +8236,13 @@
         drawProtist();
       } else if(bsp && bsp.ok){
         var pah = bsp.im.naturalHeight / bsp.im.naturalWidth || 0.8;
+        if(phase === 'euphotic' || phase === 'oxygenic') drawPhotoGlow(cell, cw, t);
         ctx.save();
         if(phase === 'engulfed') ctx.globalAlpha = 0.82;   // seen through it
         ctx.translate(cell.x, cell.y);
         ctx.rotate(bodyAngle() - bsp.g.axis);
         ctx.drawImage(bsp.im, -cw/2, -cw*pah/2, cw, cw*pah);
+        if(bodyKind === 'purple' && sulfurN > 0) drawSulfur(bsp.g, cw, cw * pah);
         ctx.restore();
       } else {
       // the bare vesicle crossfades into the full cell as the genome closes
@@ -7931,9 +8282,12 @@
         ctx.globalAlpha = 1;
       }
 
-      if(boostN() && cell){
-        var qBN = boostN(), qBR = cell.w * (0.75 + 0.12 * qBN);
+      var qBN = boostN() || (swimming() && mBoostT > 0 ? 1 : 0);
+      if(qBN && cell){
+        var qBA = boostN() ? 1 : Math.min(1, mBoostT / 0.5);   // the swim boost fades out at the end
+        var qBR = cell.w * (0.75 + 0.12 * qBN);
         ctx.save();
+        ctx.globalAlpha = qBA;
         var boostG = ctx.createRadialGradient(cell.x, cell.y, cell.w * 0.2, cell.x, cell.y, qBR);
         boostG.addColorStop(0, 'rgba(255,210,122,' + (0.18 + 0.06 * qBN).toFixed(2) + ')');
         boostG.addColorStop(1, 'rgba(255,210,122,0)');
@@ -7993,6 +8347,7 @@
 
     ctx.fillStyle = css(C.snow);
     paintParticles(near);
+    drawRecipeFront(t);
     drawFloats();
 
     if(phase === 'eras') drawEras(t, eraBgA);   // fading in over the vent field
@@ -8060,16 +8415,19 @@
       return phase === 'swim' ? at('swim', 'Drag your cell to swim') : null;
     }
     if(phase === 'euphotic'){
-      if(acceptors === 0) return at('h2s', 'Collect H\u2082S from below');
-      if(!inLight())      return at('light', 'Return to the light to make energy');
+      if(!rxReady()) return at('h2s', 'Collect 2 H\u2082S from below and 1 CO\u2082');
+      if(!inLight()) return at('light', 'Bring them up into the light to make sugar');
       return null;
     }
     if(phase === 'oxygenic')
-      return at('oxy', 'Collect water and stay in the light. Each full Energy ' +
-                       'bar adds a cell to your chain.');
+      return at('oxy', 'Collect H\u2082O and CO\u2082, then stay in the light. Each ' +
+                       'reaction adds a cell to your chain.');
     if(phase === 'hetero')
-      return at('hetero', 'Collect O\u2082 and sugar. When both bars are full, ' +
-                          'you divide.');
+      return at('hetero', 'Collect sugar and O\u2082 to respire. Every 2 reactions ' +
+                          'divide your cell.');
+    if(phase === 'predation' && boostReady())
+      return at('boost', TOUCH ? 'Energy full! Tap Boost for a burst of speed'
+                               : 'Energy full! Press Space for a burst of speed');
     if(phase === 'protist' && proPart === 1 && !proFinale)
       return at('prey', 'Swim into prey to eat them. ' + PRO_NEED + ' of each kind.');
     return null;
@@ -8114,6 +8472,14 @@
     var t = Math.max(0, Math.floor((s || 0) * 10));
     var m = Math.floor(t / 600), sec = Math.floor(t / 10) % 60;
     return m + ':' + (sec < 10 ? '0' : '') + sec + '.' + (t % 10);
+  }
+
+  // a two-note call each time the Evolve button appears
+  var evolveSeen = false;
+  function stepEvolveCall(){
+    var on = !elEvolve.hidden && !document.getElementById('hud').hidden;
+    if(on && !evolveSeen) sfx('alert');
+    evolveSeen = on;
   }
 
   function stepEvClock(){
@@ -8588,6 +8954,7 @@
       draw(t);
       stepHint(dt);
       stepEvClock();
+      stepEvolveCall();
     } catch(e){
       reportError(e);
     }
@@ -8913,6 +9280,15 @@
     });
   }
 
+  elBoostBtn.innerHTML = TOUCH ? 'Boost' : 'Boost &middot; <kbd>Space</kbd>';
+  elBoostBtn.addEventListener('click', fireBoost);
+  document.addEventListener('keydown', function(ev){
+    if((ev.code === 'Space' || ev.key === ' ') && phase === 'predation' && mode === 'field' && elPrompt.hidden){
+      ev.preventDefault();
+      fireBoost();
+    }
+  });
+
   // ---- The evasion mini game ---------------------------------------------------
   // The predation stage on its own, from the moment the Asgard arrives in the
   // full game (energy at 80%): the same rules and the same clock, so its times
@@ -8936,8 +9312,9 @@
     showPrompt('Evasion',
       'How long can you hold out? An Asgard archaeon is hunting you, and it ' +
       'divides and speeds up as time goes on. Stay out of its reach. Collect ' +
-      'O\u2082 and sugar to keep your energy up: every full bar gives you a ' +
-      '6-second speed boost, and boosts stack. If your energy runs out, you starve.',
+      'O\u2082 and sugar to keep your energy up. When your energy bar is full, ' +
+      (TOUCH ? 'tap Boost' : 'press the space bar') + ' for a 6-second speed boost. ' +
+      'If your energy runs out, you starve.',
       'Start', spawnAsgard, null,
       { src: asgardStill(), alt:'An Asgard archaeon', title:'Asgard archaeon', alarm:true });
   }
