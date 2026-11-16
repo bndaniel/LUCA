@@ -2325,7 +2325,7 @@
   // Before the bloom, every living thing turns and leaves; then the warning.
   var exodusT = -1, EXODUS_MAX = 4.5;
   function calm(){ return exodusT >= 0; }
-  var GOAL_ENVELOPE = 10, GOAL_PUMPS = 20, GOAL_BIOFILM = 10;
+  var GOAL_ENVELOPE = 5, GOAL_PUMPS = 10, GOAL_BIOFILM = 10;   // the owner's counts (16 Nov 2026; were 10 and 20)
   // Round 2's mats: they drift in, spread, and hold whatever swims into them.
   // Shots shrink them; small enough, they break up into exudate.
   var MAT_EVERY = 8, MAT_STUCK = 3, MAT_SLOW = 0.3, MAT_GROW = 0.02, MAT_MAX = 1.45, MAT_MIN = 0.45;
@@ -2898,8 +2898,9 @@
     var R = baseR();
     if(surface && !calm()){
       cyanoT += dt;
-      var cEvery = round === 5 ? 1.6 : round === 9 ? 2.6 - 1.6 * bloomK() : 4;
-      var cCap = round === 5 ? 6 : round === 9 ? (opened ? 0 : Math.round(4 + 4 * bloomK())) : 2;
+      // the bloom: about half as many as before (the owner's change), 2 rising to 4
+      var cEvery = round === 5 ? 1.6 : round === 9 ? 5 - 2 * bloomK() : 4;
+      var cCap = round === 5 ? 6 : round === 9 ? (opened ? 0 : Math.round(2 + 2 * bloomK())) : 2;
       if(cyanoT >= cEvery && cyanos.length < cCap){ cyanoT = 0; spawnCyano(false); }
     }
     for(var i = 0; i < cyanos.length; i++){
@@ -6450,7 +6451,7 @@
       prey[i].flee = true; prey[i].fleeDir = exitDir(prey[i].x, prey[i].y); prey[i].age = Math.max(prey[i].age, 5);
     }
     for(i = 0; i < alts.length; i++){ alts[i].flee = true; alts[i].dir = exitDir(alts[i].x, alts[i].y); }
-    for(i = 0; i < 2; i++) spawnCyano(true);
+    if(cyanos.length < 2) spawnCyano(true);
     mode = 'play';
     paintHud(true);
     paintGauges();
