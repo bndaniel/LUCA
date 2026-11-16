@@ -1627,7 +1627,7 @@
         <span class="gauge__label"><img class="gauge__icon" src="assets/images/microbe_nitrogen_fixer.png" alt="">Nitrogen fixers</span>
         <span class="gauge__meta">
           <span class="gauge__state" id="pp_gSymState">Next: a life</span>
-          <span class="gauge__val"><b id="pp_gSymVal">0</b> / <span id="pp_gSymMax">5</span></span>
+          <span class="gauge__val"><b id="pp_gSymVal">0</b> / <span id="pp_gSymMax">3</span></span>
         </span>
       </div>
       <div class="gauge__track"><div class="gauge__fill" id="pp_gSymFill"></div></div>
@@ -2345,9 +2345,15 @@
   var abil = { envelope:false, pumps:false, biofilm:false, flag:1, vac:false, sym:false, qs:false, t6:false };
   // round 7: Alteromonas and quorum sensing
   var alts = [], altT = 0, quorums = [], qGone = [], GOAL_QS = 10, QS_N = 3, QS_SECS = 3, QS_FILL = 0.2;
+  // A quorum calls only the defenders within QS_CALL body radii of it (a faint
+  // ring shows how far), and they swim in no faster than QS_DEF_SP (spiny),
+  // QS_MAT_SP (mats) and QS_HUNT_SP (ciliates), so you can get out of the way.
+  // The owner's change (15 Nov 2026): it called every defender in the water,
+  // and they shot across in about a second.
+  var QS_CALL = 5, QS_DEF_SP = 76, QS_MAT_SP = 44, QS_HUNT_SP = 90;   // doubled at the owner's request
   var qsBar = 0, qsT = 0, qsSaid = false;
   // round 6: nitrogen fixers, their neurotoxin, and the symbiont
-  var GOAL_SYM = 10, FIX_LIFE = 5, LIVES_SYM = 4, SYM_K = [1.08, 1.17, 1.26];
+  var GOAL_SYM = 10, FIX_LIFE = 3, LIVES_SYM = 4, SYM_K = [1.08, 1.17, 1.26];
   var fixT = 0, fixN = 0, plumes = [], CONF_SECS = 3, confT = 0, confImm = 0, confDir = 0, confTurn = 0;
   var symGhost = 0, symIn = 0;
   function maxLives(){ return abil.sym ? LIVES_SYM : abil.envelope ? LIVES_ENVELOPE : 1; }
@@ -2876,12 +2882,17 @@
   // They ride up and down the water column on their gas vacuoles, slowly, and
   // now and then leave a molecule of microcystin behind: big, slow, and a life
   // lost on a touch. They are food.
+  // How often each one releases (seconds, while on screen): the first after
+  // MOL_FIRST to twice that, then every MOL_EVERY to MOL_EVERY + MOL_SPREAD;
+  // the bloom (round 9) halves it by the end. The owner asked for fewer
+  // (15 Nov 2026): it was 3 to 9 s, then every 6 to 11 s.
+  var MOL_FIRST = 7, MOL_EVERY = 13, MOL_SPREAD = 9;
   function spawnCyano(inside){
     var R = baseR(), wR = 0.86 + Math.random() * 0.16, p = inside ? interiorSpot() : edgeSpawn(wR * R), Hh = S.vy1 - S.vy0;
     var top = S.vy0 + Hh * (0.08 + Math.random() * 0.12), bot = S.vy0 + Hh * (0.62 + Math.random() * 0.22);
     cyanos.push({ x:p[0], y:clamp(p[1], top, bot), wR:wR, key:'cyano', rot:Math.random() * 6.28, rsp:(Math.random() - 0.5) * 0.4,
                   vx:(p[0] < (S.vx0 + S.vx1) / 2 ? 1 : -1) * (8 + Math.random() * 12), top:top, bot:bot,
-                  per:14 + Math.random() * 6, ph:Math.random() * 6.28, molT:3 + Math.random() * 6, age:inside ? 5 : 0, t:0 });
+                  per:14 + Math.random() * 6, ph:Math.random() * 6.28, molT:MOL_FIRST + Math.random() * MOL_FIRST, age:inside ? 5 : 0, t:0 });
   }
   function stepCyanos(dt){
     var R = baseR();
@@ -2905,7 +2916,7 @@
       if(onScreen && mode === 'play'){
         c.molT -= dt;
         var bk9 = round === 9 ? bloomK() : 0;
-        if(c.molT <= 0 && mols.length < 6 + Math.round(4 * bk9)){ c.molT = (6 + Math.random() * 5) * (1 - 0.5 * bk9); releaseMol(c); }
+        if(c.molT <= 0 && mols.length < 6 + Math.round(4 * bk9)){ c.molT = (MOL_EVERY + Math.random() * MOL_SPREAD) * (1 - 0.5 * bk9); releaseMol(c); }
       }
       if(mode !== 'play') continue;
       var got = tryEat(c.x, c.y, c.wR * R * 0.35, 'cyano', c.wR, c.rot);
@@ -3163,8 +3174,8 @@
   // ---- Alteromonas and quorum sensing (round 7) ---------------------------------------
   // Alteromonas swim toward each other. Once three are close they reach a
   // quorum: they release a white cloud of signal molecules (acyl-homoserine
-  // lactones), and every defender in the water (spiny SAR202, mats, ciliates)
-  // packs in round them, each in a place of its own so none overlap. They
+  // lactones), and the defenders near them (spiny SAR202, mats, ciliates
+  // within QS_CALL) pack in round them, each in a place of its own so none overlap. They
   // keep signalling until you kill them: fewer than three left and it breaks
   // up. Its defenders then stay where they are, until a new quorum calls.
   function spawnAlt(inside){
@@ -3259,16 +3270,18 @@
     floatText(q.x, q.y - baseR() * 1.6, 'Quorum!', '#F2FBFA');
     if(!qsSaid){
       qsSaid = true;
-      banner('bad', 'Quorum sensing', 'Three Alteromonas are signalling', 'Their defenders are packing in around them.');
+      banner('bad', 'Quorum sensing', 'Three Alteromonas are signalling', 'Defenders inside the ring pack in around them.');
     }
   }
-  // every free defender in the water answers the call. One left standing
+  // every free defender within reach answers the call. One left standing
   // by an old quorum answers only a new quorum's first call.
   function recruit(q, fresh){
+    var reach = baseR() * QS_CALL;
     var call = function(list, kind){
       for(var k = 0; k < list.length; k++){
         var d = list[k];
         if(d.qz || d.out !== undefined || d.flee || (d.stay && !fresh)) continue;
+        if(Math.hypot(d.x - q.x, d.y - q.y) > reach) continue;
         d.qz = q; d.stay = null; q.defs.push({ d:d, kind:kind, list:list });
         if(kind === 'mat'){ d.vx = d.vy = 0; }
       }
@@ -3326,7 +3339,9 @@
         var ring = R * 1.75 + sz * 1.05, tx = q.x + Math.cos(ang) * ring, ty = q.y + Math.sin(ang) * ring * 0.85;
         if(e.kind === 'hunter'){ d.qx = tx; d.qy = ty; continue; }
         var kk = 1 - Math.exp(-dt / (e.kind === 'mat' ? 2.0 : 1.2));
-        d.x += (tx - d.x) * kk; d.y += (ty - d.y) * kk;
+        var gdx = tx - d.x, gdy = ty - d.y, gd = Math.hypot(gdx, gdy) || 1;
+        var gstep = Math.min(gd * kk, (e.kind === 'mat' ? QS_MAT_SP : QS_DEF_SP) * dt);   // slow enough to dodge
+        d.x += gdx / gd * gstep; d.y += gdy / gd * gstep;
         if(e.kind === 'spiny') d.dir = Math.atan2(ty - d.y, tx - d.x);
       }
       for(i = 0; i < n; i++) for(var j = i + 1; j < n; j++){   // and they don't pile up
@@ -3393,6 +3408,15 @@
   function drawQuorum(q){
     var a = Math.min(1, q.t / 0.8, q.end !== undefined ? 1 - q.end / 1.2 : 1);
     drawSignal(q.x, q.y, baseR() * 3.4, a, q.t, q.mols, false);
+    if(a <= 0) return;
+    var rr = baseR() * QS_CALL;                            // how far its call reaches
+    ctx.save();
+    ctx.strokeStyle = 'rgba(240,250,252,' + (0.22 * a).toFixed(3) + ')';
+    ctx.lineWidth = Math.max(1, baseR() * 0.05);
+    ctx.setLineDash([baseR() * 0.35, baseR() * 0.3]);
+    ctx.lineDashOffset = -q.t * baseR() * 0.25;
+    ctx.beginPath(); ctx.arc(q.x, q.y, rr, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
   }
   var QS_MOLS = [];
   (function(){ for(var i = 0; i < 10; i++) QS_MOLS.push({ a:i * 0.63, d:0.35 + 0.6 * hr(i + 70), spin:0.3, rot:hr(i + 80) * 6.28 }); })();
@@ -3844,7 +3868,7 @@
         var gx = h.qz ? h.qx : h.stay.x, gy = h.qz ? h.qy : h.stay.y;   // on guard at its place by the quorum
         var gcx = h.qz ? h.qz.x : h.stay.cx, gcy = h.qz ? h.qz.y : h.stay.cy, gd = Math.hypot(gx - h.x, gy - h.y);
         want = gd > 6 ? Math.atan2(gy - h.y, gx - h.x) : Math.atan2(gcy - h.y, gcx - h.x) + Math.PI / 2;
-        sp = Math.min(70, 12 + gd * 1.1);
+        sp = Math.min(h.qz ? QS_HUNT_SP : 70, 12 + gd * 1.1);
       }
       else if(cell && mode === 'play'){
         if(h.cool > 0){                                  // backs off after a bite
@@ -6227,7 +6251,7 @@
       showCard({
         tag:'Round 6 complete \u00B7 +' + PTS.round, round:7,
         title:'Quorum sensing',
-        body:'Eat 10 Alteromonas. When three gather they signal, and their defenders pack in close around them.',
+        body:'Eat 10 Alteromonas. When three gather they signal, and nearby defenders pack in close around them.',
         figs:[{ src:altStill(), verb:'Eat', name:'Alteromonas' },
               { src:quorumStill(), verb:'Avoid', name:'Their quorum', bad:true },
               { src:spinyStill(), verb:'Avoid', name:'Spiny SAR202', bad:true },
