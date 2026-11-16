@@ -15,10 +15,11 @@ the present day.
 The science is meant to be real, and each stage teaches as you play. All of
 the art is drawn by code.
 
-**Mini games:** from the main menu, try the evasion chase or **Protist
-Predator**, a four-round arcade game at a deep-sea vent where you eat, gain
-new abilities by horizontal gene transfer, and survive a viral bloom. Both
-have online leaderboards.
+**Arcade games:** from the main menu, try the evasion chase or **Protist
+Predator**, a nine-round arcade game that starts at a deep-sea vent and rises
+to the sunlit surface: eat, gain new abilities by horizontal gene transfer,
+and survive a viral bloom and a Pseudomonas bloom. Both have online
+leaderboards.
 
 **How to play:** use a mouse or a finger. Drag molecules into your cell, and
 once it can swim, drag to steer. It works on desktop and phone; turn the

@@ -727,6 +727,40 @@
   }
   .mute:hover{color:var(--ink);border-color:var(--ink-faint)}
   .mute:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  /* Pause and Sound share the top right corner */
+  .hudbtns{
+    position:absolute;top:0;right:0;display:flex;gap:8px;pointer-events:auto;
+    margin:clamp(16px,3vw,32px);
+    margin-top:calc(clamp(16px,3vw,32px) + env(safe-area-inset-top,0px));
+  }
+  .hudbtns .mute{position:static;margin:0}
+  /* paused: the frame holds behind a small card */
+  .pause{
+    position:fixed;inset:0;z-index:7;display:flex;align-items:center;justify-content:center;
+    padding:24px 16px;background:rgba(1,6,12,.62);
+  }
+  .pause__card{
+    width:min(34ch,100%);display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;
+    padding:clamp(20px,4vw,28px);background:rgba(4,14,24,.96);
+    border:1px solid var(--rule);border-radius:4px;box-shadow:0 18px 60px rgba(0,0,0,.55);
+  }
+  .pause__card h2{margin:0;font-weight:300;font-size:clamp(26px,5vw,36px);letter-spacing:.06em}
+  .pause__btns{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:6px}
+  .pause__keys{margin:0;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  /* the era readout's explainer */
+  .info{
+    pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;
+    width:15px;height:15px;margin-left:6px;padding:0;vertical-align:1px;
+    border:1px solid var(--rule);border-radius:50%;background:transparent;
+    font:600 9px/1 var(--mono);color:var(--ink-dim);cursor:pointer;
+  }
+  .info:hover,.info[aria-expanded="true"]{color:var(--ink);border-color:var(--ink-faint)}
+  .info:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .readout__info{
+    pointer-events:auto;margin:0 0 10px;max-width:32ch;padding:8px 10px;
+    border:1px solid rgba(159,224,234,.4);border-radius:4px;background:rgba(5,14,24,.88);
+    font-family:var(--sans);font-size:12.5px;line-height:1.5;color:var(--ink);
+  }
 
   .ghost{
     font-family:var(--mono);font-size:11px;letter-spacing:.18em;
@@ -876,7 +910,7 @@
   <p class="title__full">Last Universal Common Ancestor</p>
   <p class="title__sub">From the first cell to complex life</p>
   <button class="ghost title__btn" id="titleBtn" type="button">Begin</button>
-  <button class="ghost title__btn2" id="boardsBtn" type="button">Leaderboards &amp; mini games</button>
+  <button class="ghost title__btn2" id="boardsBtn" type="button">Leaderboards &amp; arcade games</button>
 </div>
 
 <div class="spec boards" id="boards" hidden role="dialog" aria-modal="true" aria-labelledby="boardsTitle">
@@ -885,14 +919,14 @@
     <h2 id="boardsTitle">Leaderboards</h2>
     <section class="boards__col">
       <h3>Time evaded</h3>
-      <p class="boards__sub">How long you held out against the Asgard archaea, in the game or the mini game</p>
+      <p class="boards__sub">How long you held out against the Asgard archaea, in the game or the arcade game</p>
       <ol class="board" id="boardsEvade" aria-label="Time evaded leaderboard"></ol>
       <p class="board__status" id="boardsEvadeStatus" aria-live="polite"></p>
-      <button class="ghost" id="miniBtn" type="button">Play the evasion mini game</button>
+      <button class="ghost" id="miniBtn" type="button">Play the evasion arcade game</button>
     </section>
     <section class="boards__col">
       <h3>Protist Predator</h3>
-      <p class="boards__sub">Points in the protist mini game: eat, evolve and survive four rounds at the vent</p>
+      <p class="boards__sub">Points in the protist arcade game: eat, evolve and survive nine rounds, from the vent to the sunlit surface</p>
       <ol class="board" id="boardsPP" aria-label="Protist Predator leaderboard"></ol>
       <p class="board__status" id="boardsPPStatus" aria-live="polite"></p>
       <button class="ghost" id="ppBtn" type="button">Play Protist Predator</button>
@@ -903,8 +937,23 @@
 
 <div class="errbar" id="errbar" hidden></div>
 
+<div class="pause" id="pauseView" hidden role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+  <div class="pause__card">
+    <p class="eyebrow">LUCA</p>
+    <h2 id="pauseTitle">Paused</h2>
+    <div class="pause__btns">
+      <button class="ghost" id="resumeBtn" type="button">Resume</button>
+      <button class="ghost" id="pauseMenuBtn" type="button">Main menu</button>
+    </div>
+    <p class="pause__keys" id="pauseKeys">P or Esc to resume</p>
+  </div>
+</div>
+
 <div class="overlay" id="hud" hidden>
-  <button class="mute" id="muteBtn" type="button" aria-pressed="false">Sound on</button>
+  <div class="hudbtns">
+    <button class="mute" id="pauseBtn" type="button" aria-pressed="false">Pause</button>
+    <button class="mute" id="muteBtn" type="button" aria-pressed="false">Sound on</button>
+  </div>
   <header class="plate plate--tl">
     <h1 id="stageName">Cell Build</h1>
     <div class="readout">
@@ -912,9 +961,10 @@
         <dt>Depth</dt><dd><b id="rdDepth">2 480</b> m</dd>
         <dt>Ambient</dt><dd><b id="rdTemp">2</b> &deg;C</dd>
         <dt>Environment</dt><dd><b id="rdEnv">Hydrothermal vent</b></dd>
-        <dt>Era</dt><dd><b id="rdEra">4.3 Ga</b></dd>
+        <dt>Era<button class="info" id="eraInfoBtn" type="button" aria-expanded="false" aria-controls="eraInfo" aria-label="What does Ga mean?">?</button></dt><dd><b id="rdEra">4.3 Ga</b></dd>
         <dt>Trait</dt><dd><b id="traitVal">None</b></dd>
       </dl>
+      <p class="readout__info" id="eraInfo" hidden></p>
     </div>
     <button class="evolve" id="evolveBtn" type="button" hidden>Evolve</button>
   </header>
@@ -1130,6 +1180,25 @@
   }
   #ppRoot .mute:hover{color:var(--ink);border-color:var(--ink-faint)}
   #ppRoot .mute:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  #ppRoot .hudbtns{
+    position:absolute;top:0;right:0;display:flex;gap:8px;pointer-events:auto;
+    margin:clamp(16px,3vw,32px);
+    margin-top:calc(clamp(16px,3vw,32px) + env(safe-area-inset-top,0px));
+    margin-right:calc(clamp(16px,3vw,32px) + env(safe-area-inset-right,0px));
+  }
+  #ppRoot .hudbtns .mute{position:static;margin:0}
+  #ppRoot .pausev{
+    position:fixed;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;
+    padding:24px 16px;background:rgba(3,5,16,.62);
+  }
+  #ppRoot .pausev__card{
+    width:min(34ch,100%);box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:12px;
+    text-align:center;padding:clamp(20px,4vw,28px);background:rgba(6,8,24,.96);
+    border:1px solid var(--rule);border-radius:4px;box-shadow:0 18px 60px rgba(0,0,0,.55);
+  }
+  #ppRoot .pausev__title{margin:0;font-weight:300;font-size:clamp(26px,5vw,36px);letter-spacing:.06em;color:var(--ink)}
+  #ppRoot .pausev__btns{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:6px}
+  #ppRoot .pausev__keys{margin:0;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
   #ppRoot .gauges{
     position:absolute;bottom:0;left:auto;right:auto;transform:none;box-sizing:border-box;width:min(380px,50%);
     padding:0 clamp(16px,3vw,32px) calc(clamp(16px,3vw,30px) + env(safe-area-inset-bottom,0px));
@@ -1157,7 +1226,7 @@
   #ppRoot .gauge__tick{position:absolute;top:0;bottom:0;width:1px;background:rgba(230,241,244,.55)}
   #ppRoot .btnrow{display:flex;justify-content:center;flex-wrap:wrap;gap:10px}
   #ppRoot .btnrow:empty{display:none}
-  #ppRoot .firebtn,#ppRoot .slimebtn{
+  #ppRoot .firebtn,#ppRoot .slimebtn,#ppRoot .vacbtn{
     display:block;pointer-events:auto;touch-action:none;
     font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
     color:#141A02;background:var(--tox);border:0;border-radius:999px;padding:10px 16px;cursor:pointer;
@@ -1168,6 +1237,12 @@
   #ppRoot .slimebtn.on{background:#A867D8;box-shadow:0 0 0 3px rgba(196,140,240,.45), 0 0 34px rgba(168,85,216,.8)}
   #ppRoot .firebtn.low,#ppRoot .slimebtn.low{opacity:.42;box-shadow:none}
   #ppRoot .firebtn:focus-visible,#ppRoot .slimebtn:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  #ppRoot .qsbtn{color:#0C1A22;background:#EAF7F8;box-shadow:0 0 0 1px rgba(234,247,248,.6), 0 0 22px rgba(234,247,248,.35)}
+  #ppRoot .qsbtn.low{opacity:.42;box-shadow:none}
+  #ppRoot .vacbtn{color:#04202A;background:#8FE3F2;box-shadow:0 0 0 1px rgba(143,227,242,.6), 0 0 22px rgba(143,227,242,.4)}
+  #ppRoot .vacbtn.low{opacity:.42;box-shadow:none}
+  #ppRoot .vacbtn kbd{font:inherit;opacity:.6;margin-left:6px}
+  #ppRoot .firebtn.jabbtn{color:#04221F;background:#7FE8D2;box-shadow:0 0 0 1px rgba(127,232,210,.6), 0 0 24px rgba(127,232,210,.45)}
   #ppRoot .gauge__icon{width:16px;height:16px;object-fit:contain;vertical-align:-4px;margin-right:7px}
   #ppRoot .banner{
     position:absolute;left:50%;top:17%;transform:translateX(-50%);
@@ -1196,6 +1271,34 @@
   }
   @keyframes ppBannerUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
   #ppRoot .card__title{margin:0;font-weight:400;font-size:clamp(24px,4.6vw,34px);letter-spacing:-.01em;text-wrap:balance}
+  #ppRoot .card__round,#ppRoot .rsplash__n{
+    margin:0;font-family:var(--mono);font-weight:600;line-height:.9;letter-spacing:.06em;text-transform:uppercase;
+    color:#FFD24A;background:linear-gradient(180deg,#FFF6C8 0%,#FFD24A 48%,#F28A2E 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 14px rgba(255,190,70,.45)) drop-shadow(0 3px 0 rgba(120,40,0,.6));
+    animation:ppRoundSlam .5s cubic-bezier(.2,1.5,.4,1) both;
+  }
+  #ppRoot .card__round{margin-bottom:-2px;font-size:clamp(36px,8vw,60px);transform-origin:left center}
+  @keyframes ppRoundSlam{from{opacity:0;transform:scale(1.8)}55%{opacity:1}to{opacity:1;transform:none}}
+  #ppRoot .rsplash{
+    position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:12px;padding:0 16px;pointer-events:none;text-align:center;animation:ppSplashOut 1.7s ease-in both;
+  }
+  #ppRoot .rsplash__n{font-size:clamp(46px,12vw,108px);transform-origin:center}
+  #ppRoot .rsplash__name{
+    margin:0;font-family:var(--mono);font-weight:500;font-size:clamp(13px,2.3vw,19px);letter-spacing:.3em;
+    text-transform:uppercase;color:var(--ink);text-shadow:0 2px 14px rgba(0,0,0,.7);animation:ppSplashName .5s .15s ease-out both;
+  }
+  @keyframes ppSplashName{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes ppSplashOut{0%,72%{opacity:1}100%{opacity:0}}
+  #ppRoot .rbadge{margin:0;display:flex;align-items:baseline;gap:8px;font-family:var(--mono);text-transform:uppercase}
+  #ppRoot .rbadge__k{font-size:16px;font-weight:600;letter-spacing:.18em;color:#FFE07A;text-shadow:0 0 12px rgba(255,190,70,.45),0 1px 0 rgba(120,40,0,.5)}
+  #ppRoot .rbadge__n{
+    display:inline-block;font-size:16px;font-weight:600;line-height:1;color:#FFE07A;margin-left:-2px;
+    text-shadow:0 0 12px rgba(255,190,70,.45),0 1px 0 rgba(120,40,0,.5);transform-origin:left bottom;
+  }
+  #ppRoot .rbadge__n.pop{animation:ppRoundSlam .5s cubic-bezier(.2,1.5,.4,1) both}
+  #ppRoot .rbadge__of{font-size:11px;letter-spacing:.18em;color:var(--ink-dim)}
   #ppRoot .card__score{
     margin:0;font-family:var(--mono);font-weight:500;line-height:1;font-variant-numeric:tabular-nums;
     font-size:clamp(46px,10vw,84px);color:var(--ink);
@@ -1342,7 +1445,7 @@
   #ppRoot .btnrow{gap:8px}
 }
   @media (prefers-reduced-motion:reduce){
-  #ppRoot .banner,#ppRoot .card__box,#ppRoot .title > *,#ppRoot .pips.hit i{animation:none}
+  #ppRoot .banner,#ppRoot .card__box,#ppRoot .title > *,#ppRoot .pips.hit i,#ppRoot .card__round,#ppRoot .rsplash,#ppRoot .rsplash__n,#ppRoot .rsplash__name,#ppRoot .rbadge__n.pop{animation:none}
 }
 </style>
 <div id="ppRoot">
@@ -1350,7 +1453,7 @@
 
 <div class="hud" id="pp_hud" hidden>
   <header class="plate">
-    <p class="eyebrow" id="pp_hudRound">Round 1 of 4</p>
+    <p class="rbadge" id="pp_hudRound"><span class="rbadge__k">Round</span><b class="rbadge__n" id="pp_hudRoundN">1</b><span class="rbadge__of" id="pp_hudRoundOf">of 9</span></p>
     <h1 id="pp_hudName">The purple vent</h1>
     <dl class="readout">
       <dt>Score</dt><dd><b class="score" id="pp_hudScore">0</b></dd>
@@ -1358,7 +1461,10 @@
       <dt class="abil">Abilities</dt><dd class="abil"><b id="pp_hudAbil">None</b></dd>
     </dl>
   </header>
-  <button class="mute" id="pp_muteBtn" type="button" aria-pressed="false">Sound on</button>
+  <div class="hudbtns">
+    <button class="mute" id="pp_pauseBtn" type="button" aria-pressed="false">Pause</button>
+    <button class="mute" id="pp_muteBtn" type="button" aria-pressed="false">Sound on</button>
+  </div>
 
   <div class="banner" id="pp_banner" hidden role="status">
     <p class="eyebrow" id="pp_bannerTag"></p>
@@ -1376,6 +1482,16 @@
         </span>
       </div>
       <div class="gauge__track"><div class="gauge__fill" id="pp_gGoalFill"></div></div>
+    </div>
+    <div class="gauge" id="pp_gSym" hidden style="--bar:#FFD44A">
+      <div class="gauge__head">
+        <span class="gauge__label"><img class="gauge__icon" src="assets/images/microbe_nitrogen_fixer.png" alt="">Nitrogen fixers</span>
+        <span class="gauge__meta">
+          <span class="gauge__state" id="pp_gSymState">Next: a life</span>
+          <span class="gauge__val"><b id="pp_gSymVal">0</b> / <span id="pp_gSymMax">5</span></span>
+        </span>
+      </div>
+      <div class="gauge__track"><div class="gauge__fill" id="pp_gSymFill"></div></div>
     </div>
     <div class="gauge" id="pp_gTemp">
       <div class="gauge__head">
@@ -1395,6 +1511,11 @@
     <div class="btnrow">
       <button class="firebtn" id="pp_fireBtn" type="button" hidden>Fire toxins<kbd>C</kbd></button>
       <button class="slimebtn" id="pp_slimeBtn" type="button" hidden>Biofilm<kbd>hold Z</kbd></button>
+      <button class="slimebtn qsbtn" id="pp_qsBtn" type="button" hidden>Quorum<kbd>Z</kbd></button>
+    </div>
+    <div class="btnrow" id="pp_vacRow" hidden>
+      <button class="firebtn vacbtn" id="pp_riseBtn" type="button">Rise<kbd>W</kbd></button>
+      <button class="firebtn vacbtn" id="pp_sinkBtn" type="button">Sink<kbd>S</kbd></button>
     </div>
     <div class="gauge" id="pp_gTox" hidden style="--bar:#D3F25A">
       <div class="gauge__head">
@@ -1405,6 +1526,35 @@
         </span>
       </div>
       <div class="gauge__track"><div class="gauge__fill" id="pp_gToxFill"></div></div>
+    </div>
+    <div class="gauge" id="pp_gJab" hidden style="--bar:#7FE8D2">
+      <div class="gauge__head">
+        <span class="gauge__label">T6SS</span>
+        <span class="gauge__meta">
+          <span class="gauge__state" id="pp_gJabState">Ready</span>
+          <span class="gauge__val"><b id="pp_gJabVal">5</b> jabs</span>
+        </span>
+      </div>
+      <div class="gauge__track"><div class="gauge__fill" id="pp_gJabFill"></div></div>
+    </div>
+    <div class="gauge" id="pp_gVac" hidden style="--bar:#8FE3F2">
+      <div class="gauge__head">
+        <span class="gauge__label">Gas vacuoles</span>
+        <span class="gauge__meta">
+          <span class="gauge__state" id="pp_gVacState">Ready</span>
+        </span>
+      </div>
+      <div class="gauge__track"><div class="gauge__fill" id="pp_gVacFill"></div></div>
+    </div>
+    <div class="gauge" id="pp_gQs" hidden style="--bar:#EAF7F8">
+      <div class="gauge__head">
+        <span class="gauge__label">Quorum sensing</span>
+        <span class="gauge__meta">
+          <span class="gauge__state" id="pp_gQsState">Ready</span>
+          <span class="gauge__val"><b id="pp_gQsVal">0</b> %</span>
+        </span>
+      </div>
+      <div class="gauge__track"><div class="gauge__fill" id="pp_gQsFill"></div></div>
     </div>
     <div class="gauge" id="pp_gSlime" hidden style="--bar:#B07AD8">
       <div class="gauge__head">
@@ -1420,7 +1570,7 @@
 </div>
 
 <div class="title" id="pp_titleCard">
-  <p class="eyebrow">A LUCA mini game</p>
+  <p class="eyebrow">A LUCA arcade game</p>
   <h1 class="title__name">Protist Predator</h1>
   <p class="title__sub">Eat &middot; Evolve &middot; Survive</p>
   <button class="ghost ghost--go title__btn" id="pp_startBtn" type="button">Start</button>
@@ -1432,9 +1582,15 @@
   <p class="clock__val" id="pp_bloomVal">2:00</p>
 </div>
 
+<div class="rsplash" id="pp_roundSplash" hidden aria-hidden="true">
+  <p class="rsplash__n" id="pp_rsplashN">Round 1</p>
+  <p class="rsplash__name" id="pp_rsplashName"></p>
+</div>
+
 <div class="card" id="pp_card" hidden>
   <div class="card__box" role="dialog" aria-modal="true" aria-labelledby="pp_cardTitle">
     <p class="eyebrow" id="pp_cardTag"></p>
+    <p class="card__round" id="pp_cardRound" hidden></p>
     <h2 class="card__title" id="pp_cardTitle"></h2>
     <p class="card__score" id="pp_cardScore" hidden></p>
     <p class="card__body" id="pp_cardBody"></p>
@@ -1466,6 +1622,18 @@
       <p class="hgt__line" id="pp_hgtLine"></p>
     </div>
     <button class="ghost ghost--go hgt__btn" id="pp_hgtBtn" type="button">Continue</button>
+  </div>
+</div>
+
+<div class="pausev" id="pp_pauseView" hidden role="dialog" aria-modal="true" aria-labelledby="pp_pauseTitle">
+  <div class="pausev__card">
+    <p class="eyebrow">Protist Predator</p>
+    <h2 class="pausev__title" id="pp_pauseTitle">Paused</h2>
+    <div class="pausev__btns">
+      <button class="ghost ghost--go" id="pp_resumeBtn" type="button">Resume</button>
+      <button class="ghost" id="pp_pauseQuit" type="button">Main menu</button>
+    </div>
+    <p class="pausev__keys" id="pp_pauseKeys">P or Esc to resume</p>
   </div>
 </div>
 
@@ -1726,8 +1894,10 @@
     cv.height = bg.height = fg.height = ph;
     cv.style.width = vw+'px'; cv.style.height = vh+'px';
     shx = shy = 0;
+    bgS.width = pw; bgS.height = ph;
     buildWater();
     buildFloorAndVents();
+    buildSurfaceWater();
     var rnd = mulberry32(1337);
     far  = makeParticles(300, 0.7, 2.0, 0.08, 0.26, 3, 11, rnd);
     near = makeParticles(80,  1.6, 3.6, 0.16, 0.42, 8, 24, rnd);
@@ -1751,6 +1921,13 @@
   }
   loadImg('alpha', 'assets/images/microbe_sar11.png');
   loadImg('psb', 'assets/images/microbe_purple_sulfur.png');
+  loadImg('cyano', 'assets/images/microbe_cyanobacterium.png');
+  loadImg('fix', 'assets/images/microbe_nitrogen_fixer.png');
+  loadImg('alt', 'assets/images/microbe_alteromonas.png');
+  loadImg('pseudo', 'assets/images/microbe_pseudomonas.png');
+  loadImg('pseudoFast', 'assets/images/microbe_pseudomonas_pyoverdine.png');
+  loadImg('pseudoRed', 'assets/images/microbe_pseudomonas_pyorubin.png');
+  loadImg('pseudoDark', 'assets/images/microbe_pseudomonas_pyomelanin.png');
   loadImg('sar', 'assets/images/microbe_sar202.png');
   loadImg('phage', 'assets/images/microbe_bacteriophage.png');
   loadImg('asg', 'assets/images/microbe_asgard_body.png');
@@ -1855,7 +2032,7 @@
     src.connect(fl); fl.connect(g); g.connect(sfxBus);
     src.start(t0); src.stop(t0 + dur + 0.03);
   }
-  var SFX_GAP = { blip:0.04, pick:0.05, nope:0.3, pop:0.06, hit:0.05, burst:0.1, eat:0.08, shoot:0.06, splat:0.05, warn:0.5 };
+  var SFX_GAP = { blip:0.04, pick:0.05, nope:0.3, pop:0.06, hit:0.05, burst:0.1, eat:0.08, shoot:0.06, splat:0.05, warn:0.5, charge:0.25, stab:0.08 };
   function sfx(name){
     if(muted || !actx || actx.state !== 'running') return;
     var now = actx.currentTime;
@@ -1900,14 +2077,60 @@
         var up = [523, 659, 784, 1047, 1319];
         for(i=0;i<up.length;i++) sTone('square', up[i], up[i], now + i * 0.055, 0.12, 0.07);
         sTone('sine', 1568, 2093, now + 0.28, 0.3, 0.1);
+      } else if(name === 'quorum'){          // a quorum: many small voices at once
+        for(i = 0; i < 5; i++) sTone('sine', 520 + i * 90, 640 + i * 110, now + i * 0.06, 0.35, 0.05);
+        sNoise(now, 0.6, 0.08, 'bandpass', 1800, 900, 1.2);
+      } else if(name === 'dizzy'){           // a neurotoxin: the world wobbles
+        sTone('triangle', 660, 330, now, 0.5, 0.10);
+        sTone('triangle', 698, 349, now + 0.05, 0.5, 0.08);
+        sTone('sine', 990, 495, now + 0.12, 0.4, 0.05);
+      } else if(name === 'go'){              // a round starts: three quick notes up, arcade style
+        sTone('square', 392, 392, now, 0.08, 0.05);
+        sTone('square', 523, 523, now + 0.1, 0.08, 0.05);
+        sTone('square', 784, 784, now + 0.2, 0.26, 0.06);
+      } else if(name === 'jab'){             // your T6SS fires: a snap
+        sNoise(now, 0.09, 0.2, 'highpass', 2400, 1200, 1.0);
+        sTone('square', 1300, 240, now, 0.09, 0.07);
+        sTone('sine', 180, 70, now + 0.02, 0.14, 0.12);
+      } else if(name === 'stab'){            // a Pseudomonas fires at you
+        sNoise(now, 0.1, 0.14, 'bandpass', 1800, 700, 1.4);
+        sTone('square', 900, 200, now, 0.1, 0.05);
+      } else if(name === 'charge'){          // a Pseudomonas loads its sheath
+        sTone('triangle', 240, 760, now, 1.1, 0.035);
+      } else if(name === 'vac'){             // gas vesicles: a quick bubbly whoosh
+        sNoise(now, 0.35, 0.16, 'bandpass', 900, 2600, 1.6);
+        sTone('sine', 300, 520, now, 0.22, 0.08);
       } else if(name === 'tick'){
         sTone('sine', 1250, 1100, now, 0.035, 0.09);
       }
     } catch(e){}
   }
   // the predation stage's score, from LUCA
-  var music = new Audio('assets/music/dungeon.mp3');
-  music.loop = true; music.volume = 0.55; music.preload = 'auto';
+  // three scores, from LUCA: the vent (the predation stage's), the viral
+  // bloom (LUCA's virus song), and the sunlit surface
+  var TRACKS = { deep:new Audio('assets/music/dungeon.mp3'), virus:new Audio('assets/music/virus_intro.mp3'), surface:new Audio('assets/music/deep_blue_chill.mp3') };
+  for(var tkn in TRACKS){ TRACKS[tkn].loop = true; TRACKS[tkn].volume = 0.55; TRACKS[tkn].preload = tkn === 'deep' ? 'auto' : 'none'; }
+  var music = TRACKS.deep, MUSIC_VOL = 0.55;
+  function fadeAudio(a, to, ms, stop){
+    var from = a.volume, t0 = performance.now();
+    clearInterval(a._fade);
+    a._fade = setInterval(function(){
+      var k = Math.min(1, (performance.now() - t0) / ms);
+      a.volume = Math.max(0, Math.min(1, from + (to - from) * k));
+      if(k >= 1){ clearInterval(a._fade); if(stop) a.pause(); }
+    }, 50);
+  }
+  function setTrack(name){
+    var next = TRACKS[name];
+    if(!next || next === music) return;
+    var old = music;
+    music = next;
+    if(!old.paused) fadeAudio(old, 0, 1200, true);
+    try { next.currentTime = 0; } catch(e){}
+    next.volume = 0;
+    startMusic();
+    fadeAudio(next, MUSIC_VOL, 1400, false);
+  }
   function startMusic(){
     if(muted) return;
     var p = music.play();
@@ -1950,7 +2173,10 @@
   var ASG_WANDER = 22, ASG_HUNT = [30, 46];
   var PTS = { eat:10, kill:25, ability:100, round:250, asg:100, hunter:50 };
   // Round 3's ciliate hunters (after Didinium): a little bigger than you, slower
-  // than you, turning in arcs. Three toxin hits kill one; one touch of slime does.
+  // than you, turning in arcs. Three toxin hits kill one, or four touches of slime.
+  // slime hurts the big cells a touch at a time (at most one touch each 0.5 s):
+  // four kill a ciliate and eight an Asgard archaeon
+  var SLIME_HITS_HUNTER = 4, SLIME_HITS_ASG = 8, SLIME_TOUCH = 0.5;
   var HUNTER_SIZE = 1.0, HUNTER_HP = 3, HUNTER_SP = [40, 54], HUNTER_TURN = 1.1, HUNTER_EVERY = 3;
   var GOAL_FLAG2 = 3, GOAL_FLAG3 = 6;
   // Round 4, the viral bloom: two minutes of viruses from every side, some
@@ -1969,13 +2195,29 @@
   // touches. Each purple sulfur meal fills a fifth of the bar; a full bar is
   // 3 s of slime, and each blob lasts 6 s.
   var SLIME_LIFE = 6, SLIME_DRAIN = 1 / 3, SLIME_FILL = 0.20, SLIME_EVERY = 0.07;
-  var ROUNDS = ['The purple vent', 'The mats', 'Predators', 'Viral bloom'];
+  var ROUNDS = ['The purple vent', 'The mats', 'Predators', 'Viral bloom',
+                'The surface', 'Nitrogen fixers', 'Quorum sensing', 'Pseudomonas', 'Bloom event'];
+  var portalT = -1, portalFrom = null, gone = false;     // round 9's way out
 
   var mode = 'title';           // title | card | play | dead
   var round = 1, freePlay = false;
   var cell = null;
   var lives = 1, score = 0, eaten = 0, kills = 0, runT = 0;
-  var abil = { envelope:false, pumps:false, biofilm:false, flag:1 };
+  var abil = { envelope:false, pumps:false, biofilm:false, flag:1, vac:false, sym:false, qs:false, t6:false };
+  // round 7: Alteromonas and quorum sensing
+  var alts = [], altT = 0, quorums = [], qGone = [], GOAL_QS = 10, QS_N = 3, QS_SECS = 3, QS_FILL = 0.2;
+  var qsBar = 0, qsT = 0, qsSaid = false;
+  // round 6: nitrogen fixers, their neurotoxin, and the symbiont
+  var GOAL_SYM = 10, FIX_LIFE = 5, LIVES_SYM = 4, SYM_K = [1.08, 1.17, 1.26];
+  var fixT = 0, fixN = 0, plumes = [], CONF_SECS = 3, confT = 0, confImm = 0, confDir = 0, confTurn = 0;
+  var symGhost = 0, symIn = 0;
+  function maxLives(){ return abil.sym ? LIVES_SYM : abil.envelope ? LIVES_ENVELOPE : 1; }
+  // ---- the surface (rounds 5 to 8) ----
+  var surface = false, riseT = -1, riseSwapped = false;
+  var cyanos = [], cyanoT = 0, mols = [];
+  var GOAL_VAC = 10;
+  // gas vacuoles: a tap is a 1 s burst at 3x speed straight up or down, then 1.5 s to refill
+  var VAC_BURST = 1.0, VAC_CD = 1.5, VAC_X = 3, vacT = 0, vacCd = 0, vacDir = 0, vacPrevFlag = 3, fizz = [];
   var hunting = false;
   var temp = 0.5, tempBad = 0, tempSaid = 0;
   var invT = 0, hurtT = 0;
@@ -1992,6 +2234,7 @@
   // how mean the water is, 0 to 1. Round 1 gets meaner as you eat; in round 2
   // the mats are the main threat and the rest ease off a little.
   function heat(){
+    if(surface) return 0.4;
     if(round === 1) return freePlay ? 1 : clamp(eaten / GOAL_PUMPS, 0, 1);
     if(round === 2) return 0.35 + 0.35 * (freePlay ? 1 : clamp(eaten / GOAL_BIOFILM, 0, 1));
     return 0.45 + 0.25 * roundK();
@@ -2072,9 +2315,16 @@
       var dx = drag.tx - cell.x, dy = drag.ty - cell.y, d = Math.hypot(dx, dy);
       if(d > 1){ var want = Math.min(top, d * 1.5); wx = dx / d * want; wy = dy / d * want; }
     }
-    var k = 1 - Math.exp(-dt / RESP);
+    if(confT > 0){                                         // a neurotoxin: it darts about on its own
+      confTurn -= dt;
+      if(confTurn <= 0){ confTurn = 0.35 + Math.random() * 0.4; confDir = Math.random() * Math.PI * 2; }
+      wx = Math.cos(confDir) * top * 0.85; wy = Math.sin(confDir) * top * 0.85;
+    }
+    var aimX = wx, aimY = wy;
+    if(vacT > 0) wy = vacDir * SPEED * VAC_X;              // a gas-vacuole burst: straight up or down
+    var k = 1 - Math.exp(-dt / RESP), kv = vacT > 0 ? 1 - Math.exp(-dt / 0.12) : k;
     cell.vx += (wx - cell.vx) * k;
-    cell.vy += (wy - cell.vy) * k;
+    cell.vy += (wy - cell.vy) * kv;
     cell.x += cell.vx * dt;
     cell.y += cell.vy * dt;
     updateBox();
@@ -2083,8 +2333,10 @@
     if(cell.y <= b.y0 || cell.y >= b.y1){ cell.y = clamp(cell.y, b.y0, b.y1); cell.vy = 0; }
     var spd = Math.hypot(cell.vx, cell.vy);
     cell.eff += (Math.min(1, spd / top) - cell.eff) * (1 - Math.exp(-dt / 0.40));
-    if(spd > 4){
-      var turn = wrapA(Math.atan2(cell.vy, cell.vx) - cell.heading);
+    var buoy = vacT > 0 || vacCd > 0;                     // buoyancy, and its coast, don't turn you
+    var hx = buoy ? aimX : cell.vx, hy = buoy ? aimY : cell.vy;
+    if(Math.hypot(hx, hy) > 4){
+      var turn = wrapA(Math.atan2(hy, hx) - cell.heading);
       cell.heading += turn * (1 - Math.exp(-dt / TURN)) * Math.max(cell.eff, 0.65);
     }
     cell.wig += dt * (0.9 + 7.5 * cell.eff);
@@ -2097,7 +2349,7 @@
   function plumeX(up){ var m = mouths[0]; return m.x + Math.sin(gT * 0.6 + up * 0.012) * up * 0.06; }
   function plumeR(up){ return mouths[0].hw * 1.5 + up * 0.17; }
   function stepTemp(dt){
-    if(calm()) return;
+    if(calm() || surface){ temp = 0.5; tempBad = 0; return; }   // no vent up here
     var m = mouths[0];
     if(!m) return;
     var d = Math.hypot(cell.x - m.x, cell.y - m.y), hot = 0;
@@ -2164,9 +2416,10 @@
   function drift(p, dt){
     p.age += dt;
     p.dir += Math.sin(gT * 0.5 + p.ph) * dt * 0.35;
-    var sp = p.sp + p.kick;
+    var held = p.stay && !p.qz && !p.flee, sp = (held ? 0 : p.sp) + p.kick;
     p.x += Math.cos(p.dir) * sp * dt;
     p.y += Math.sin(p.dir) * sp * dt;
+    if(held){ var hk = 1 - Math.exp(-dt / 1.5); p.x += (p.stay.x - p.x) * hk; p.y += (p.stay.y - p.y) * hk; }
     p.kick *= Math.exp(-dt / 0.5);
     if(p.cd > 0) p.cd -= dt;
     p.rot += p.rsp * dt;
@@ -2174,13 +2427,20 @@
     return p.age > 4 && (p.x < S.vx0 - m || p.x > S.vx1 + m || p.y < S.vy0 - m || p.y > S.vy1 + m);
   }
 
-  function freeSpot(){
+  // Where a meal is digested: a free place if there is one, otherwise beside
+  // the least crowded, drawn a little in toward the middle so it stays inside.
+  // There is no limit on how many cells you can be eating at once.
+  function mealSpot(){
+    var best = PRO_SPOTS[0], bn = 1e9;
     for(var i = 0; i < PRO_SPOTS.length; i++){
-      var used = false;
-      for(var j = 0; j < meals.length; j++) if(meals[j].spot === PRO_SPOTS[i]) used = true;
-      if(!used) return PRO_SPOTS[i];
+      var n = 0;
+      for(var j = 0; j < meals.length; j++) if(meals[j].base === PRO_SPOTS[i]) n++;
+      if(n < bn){ bn = n; best = PRO_SPOTS[i]; }
     }
-    return null;
+    if(bn === 0) return { base:best, at:best };
+    var k = Math.min(0.6, 0.22 * bn), a = Math.random() * 6.28;
+    return { base:best, at:[best[0] + (0.05 - best[0]) * k + Math.cos(a) * 0.06,
+                            best[1] - best[1] * k + Math.sin(a) * 0.06] };
   }
   function startMeal(x, y, key, wR, rot){
     sfx('eat');
@@ -2189,8 +2449,8 @@
     var tx = b[0] - a[0], ty = b[1] - a[1], tm = Math.hypot(tx, ty) || 1;
     var n = [ty / tm, -tx / tm];
     if(n[0] * Cp[0] + n[1] * Cp[1] < 0) n = [-n[0], -n[1]];
-    var pr = Math.min(0.8, wR * baseR() / pR() / 2);
-    meals.push({ t:0, key:key, pr:pr, rot:rot - cell.heading, spot:freeSpot(), P0:L, n:n,
+    var pr = Math.min(0.8, wR * baseR() / pR() / 2), ms = mealSpot();
+    meals.push({ t:0, key:key, pr:pr, rot:rot - cell.heading, spot:ms.at, base:ms.base, P0:L, n:n,
                  Cout:[Cp[0] + n[0] * pr * 1.05, Cp[1] + n[1] * pr * 1.05],
                  lys:[[Math.random() * 6.28, 0.32], [Math.random() * 6.28, 0.38]],
                  fed:PRO.mitos.map(function(){ return false; }) });
@@ -2198,9 +2458,6 @@
   }
   function tryEat(x, y, r, key, wR, rot){
     if(!pHit(x, y, r)) return 0;
-    if(!freeSpot()){                              // full: it bumps off the membrane
-      return -1;
-    }
     startMeal(x, y, key, wR, rot);
     return 1;
   }
@@ -2216,8 +2473,9 @@
     } else if(round === 1){
       if(preyT >= 1.3 && countPrey('alpha') < 7){ preyT = 0; spawnPrey(false, 'alpha'); }
     } else {                            // purple sulfur everywhere; a few alphas to refill toxins
-      var psbEvery = round === 2 ? 1.1 : round === 3 ? 1.6 : 0.8, psbCap = round === 2 ? 6 : round === 3 ? 4 : 8;
-      var alEvery = round === 4 ? 1.1 : 3.2, alCap = round === 4 ? 7 : 3;   // plenty to eat in the bloom
+      var psbEvery = round === 2 ? 1.1 : round === 3 ? 1.6 : surface ? 1.3 : 0.8;
+      var psbCap = round === 2 ? 6 : round === 3 ? 4 : surface ? 5 : 8;
+      var alEvery = round === 4 || round === 9 ? 1.1 : surface ? 1.4 : 3.2, alCap = round === 4 || round === 9 ? 7 : surface ? 5 : 3;   // plenty to eat
       if(preyT >= psbEvery && countPrey('psb') < psbCap){ preyT = 0; spawnPrey(false, 'psb'); }
       if(alphaT >= alEvery && countPrey('alpha') < alCap){ alphaT = 0; spawnPrey(false, 'alpha'); }
     }
@@ -2234,7 +2492,7 @@
 
   // the spiny SAR202: drifts, and every touch costs a life
   function stepSpiny(dt){
-    var R = baseR(), k = heat(), cap = round === 4 ? 0 : 1 + Math.floor(k * 2.5);
+    var R = baseR(), k = heat(), cap = round === 4 ? 0 : surface ? (round === 7 ? 3 : round === 8 ? 2 : round === 9 ? 0 : 1) : 1 + Math.floor(k * 2.5);
     spinyT += dt;
     if(spinyT >= 5 && spiny.length < cap && !calm()){ spinyT = 0; spawnSpiny(); }
     for(var i = 0; i < spiny.length; i++){
@@ -2311,6 +2569,7 @@
       else virT += dt;
     } else {
       virT += dt;
+      if(surface) cap = 0;                                  // no viruses at the surface
       if(virT >= every && viruses.length < cap && !calm()){ virT = 0; spawnVirus(); }
     }
     for(var i = 0; i < viruses.length; i++){
@@ -2333,10 +2592,13 @@
   }
 
   // ---- the Asgard archaeon: wanders, then hunts ----------------------------
+  // it comes in from the side away from you, and the other half of the height
   function newAsgard(){
-    var w = cellSize() * ASG_SIZE, right = Math.random() < 0.6;
+    var w = cellSize() * ASG_SIZE, mx = (S.vx0 + S.vx1) / 2, my = (S.vy0 + S.vy1) / 2;
+    var right = cell ? cell.x < mx : Math.random() < 0.6;
+    var low = cell ? cell.y < my : Math.random() < 0.5;
     var x = right ? S.vx1 + w * 0.4 : S.vx0 - w * 0.4;
-    var y = S.vy0 + (S.vy1 - S.vy0) * (0.30 + Math.random() * 0.35);
+    var y = S.vy0 + (S.vy1 - S.vy0) * (low ? 0.55 + Math.random() * 0.2 : 0.15 + Math.random() * 0.2);
     return { x:x, y:y, w:w, t:Math.random() * 10, dir:right ? Math.PI : 0, sp:ASG_WANDER,
              wf:0.18 + Math.random() * 0.26, ph:Math.random() * 6.28,
              rot:Math.random() * 6.28, rsp:(Math.random() < 0.5 ? -1 : 1) * Math.PI * 2 / 170,
@@ -2345,7 +2607,7 @@
   // the archaeon hunts from the envelope on, but leaves the predator round to the ciliates
   function asgChases(){ return hunting && round < 3; }
   function stepAsgards(dt){
-    if(asgBackT >= 0 && round !== 4 && !calm()){
+    if(asgBackT >= 0 && round !== 4 && !surface && !calm()){
       asgBackT -= dt;
       if(asgBackT < 0){ asgs.push(newAsgard()); asgBackT = -1; }
     }
@@ -2389,7 +2651,7 @@
   function spawnMat(side, inside){
     var R = baseR(), r = R * (1.15 + Math.random() * 0.35);
     var fromLeft = side === undefined ? Math.random() < 0.5 : side < 0;
-    var y = S.vy0 + (S.vy1 - S.vy0) * (0.14 + Math.random() * 0.5);
+    var y = S.vy0 + (S.vy1 - S.vy0) * (surface ? 0.64 + Math.random() * 0.2 : 0.14 + Math.random() * 0.5);
     var cells = [], tries = 0, cs = R * 0.62;
     while(cells.length < 24 && tries++ < 400){
       var a = Math.random() * Math.PI * 2, d = r * 0.82 * Math.sqrt(Math.random());
@@ -2408,7 +2670,7 @@
   }
   function stepMats(dt){
     var stuck = null;
-    if(round === 2 || round === 3){
+    if(round === 2 || round === 3 || (surface && round !== 9)){
       var cap = round === 2 ? 3 + Math.round(roundK()) : 2;      // fewer once the hunters arrive
       matT += dt;
       if(matT >= MAT_EVERY && mats.length < cap && !calm()){ matT = 0; spawnMat(); }
@@ -2419,7 +2681,7 @@
       f.x += f.vx * dt; f.y += f.vy * dt; f.rot += f.rsp * dt;
       if(f.hold > 0) f.hold -= dt;                                   // shot: it holds back a while
       else f.r = Math.min(f.r0 * MAT_MAX, f.r + f.r0 * MAT_GROW * dt);   // the mat spreads
-      if(f.y < S.vy0 + f.r * 0.6) f.vy = Math.abs(f.vy);
+      if(f.y < S.vy0 + (surface ? (S.vy1 - S.vy0) * 0.6 : f.r * 0.6)) f.vy = Math.abs(f.vy);   // surface mats stay low
       if(f.y > S.vy1 - f.r * 1.2) f.vy = -Math.abs(f.vy);
       if((f.vx > 0 && f.x > S.vx1 + f.r * 1.3) || (f.vx < 0 && f.x < S.vx0 - f.r * 1.3)){
         mats.splice(i, 1); i--; continue;
@@ -2464,14 +2726,960 @@
     }
   }
 
+  // ---- cyanobacteria (round 5, the surface) ----------------------------------------
+  // They ride up and down the water column on their gas vacuoles, slowly, and
+  // now and then leave a molecule of microcystin behind: big, slow, and a life
+  // lost on a touch. They are food.
+  function spawnCyano(inside){
+    var R = baseR(), wR = 0.86 + Math.random() * 0.16, p = inside ? interiorSpot() : edgeSpawn(wR * R), Hh = S.vy1 - S.vy0;
+    var top = S.vy0 + Hh * (0.08 + Math.random() * 0.12), bot = S.vy0 + Hh * (0.62 + Math.random() * 0.22);
+    cyanos.push({ x:p[0], y:clamp(p[1], top, bot), wR:wR, key:'cyano', rot:Math.random() * 6.28, rsp:(Math.random() - 0.5) * 0.4,
+                  vx:(p[0] < (S.vx0 + S.vx1) / 2 ? 1 : -1) * (8 + Math.random() * 12), top:top, bot:bot,
+                  per:14 + Math.random() * 6, ph:Math.random() * 6.28, molT:3 + Math.random() * 6, age:inside ? 5 : 0, t:0 });
+  }
+  function stepCyanos(dt){
+    var R = baseR();
+    if(surface && !calm()){
+      cyanoT += dt;
+      var cEvery = round === 5 ? 1.6 : round === 9 ? 2.6 - 1.6 * bloomK() : 4;
+      var cCap = round === 5 ? 6 : round === 9 ? (opened ? 0 : Math.round(4 + 4 * bloomK())) : 2;
+      if(cyanoT >= cEvery && cyanos.length < cCap){ cyanoT = 0; spawnCyano(false); }
+    }
+    for(var i = 0; i < cyanos.length; i++){
+      var c = cyanos[i];
+      c.age += dt; c.t += dt; c.rot += c.rsp * dt;
+      var mid = (c.top + c.bot) / 2, amp = (c.bot - c.top) / 2;
+      var ty = mid + amp * Math.sin(c.t * Math.PI * 2 / c.per + c.ph), oy = c.y;
+      c.y += (ty - c.y) * (1 - Math.exp(-dt / 1.2));
+      c.vy = (c.y - oy) / Math.max(dt, 1e-3);
+      c.x += c.vx * dt;
+      var m = c.wR * R * 3;
+      if(c.age > 4 && (c.x < S.vx0 - m || c.x > S.vx1 + m)){ cyanos.splice(i, 1); i--; continue; }
+      var onScreen = c.x > S.vx0 && c.x < S.vx1;
+      if(onScreen && mode === 'play'){
+        c.molT -= dt;
+        var bk9 = round === 9 ? bloomK() : 0;
+        if(c.molT <= 0 && mols.length < 6 + Math.round(4 * bk9)){ c.molT = (6 + Math.random() * 5) * (1 - 0.5 * bk9); releaseMol(c); }
+      }
+      if(mode !== 'play') continue;
+      var got = tryEat(c.x, c.y, c.wR * R * 0.35, 'cyano', c.wR, c.rot);
+      if(got > 0){ cyanos.splice(i, 1); i--; ate('cyano', 1); }
+      else if(got < 0) nudgeOff(c, dt);
+    }
+    for(i = 0; i < mols.length; i++){
+      var q = mols[i];
+      q.t += dt; q.x += q.vx * dt; q.y += q.vy * dt; q.rot += q.rsp * dt;
+      if(q.t >= q.life){ mols.splice(i, 1); i--; continue; }
+      if(mode === 'play' && invT <= 0 && q.t > 0.6 && pHit(q.x, q.y, q.r * 0.5)){
+        pops.push({ x:q.x, y:q.y, r:q.r, p:0, col:'#9BF06A' });
+        mols.splice(i, 1); i--;
+        loseLife(q.x, q.y);
+      }
+    }
+  }
+  function releaseMol(c){
+    var R = baseR(), a = Math.random() * Math.PI * 2;
+    mols.push({ x:c.x, y:c.y, r:R * (1.15 + Math.random() * 0.25), vx:Math.cos(a) * (8 + Math.random() * 8),
+                vy:Math.sin(a) * (8 + Math.random() * 8), rot:Math.random() * 6.28, rsp:(Math.random() - 0.5) * 0.4,
+                t:0, life:12 + Math.random() * 4 });
+    pops.push({ x:c.x, y:c.y, r:R * 0.5, p:0, col:'#9BF06A' });
+  }
+  // Microcystin, from LUCA: a ring of seven amino acids with the long Adda
+  // side chain ending in a benzene ring, and short stubs off the ring.
+  var MC_RING = [], MC_STUB = [2, 4, 6], MC_ADDA = [[0.23,-0.11],[0.42,-0.24],[0.56,-0.06],[0.75,-0.18]];
+  (function(){
+    for(var i = 0; i < 7; i++){
+      var a = -Math.PI / 2 + i * Math.PI * 2 / 7;
+      MC_RING.push([-0.12 + Math.cos(a) * 0.36, Math.sin(a) * 0.36]);
+    }
+  })();
+  function microcystin(g, r, dotR){
+    g.beginPath();
+    g.moveTo(MC_RING[0][0] * r, MC_RING[0][1] * r);
+    for(var i = 1; i < 7; i++) g.lineTo(MC_RING[i][0] * r, MC_RING[i][1] * r);
+    g.closePath(); g.stroke();
+    g.beginPath();
+    g.moveTo(MC_RING[1][0] * r, MC_RING[1][1] * r);
+    for(i = 0; i < MC_ADDA.length; i++) g.lineTo(MC_ADDA[i][0] * r, MC_ADDA[i][1] * r);
+    g.stroke();
+    var bx = 0.9, by = -0.18;
+    g.beginPath();
+    for(i = 0; i < 6; i++){
+      var ha = i * Math.PI / 3, hx = (bx + Math.cos(ha) * 0.13) * r, hy = (by + Math.sin(ha) * 0.13) * r;
+      if(i) g.lineTo(hx, hy); else g.moveTo(hx, hy);
+    }
+    g.closePath(); g.stroke();
+    g.beginPath();
+    for(i = 0; i < MC_STUB.length; i++){
+      var p = MC_RING[MC_STUB[i]], ox = p[0] + 0.12, oy = p[1], d = Math.hypot(ox, oy) || 1;
+      g.moveTo(p[0] * r, p[1] * r);
+      g.lineTo((p[0] + ox / d * 0.2) * r, (p[1] + oy / d * 0.2) * r);
+    }
+    g.stroke();
+    for(i = 0; i < 7; i++){ g.beginPath(); g.arc(MC_RING[i][0] * r, MC_RING[i][1] * r, dotR, 0, Math.PI * 2); g.fill(); }
+  }
+  // the molecule itself, big, with a crisp green edge: no cloud
+  function drawMol(q, g){
+    var c = g || ctx, k = Math.min(1, q.t / 0.6), a = Math.max(0, Math.min(1, (q.life - q.t) / 1.5));
+    var r = q.r * (0.5 + 0.5 * k);
+    c.save();
+    c.translate(q.x, q.y); c.rotate(q.rot);
+    c.globalAlpha = a;
+    c.shadowColor = 'rgba(140,255,90,0.85)'; c.shadowBlur = 10;
+    c.strokeStyle = '#7FE04E'; c.fillStyle = '#E2FFC9';
+    c.lineWidth = Math.max(2, r * 0.085); c.lineJoin = 'round'; c.lineCap = 'round';
+    microcystin(c, r, r * 0.08);
+    c.restore();
+  }
+
+  // ---- nitrogen fixers (round 6) ----------------------------------------------------
+  // Food that drifts like the rest, but now and then one lets go a plume of
+  // anatoxin-a, a neurotoxin real nitrogen-fixing cyanobacteria make. Swim
+  // into a plume and for 3 s the cell darts about on its own.
+  function spawnFixer(inside){
+    var p = newDrifter('fix', 0.8 + Math.random() * 0.15, inside);
+    p.plT = 4 + Math.random() * 6;
+    prey.push(p);
+  }
+  function stepFixers(dt){
+    if(surface && round >= 6 && round !== 9 && !calm()){
+      fixT += dt;
+      if(fixT >= 1.5 && countPrey('fix') < (round === 6 ? 6 : 3)){ fixT = 0; spawnFixer(false); }
+    }
+    for(var i = 0; i < prey.length; i++){
+      var p = prey[i];
+      if(p.key !== 'fix' || mode !== 'play' || p.flee) continue;
+      p.plT -= dt;
+      var onS = p.x > S.vx0 && p.x < S.vx1 && p.y > S.vy0 && p.y < S.vy1;
+      if(p.plT <= 0 && onS && plumes.length < 4){ p.plT = 12 + Math.random() * 6; releasePlume(p); }
+    }
+    for(i = 0; i < plumes.length; i++){
+      var pl = plumes[i];
+      pl.t += dt; pl.x += pl.vx * dt; pl.y += pl.vy * dt;
+      if(pl.t >= pl.life){ plumes.splice(i, 1); i--; continue; }
+      if(mode === 'play' && confT <= 0 && confImm <= 0 && plumeAlpha(pl) > 0.35 && pHit(pl.x, pl.y, plumeRad(pl) * 0.7)) confuse();
+    }
+    if(confT > 0){ confT -= dt; if(confT <= 0){ confT = 0; confImm = 1.0; } }
+    else if(confImm > 0) confImm -= dt;
+  }
+  function releasePlume(p){
+    var R = baseR(), ms = [];
+    for(var i = 0; i < 16; i++)
+      ms.push({ a:Math.random() * 6.28, d:Math.sqrt(Math.random()) * 0.95, spin:(Math.random() - 0.5) * 0.5,
+                rot:Math.random() * 6.28, rsp:(Math.random() - 0.5) * 1.2 });
+    plumes.push({ x:p.x, y:p.y, vx:(Math.random() - 0.5) * 14, vy:(Math.random() - 0.5) * 10, t:0,
+                  life:7 + Math.random() * 2, rmax:R * (1.9 + Math.random() * 0.5), mr:R * 0.26, mols:ms });
+    pops.push({ x:p.x, y:p.y, r:R * 0.6, p:0, col:'#FFD44A' });
+  }
+  function plumeRad(pl){ return pl.rmax * (0.2 + 0.8 * (1 - Math.exp(-pl.t / 1.1))); }
+  function plumeAlpha(pl){ return Math.max(0, Math.min(1, pl.t / 0.4, (pl.life - pl.t) / 2)); }
+  function confuse(){
+    confT = CONF_SECS; confTurn = 0;
+    floatText(cell.x, cell.y - pR() * 1.6, 'Confused!', '#FFE27A');
+    sfx('dizzy');
+  }
+  // anatoxin-a: an eight-carbon ring bridged by a nitrogen (a seven-ring and a
+  // five-ring sharing it), one double bond, and an acetyl group
+  var AT_RING = [];
+  (function(){
+    for(var i = 0; i < 8; i++){
+      var a = -Math.PI / 2 + i * Math.PI / 4;
+      AT_RING.push([-0.12 + Math.cos(a) * 0.36, 0.05 + Math.sin(a) * 0.36]);
+    }
+  })();
+  var AT_N = [(AT_RING[0][0] + AT_RING[5][0]) / 2, (AT_RING[0][1] + AT_RING[5][1]) / 2];
+  var AT_C = [AT_RING[1][0] + 0.21, AT_RING[1][1] - 0.21], AT_O = [AT_C[0] - 0.05, AT_C[1] - 0.28], AT_M = [AT_C[0] + 0.28, AT_C[1] + 0.02];
+  function anatoxin(g, r, dotR){
+    var P = AT_RING, i;
+    g.beginPath();
+    g.moveTo(P[0][0] * r, P[0][1] * r);
+    for(i = 1; i < 8; i++) g.lineTo(P[i][0] * r, P[i][1] * r);
+    g.closePath();
+    g.moveTo(P[0][0] * r, P[0][1] * r); g.lineTo(AT_N[0] * r, AT_N[1] * r); g.lineTo(P[5][0] * r, P[5][1] * r);
+    g.moveTo(P[1][0] * r, P[1][1] * r); g.lineTo(AT_C[0] * r, AT_C[1] * r); g.lineTo(AT_M[0] * r, AT_M[1] * r);
+    g.stroke();
+    var ix = -0.12, iy = 0.05, k = 0.8;                       // the double bonds: C=C in the ring, C=O
+    g.beginPath();
+    g.moveTo((ix + (P[1][0] - ix) * k) * r, (iy + (P[1][1] - iy) * k) * r);
+    g.lineTo((ix + (P[2][0] - ix) * k) * r, (iy + (P[2][1] - iy) * k) * r);
+    var dx = AT_O[0] - AT_C[0], dy = AT_O[1] - AT_C[1], dl = Math.hypot(dx, dy), ox = -dy / dl * 0.07, oy = dx / dl * 0.07;
+    g.moveTo((AT_C[0] + ox) * r, (AT_C[1] + oy) * r); g.lineTo((AT_O[0] + ox) * r, (AT_O[1] + oy) * r);
+    g.moveTo((AT_C[0] - ox) * r, (AT_C[1] - oy) * r); g.lineTo((AT_O[0] - ox) * r, (AT_O[1] - oy) * r);
+    g.stroke();
+    var keep = g.fillStyle;
+    g.fillStyle = '#A8CCFF'; g.beginPath(); g.arc(AT_N[0] * r, AT_N[1] * r, dotR * 1.7, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#FF9F7F'; g.beginPath(); g.arc(AT_O[0] * r, AT_O[1] * r, dotR * 1.7, 0, Math.PI * 2); g.fill();
+    g.fillStyle = keep;
+  }
+  // a plume: many small molecules over a faint yellow haze
+  function drawNeuro(pl, g){
+    var c = g || ctx, a = plumeAlpha(pl), rad = plumeRad(pl);
+    if(a <= 0) return;
+    c.save();
+    var hz = c.createRadialGradient(pl.x, pl.y, 0, pl.x, pl.y, rad * 1.15);
+    hz.addColorStop(0, 'rgba(255,214,80,' + (0.20 * a).toFixed(3) + ')');
+    hz.addColorStop(0.6, 'rgba(255,214,80,' + (0.09 * a).toFixed(3) + ')');
+    hz.addColorStop(1, 'rgba(255,214,80,0)');
+    c.fillStyle = hz; c.beginPath(); c.arc(pl.x, pl.y, rad * 1.15, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = '#F7D23E'; c.fillStyle = '#FFF2B0';
+    c.lineJoin = 'round'; c.lineCap = 'round'; c.lineWidth = Math.max(1.2, pl.mr * 0.12);
+    for(var i = 0; i < pl.mols.length; i++){
+      var m = pl.mols[i], ang = m.a + pl.t * m.spin;
+      c.save();
+      c.translate(pl.x + Math.cos(ang) * rad * m.d, pl.y + Math.sin(ang) * rad * m.d);
+      c.rotate(m.rot + pl.t * m.rsp);
+      c.globalAlpha = a;
+      anatoxin(c, pl.mr, pl.mr * 0.08);
+      c.restore();
+    }
+    c.restore();
+  }
+  function neuroStill(){
+    if(stills.neuro) return stills.neuro;
+    var side = 200, c2 = document.createElement('canvas'), ms = [];
+    c2.width = c2.height = side;
+    for(var i = 0; i < 11; i++) ms.push({ a:i * 2.4, d:0.25 + 0.7 * hr(i + 40), spin:0, rot:hr(i + 60) * 6.28, rsp:0 });
+    drawNeuro({ x:side / 2, y:side / 2, t:2.2, life:99, rmax:side * 0.42, mr:side * 0.13, mols:ms }, c2.getContext('2d'));
+    return (stills.neuro = c2.toDataURL());
+  }
+  // confused: a yellow glow and sparks circling over the cell
+  function drawConfused(){
+    if(confT <= 0 || !cell) return;
+    var R = pR(), k = Math.min(1, confT / 0.4);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    var g = ctx.createRadialGradient(cell.x, cell.y, 0, cell.x, cell.y, R * 1.9);
+    g.addColorStop(0, 'rgba(255,214,80,' + (0.22 * k).toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,214,80,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cell.x, cell.y, R * 1.9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,236,140,' + (0.95 * k).toFixed(3) + ')';
+    for(var j = 0; j < 5; j++){
+      var a = gT * 4.2 + j * Math.PI * 2 / 5, px = cell.x + Math.cos(a) * R * 0.95, py = cell.y - R * 1.3 + Math.sin(a) * R * 0.3;
+      var sz = R * (0.09 + 0.03 * Math.sin(gT * 9 + j));
+      ctx.beginPath();
+      ctx.moveTo(px, py - sz * 1.8); ctx.lineTo(px + sz * 0.45, py - sz * 0.45); ctx.lineTo(px + sz * 1.8, py);
+      ctx.lineTo(px + sz * 0.45, py + sz * 0.45); ctx.lineTo(px, py + sz * 1.8); ctx.lineTo(px - sz * 0.45, py + sz * 0.45);
+      ctx.lineTo(px - sz * 1.8, py); ctx.lineTo(px - sz * 0.45, py - sz * 0.45); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  // the symbiont: a nitrogen fixer kept alive in its own membrane, glowing softly
+  var SYM_AT = [-0.42, 0.08], SYM_W = 0.78;
+  function drawSymbiont(R){
+    if(!abil.sym && !symIn) return;
+    var im = img('fix');
+    if(!im) return;
+    var w = SYM_W * R * (1 + 0.04 * Math.sin(gT * 2.2));
+    ctx.save();
+    outlinePath(R, 0.95); ctx.clip();
+    ctx.translate(SYM_AT[0] * R, SYM_AT[1] * R);
+    ctx.globalCompositeOperation = 'lighter';
+    var g = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.75);
+    g.addColorStop(0, 'rgba(255,220,100,0.30)'); g.addColorStop(1, 'rgba(255,220,100,0)');
+    ctx.globalAlpha = proA; ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, w * 0.75, 0, Math.PI * 2); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.rotate(gT * 0.15);
+    ctx.drawImage(im, -w / 2, -w / 2, w, w);
+    ctx.strokeStyle = 'rgba(190,240,245,0.7)'; ctx.lineWidth = Math.max(1, R * 0.018);
+    ctx.beginPath(); ctx.arc(0, 0, w * 0.47, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+    ctx.globalAlpha = proA;
+  }
+  // its lives: thin glowing yellow lines round the cell, one for each life past the last
+  function drawSymLines(R){
+    var n = Math.max(0, lives - 1), all = symGhost ? SYM_K.length : n;
+    for(var i = 0; i < all; i++){
+      var on = i < n;
+      outlinePath(R, SYM_K[i]);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = proA * (on ? 0.32 : 0.07);
+      ctx.strokeStyle = '#FFD44A'; ctx.lineWidth = R * 0.06; ctx.stroke();
+      ctx.restore();
+      ctx.globalAlpha = proA * (on ? 0.95 : 0.22);
+      ctx.strokeStyle = '#FFF0A0'; ctx.lineWidth = R * 0.022; ctx.stroke();
+    }
+    ctx.globalAlpha = proA;
+  }
+  // every FIX_LIFE nitrogen fixers eaten with the symbiont aboard: a life
+  function fixLife(){
+    if(lives < maxLives()){
+      lives++;
+      peels.push({ k:1.0, t:0, grow:true, col:'#FFE27A', w:0.03 });
+      floatText(cell.x, cell.y - pR() * 1.9, '+1 life', '#FFE27A');
+    } else {
+      addScore(PTS.asg, cell.x, cell.y - pR() * 1.9);
+      floatText(cell.x, cell.y - pR() * 2.6, 'Lives full', '#FFE27A');
+    }
+    sfx('oneup');
+    paintHud(true);
+  }
+
+  // ---- Alteromonas and quorum sensing (round 7) ---------------------------------------
+  // Alteromonas swim toward each other. Once three are close they reach a
+  // quorum: they release a white cloud of signal molecules (acyl-homoserine
+  // lactones), and every defender in the water (spiny SAR202, mats, ciliates)
+  // packs in round them, each in a place of its own so none overlap. They
+  // keep signalling until you kill them: fewer than three left and it breaks
+  // up. Its defenders then stay where they are, until a new quorum calls.
+  function spawnAlt(inside){
+    var R = baseR(), w = 1.38 + Math.random() * 0.18, p = inside ? interiorSpot() : edgeSpawn(w * R * 0.5);
+    var tx = S.vx0 + (S.vx1 - S.vx0) * (0.2 + Math.random() * 0.6), ty = S.vy0 + (S.vy1 - S.vy0) * (0.15 + Math.random() * 0.55);
+    alts.push({ x:p[0], y:p[1], wR:w, dir:inside ? Math.random() * 6.28 : Math.atan2(ty - p[1], tx - p[0]),
+                sp:24 + Math.random() * 12, age:inside ? 5 : 0, qz:null, qcd:0, slot:0, ph:Math.random() * 9, wig:Math.random() * 6 });
+  }
+  function stepAlts(dt){
+    var R = baseR(), i, j, a, b;
+    if(surface && round >= 7 && round !== 9 && !calm()){
+      altT += dt;
+      if(altT >= 1.6 && alts.length < (round === 7 ? 7 : 3)){ altT = 0; spawnAlt(false); }
+    }
+    for(i = 0; i < alts.length; i++){
+      a = alts[i];
+      a.age += dt; if(a.qcd > 0) a.qcd -= dt;
+      if(a.flee){                                          // leaving for the bloom
+        a.x += Math.cos(a.dir) * 110 * dt; a.y += Math.sin(a.dir) * 110 * dt;
+        if(offScreen(a.x, a.y, R * 2)){ alts.splice(i, 1); i--; }
+        continue;
+      }
+      if(a.qz){                                            // in the huddle, circling slowly
+        var q = a.qz, ang = q.t * 0.35 + a.slot, rr = R * (q.members.length > 3 ? 0.95 : 0.75);
+        var tx = q.x + Math.cos(ang) * rr, ty = q.y + Math.sin(ang) * rr * 0.8;
+        a.x += (tx - a.x) * (1 - Math.exp(-dt / 0.6)); a.y += (ty - a.y) * (1 - Math.exp(-dt / 0.6));
+        a.dir += wrapA(ang + Math.PI / 2 - a.dir) * Math.min(1, dt * 2);
+      } else {
+        var best = null, bd = R * 10;                     // they swim toward each other
+        if(a.qcd <= 0) for(j = 0; j < alts.length; j++){
+          b = alts[j]; if(b === a) continue;
+          var d = Math.hypot(b.x - a.x, b.y - a.y);
+          if(d < bd){ bd = d; best = b; }
+        }
+        if(best && bd > R * 1.1) a.dir += clamp(wrapA(Math.atan2(best.y - a.y, best.x - a.x) - a.dir), -0.9 * dt, 0.9 * dt);
+        else a.dir += Math.sin(gT * 0.5 + a.ph) * dt * 0.35;
+        a.x += Math.cos(a.dir) * a.sp * dt; a.y += Math.sin(a.dir) * a.sp * dt;
+        if(a.age > 3){                                     // once in, it stays in the water
+          if((a.x < S.vx0 + R && Math.cos(a.dir) < 0) || (a.x > S.vx1 - R && Math.cos(a.dir) > 0)) a.dir = Math.PI - a.dir;
+          if((a.y < S.vy0 + R && Math.sin(a.dir) < 0) || (a.y > S.vy1 - R && Math.sin(a.dir) > 0)) a.dir = -a.dir;
+        }
+      }
+    }
+    for(i = 0; i < alts.length; i++) for(j = i + 1; j < alts.length; j++){   // never stacked
+      a = alts[i]; b = alts[j];
+      var dx = b.x - a.x, dy = b.y - a.y, dd = Math.hypot(dx, dy) || 1, need = R * 0.75;
+      if(dd < need){ var push = (need - dd) / 2 / dd; a.x -= dx * push; a.y -= dy * push; b.x += dx * push; b.y += dy * push; }
+    }
+    if(mode === 'play') for(i = 0; i < alts.length; i++){
+      a = alts[i];
+      var got = tryEat(a.x, a.y, R * 0.25, 'alt', a.wR, a.dir);
+      if(got > 0){ alts.splice(i, 1); i--; ate('alt', 1); }
+      else if(got < 0) nudgeOff(a, dt);
+    }
+    if(mode === 'play' && quorums.length < 2 && !calm()){  // a quorum: three close together
+      for(i = 0; i < alts.length; i++){
+        a = alts[i];
+        if(a.qz || a.qcd > 0 || a.age < 2 || a.flee) continue;
+        var group = [a];
+        for(j = 0; j < alts.length; j++){
+          b = alts[j];
+          if(b !== a && !b.qz && !b.flee && b.qcd <= 0 && Math.hypot(b.x - a.x, b.y - a.y) < R * 3.2) group.push(b);
+        }
+        if(group.length >= QS_N){ startQuorum(group); break; }
+      }
+    }
+    stepQuorums(dt);
+    // no one keeps answering a quorum that has broken up
+    var loose = function(list, kind){
+      for(var k = 0; k < list.length; k++){
+        var d = list[k];
+        if(d.qz && quorums.indexOf(d.qz) < 0){
+          if(kind) park(d, kind, d.qz.x, d.qz.y);
+          else d.qz = null;
+        }
+      }
+    };
+    loose(spiny, 'spiny'); loose(mats, 'mat'); loose(hunters, 'hunter'); loose(alts, null);
+  }
+  function defSize(d, kind){ var R = baseR(); return kind === 'mat' ? d.r : kind === 'hunter' ? d.w * 0.55 : d.wR * R * 0.75; }
+  function startQuorum(group){
+    var cx = 0, cy = 0, i;
+    for(i = 0; i < group.length; i++){ cx += group[i].x; cy += group[i].y; }
+    var q = { x:cx / group.length, y:cy / group.length, t:0, members:group, defs:[],
+              vx:(Math.random() - 0.5) * 12, vy:(Math.random() - 0.5) * 8, mols:[] };
+    for(i = 0; i < group.length; i++){ group[i].qz = q; group[i].slot = i * Math.PI * 2 / group.length; }
+    for(i = 0; i < 12; i++) q.mols.push({ a:Math.random() * 6.28, d:0.3 + Math.random() * 0.7, spin:(Math.random() - 0.5) * 0.4,
+                                          rot:Math.random() * 6.28, rsp:(Math.random() - 0.5) * 0.8 });
+    recruit(q, true);
+    quorums.push(q);
+    sfx('quorum');
+    floatText(q.x, q.y - baseR() * 1.6, 'Quorum!', '#F2FBFA');
+    if(!qsSaid){
+      qsSaid = true;
+      banner('bad', 'Quorum sensing', 'Three Alteromonas are signalling', 'Their defenders are packing in around them.');
+    }
+  }
+  // every free defender in the water answers the call. One left standing
+  // by an old quorum answers only a new quorum's first call.
+  function recruit(q, fresh){
+    var call = function(list, kind){
+      for(var k = 0; k < list.length; k++){
+        var d = list[k];
+        if(d.qz || d.out !== undefined || d.flee || (d.stay && !fresh)) continue;
+        d.qz = q; d.stay = null; q.defs.push({ d:d, kind:kind, list:list });
+        if(kind === 'mat'){ d.vx = d.vy = 0; }
+      }
+    };
+    call(spiny, 'spiny'); call(mats, 'mat'); call(hunters, 'hunter');
+  }
+  // a defender whose quorum has gone stays where it is: a spiny cell holds
+  // its spot, a mat stops, a ciliate keeps guard there
+  function park(d, kind, cx, cy){
+    var hx = kind === 'hunter' && d.qx !== undefined;
+    d.stay = { x:hx ? d.qx : d.x, y:hx ? d.qy : d.y, cx:cx, cy:cy };
+    d.qz = null; d.qx = d.qy = undefined;
+    if(kind === 'mat'){ d.vx = d.vy = 0; }
+  }
+  function endQuorum(q){
+    for(var i = 0; i < q.members.length; i++){
+      var m = q.members[i]; m.qz = null; m.qcd = 8; m.dir = Math.random() * 6.28;
+    }
+    for(i = 0; i < q.defs.length; i++){
+      var e = q.defs[i], d = e.d;
+      if(d.qz !== q) continue;
+      park(d, e.kind, q.x, q.y);
+    }
+    quorums.splice(quorums.indexOf(q), 1);
+    q.end = 0; qGone.push(q);                             // its cloud fades
+  }
+  function stepQuorums(dt){
+    var R = baseR();
+    for(var gi = 0; gi < qGone.length; gi++){
+      qGone[gi].end += dt; qGone[gi].t += dt;
+      if(qGone[gi].end >= 1.2){ qGone.splice(gi, 1); gi--; }
+    }
+    for(var qi = 0; qi < quorums.length; qi++){
+      var q = quorums[qi], i;
+      q.t += dt;
+      for(i = 0; i < q.members.length; i++)                // gone: eaten, shot, or called away
+        if(alts.indexOf(q.members[i]) < 0 || q.members[i].qz !== q){ q.members.splice(i, 1); i--; }
+      for(i = 0; i < q.defs.length; i++)
+        if(q.defs[i].list.indexOf(q.defs[i].d) < 0 || q.defs[i].d.qz !== q || q.defs[i].d.flee){ q.defs.splice(i, 1); i--; }
+      if(q.members.length < QS_N){ endQuorum(q); qi--; continue; }
+      recruit(q, false);                                    // late arrivals are called in too
+      var cx = 0, cy = 0;
+      for(i = 0; i < q.members.length; i++){ cx += q.members[i].x; cy += q.members[i].y; }
+      cx /= q.members.length; cy /= q.members.length;
+      q.x += (cx - q.x) * (1 - Math.exp(-dt / 0.8)) + q.vx * dt;
+      q.y += (cy - q.y) * (1 - Math.exp(-dt / 0.8)) + q.vy * dt;
+      if((q.x < S.vx0 + R * 3 && q.vx < 0) || (q.x > S.vx1 - R * 3 && q.vx > 0)) q.vx = -q.vx;
+      if((q.y < S.vy0 + R * 2.5 && q.vy < 0) || (q.y > S.vy1 - R * 2.5 && q.vy > 0)) q.vy = -q.vy;
+      q.x = clamp(q.x, S.vx0 + R * 3, S.vx1 - R * 3); q.y = clamp(q.y, S.vy0 + R * 2.5, S.vy1 - R * 2.5);
+      for(i = 0; i < q.mols.length; i++) q.mols[i].rot += q.mols[i].rsp * dt;
+      // each defender has its own place on a ring round the huddle
+      var n = q.defs.length;
+      for(i = 0; i < n; i++){
+        var e = q.defs[i], d = e.d, sz = defSize(d, e.kind), ang = q.t * 0.1 + i * Math.PI * 2 / n;
+        var ring = R * 1.75 + sz * 1.05, tx = q.x + Math.cos(ang) * ring, ty = q.y + Math.sin(ang) * ring * 0.85;
+        if(e.kind === 'hunter'){ d.qx = tx; d.qy = ty; continue; }
+        var kk = 1 - Math.exp(-dt / (e.kind === 'mat' ? 2.0 : 1.2));
+        d.x += (tx - d.x) * kk; d.y += (ty - d.y) * kk;
+        if(e.kind === 'spiny') d.dir = Math.atan2(ty - d.y, tx - d.x);
+      }
+      for(i = 0; i < n; i++) for(var j = i + 1; j < n; j++){   // and they don't pile up
+        var A = q.defs[i], B = q.defs[j];
+        if(A.kind === 'hunter' || B.kind === 'hunter') continue;
+        var dx = B.d.x - A.d.x, dy = B.d.y - A.d.y, dd = Math.hypot(dx, dy) || 1;
+        var need = (defSize(A.d, A.kind) + defSize(B.d, B.kind)) * 0.92;
+        if(dd < need){ var pu = (need - dd) / 2 / dd; A.d.x -= dx * pu; A.d.y -= dy * pu; B.d.x += dx * pu; B.d.y += dy * pu; }
+      }
+    }
+  }
+  // an acyl-homoserine lactone: a five-ring lactone with its C=O, an amide,
+  // and a fatty tail
+  var AHL_RING = [];
+  (function(){
+    for(var i = 0; i < 5; i++){ var a = Math.PI + i * Math.PI * 2 / 5; AHL_RING.push([-0.45 + Math.cos(a) * 0.2, Math.sin(a) * 0.2]); }
+  })();
+  function ahl(g, r){
+    var P = AHL_RING, i;
+    g.beginPath();
+    g.moveTo(P[0][0] * r, P[0][1] * r);
+    for(i = 1; i < 5; i++) g.lineTo(P[i][0] * r, P[i][1] * r);
+    g.closePath();
+    var x = P[3][0], y = P[3][1];                       // ring carbon, out to the amide and the tail
+    g.moveTo(x * r, y * r);
+    var pts = [[x + 0.16, y - 0.1], [x + 0.32, y], [x + 0.48, y - 0.1], [x + 0.64, y], [x + 0.8, y - 0.1], [x + 0.96, y]];
+    for(i = 0; i < pts.length; i++) g.lineTo(pts[i][0] * r, pts[i][1] * r);
+    g.moveTo(pts[1][0] * r, pts[1][1] * r); g.lineTo(pts[1][0] * r, (pts[1][1] + 0.18) * r);   // the amide's C=O
+    g.moveTo(P[1][0] * r, P[1][1] * r); g.lineTo((P[1][0] - 0.1) * r, (P[1][1] - 0.15) * r);  // the lactone's
+    g.stroke();
+  }
+  // the signal: a soft white cloud with its molecules, and rings going out (or in)
+  function drawSignal(x, y, rad, a, t, mols, inward){
+    if(a <= 0) return;
+    ctx.save();
+    for(var k = 0; k < 7; k++){
+      var pa = k * 0.9 + t * 0.12, pd = rad * (0.15 + 0.35 * hr(k + 3)), pr = rad * (0.45 + 0.25 * hr(k + 11));
+      var px = x + Math.cos(pa) * pd, py = y + Math.sin(pa) * pd * 0.8;
+      var g = ctx.createRadialGradient(px, py, 0, px, py, pr);
+      g.addColorStop(0, 'rgba(240,250,252,' + (0.15 * a).toFixed(3) + ')'); g.addColorStop(1, 'rgba(240,250,252,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px, py, pr, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.lineWidth = Math.max(1, rad * 0.012);
+    for(k = 0; k < 3; k++){
+      var f = (t * 0.7 + k / 3) % 1, rr = rad * (inward ? 1.1 - f * 0.9 : 0.3 + f * 0.95);
+      ctx.strokeStyle = 'rgba(240,250,252,' + (0.30 * a * (inward ? f : 1 - f)).toFixed(3) + ')';
+      ctx.beginPath(); ctx.ellipse(x, y, rr, rr * 0.85, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+    if(mols){
+      ctx.strokeStyle = 'rgba(246,252,253,' + (0.85 * a).toFixed(3) + ')'; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      var mr = baseR() * 0.3;
+      ctx.lineWidth = Math.max(1, mr * 0.1);
+      for(k = 0; k < mols.length; k++){
+        var m = mols[k], ma = m.a + t * m.spin;
+        ctx.save();
+        ctx.translate(x + Math.cos(ma) * rad * 0.8 * m.d, y + Math.sin(ma) * rad * 0.65 * m.d);
+        ctx.rotate(m.rot);
+        ahl(ctx, mr);
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+  }
+  function drawQuorum(q){
+    var a = Math.min(1, q.t / 0.8, q.end !== undefined ? 1 - q.end / 1.2 : 1);
+    drawSignal(q.x, q.y, baseR() * 3.4, a, q.t, q.mols, false);
+  }
+  var QS_MOLS = [];
+  (function(){ for(var i = 0; i < 10; i++) QS_MOLS.push({ a:i * 0.63, d:0.35 + 0.6 * hr(i + 70), spin:0.3, rot:hr(i + 80) * 6.28 }); })();
+  function quorumStill(){
+    if(stills.quorum) return stills.quorum;
+    var side = 220, c2 = document.createElement('canvas');
+    c2.width = c2.height = side;
+    var keep = ctx; ctx = c2.getContext('2d');
+    var R0 = baseR(), k = side * 0.46 / (R0 * 2.2);
+    ctx.save(); ctx.translate(side / 2, side / 2); ctx.scale(k, k);
+    for(var j = 0; j < 2; j++) drawSignal(0, 0, R0 * 2.2, 1, 1.3, j ? QS_MOLS.slice(0, 7) : null, false);
+    for(var i = 0; i < 3; i++){ var an = i * 2.1 + 0.3; sprite('alt', Math.cos(an) * R0 * 0.7, Math.sin(an) * R0 * 0.6, R0 * 1.6, an + Math.PI / 2, 1); }
+    ctx.restore();
+    ctx = keep;
+    return (stills.quorum = c2.toDataURL());
+  }
+  function altStill(){
+    if(stills.alt) return stills.alt;
+    var side = 160, c2 = document.createElement('canvas');
+    c2.width = c2.height = side;
+    var keep = ctx; ctx = c2.getContext('2d');
+    sprite('alt', side * 0.42, side * 0.56, side * 1.9, -0.55, 1);
+    ctx = keep;
+    return (stills.alt = c2.toDataURL());
+  }
+  function spinyStill(){
+    if(stills.spiny) return stills.spiny;
+    var side = 160, c2 = document.createElement('canvas');
+    c2.width = c2.height = side;
+    var keep = ctx; ctx = c2.getContext('2d');
+    var p = { x:side / 2, y:side / 2, rot:0.3 }, w = side * 0.62;
+    drawSpines(p, w);
+    sprite('sar', p.x, p.y, w, p.rot, 1);
+    ctx = keep;
+    return (stills.spiny = c2.toDataURL());
+  }
+  // your own quorum sensing: prey near you drift in for 3 s
+  function qsFire(){
+    if(mode !== 'play' || paused || !abil.qs) return;
+    if(qsT > 0) return;
+    if(qsBar < 1 - 1e-6){ sfx('nope'); var qb = $('pp_qsBtn'); qb.animate && qb.animate([{ transform:'translateX(-4px)' }, { transform:'translateX(4px)' }, { transform:'none' }], { duration:220 }); return; }
+    qsBar = 0; qsT = QS_SECS;
+    sfx('quorum');
+    paintGauges();
+  }
+  function stepQsMine(dt){
+    if(qsT <= 0) return;
+    qsT = Math.max(0, qsT - dt);
+    var Rr = baseR() * 8;
+    var pull = function(list, isAlt){
+      for(var i = 0; i < list.length; i++){
+        var p = list[i], dx = cell.x - p.x, dy = cell.y - p.y, d = Math.hypot(dx, dy) || 1;
+        if(d > Rr || p.out !== undefined || p.flee) continue;
+        if(isAlt && p.qz) p.qz = null;                      // your signal draws them out of their huddle
+        var v = 150 * (1 - 0.5 * d / Rr);
+        p.x += dx / d * v * dt; p.y += dy / d * v * dt;
+        if(p.dir !== undefined) p.dir = Math.atan2(dy, dx);
+      }
+    };
+    pull(prey); pull(cyanos); pull(alts, true); pull(tokens);   // prey only: never the Pseudomonas
+  }
+  function drawQsMine(){
+    if(qsT <= 0 || !cell) return;
+    var a = Math.min(1, (QS_SECS - qsT) / 0.3, qsT / 0.6);
+    drawSignal(cell.x, cell.y, baseR() * 7, a, gT, QS_MOLS, true);
+  }
+  // the T6SS takes the place of the efflux pumps
+  function gainT6ss(){
+    abil.t6 = true; abil.pumps = false; jabs = JAB_START; jabT = -1; jabK = 0;
+    addScore(PTS.ability, cell.x, cell.y - pR() * 2);
+    hgtStart('t6ss');
+    roundEndT = 3.2;
+    paintHud(true);
+  }
+  function gainQuorum(){
+    abil.qs = true; abil.biofilm = false; slimeHeld = false; slime.length = 0;
+    qsBar = 1;
+    addScore(PTS.ability, cell.x, cell.y - pR() * 2);
+    hgtStart('quorum');
+    roundEndT = 3.2;
+    paintHud(true);
+    paintGauges();
+  }
+
+  // ---- gas vacuoles: bursts up and down ---------------------------------------------
+  function vacBurst(dir){
+    if(mode !== 'play' || paused || !abil.vac) return;
+    if(vacT > 0 || vacCd > 0) return;
+    vacT = VAC_BURST; vacDir = dir;
+    sfx('vac');
+  }
+  function stepVac(dt){
+    if(vacT > 0){
+      vacT -= dt;
+      if(Math.random() < dt * 40){                        // a fizz of bubbles behind
+        var R = pR();
+        fizz.push({ x:cell.x + (Math.random() - 0.5) * R, y:cell.y - vacDir * R * 0.7, r:R * (0.04 + Math.random() * 0.05),
+                    vx:(Math.random() - 0.5) * 30, vy:-vacDir * (40 + Math.random() * 40), life:0 });
+      }
+      if(vacT <= 0){ vacT = 0; vacCd = VAC_CD; }
+    } else if(vacCd > 0) vacCd = Math.max(0, vacCd - dt);
+    for(var i = 0; i < fizz.length; i++){
+      var f = fizz[i];
+      f.life += dt / 0.7; f.x += f.vx * dt; f.y += f.vy * dt;
+      if(f.life >= 1){ fizz.splice(i, 1); i--; }
+    }
+  }
+  // gas vesicles inside the cell: little pale capsules in clusters
+  var VAC_AT = [[0.6, -0.5, 0.35], [0.82, 0.3, -0.55], [-0.84, 0.1, 1.5], [0.02, 0.55, 0.15]];
+  var vacLit = 0;                                   // the gene-transfer scene lights them too
+  function drawVacuoles(R){
+    if(!abil.vac) return;
+    var glow = vacT > 0 ? 0.6 + 0.4 * Math.sin(gT * 30) : vacLit;
+    ctx.save();
+    outlinePath(R, 0.95); ctx.clip();
+    for(var i = 0; i < VAC_AT.length; i++){
+      var v = VAC_AT[i];
+      for(var j = 0; j < 3; j++){
+        ctx.save();
+        ctx.translate(v[0] * R, v[1] * R);
+        ctx.rotate(v[2]);
+        ctx.translate(0, (j - 1) * R * 0.11);
+        ctx.globalAlpha = proA;
+        if(glow > 0){
+          ctx.shadowColor = 'rgba(190,245,255,' + (0.9 * glow).toFixed(3) + ')'; ctx.shadowBlur = R * 0.35;
+        }
+        ctx.fillStyle = glow > 0.3 ? 'rgba(240,253,255,0.98)' : 'rgba(205,234,246,0.92)';
+        ctx.strokeStyle = 'rgba(90,150,185,0.95)'; ctx.lineWidth = Math.max(1, R * 0.02);
+        var L = R * 0.27, w = R * 0.045;
+        ctx.beginPath();
+        ctx.moveTo(-L / 2 + w, -w); ctx.lineTo(L / 2 - w, -w); ctx.arc(L / 2 - w, 0, w, -Math.PI / 2, Math.PI / 2);
+        ctx.lineTo(-L / 2 + w, w); ctx.arc(-L / 2 + w, 0, w, Math.PI / 2, Math.PI * 1.5); ctx.closePath();
+        ctx.fill(); ctx.shadowBlur = 0; ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';                     // a glint on each
+        ctx.fillRect(-L / 2 + w, -w * 0.6, L - w * 2, w * 0.35);
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+    ctx.globalAlpha = proA;
+  }
+
   // ---- ciliate hunters (round 3) -----------------------------------------------
+  // ---- Pseudomonas and the T6SS (round 8) ------------------------------------------
+  // Pseudomonas close in slowly, like the ciliates. When one is near and
+  // pointed at you it loads its type VI secretion system (it trembles and
+  // glows) and fires: the sheath inside it contracts and drives a spike out
+  // of its front pole, a spear longer than the cell. Then it has to rebuild
+  // the sheath before it can fire again, and it hangs back while it does.
+  var pseudos = [], psT = 0, GOAL_T6 = 10, JAB_START = 5, JAB_MAX = 10;
+  var PS_WIND = 1.2, PS_OUT = 0.08, PS_HOLD = 0.14, PS_BACK = 0.35, PS_REACH = 1.3, PS_TURN = 1.0;
+  var JAB_OUT = 0.07, JAB_HOLD = 0.1, JAB_BACK = 0.24, JAB_REACH = 1.7;
+  var jabs = 0, jabT = -1, jabK = 0, jabHit = null;
+  // the sprite is mostly flagellum: the body is the middle 45% of its width
+  function psGeom(p){ var W = p.wR * baseR(); return { W:W, hl:W * 0.223, ht:W * 0.061 }; }
+  function segDist(px, py, ax, ay, bx, by){
+    var dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy || 1;
+    var u = clamp(((px - ax) * dx + (py - ay) * dy) / L2, 0, 1);
+    return Math.hypot(px - ax - dx * u, py - ay - dy * u);
+  }
+  // a hit on the rod, a little generous: the pumps fire from your flanks, and
+  // a pair of shots straddled a thin rod dead ahead
+  function psHit(p, x, y, r){
+    var g = psGeom(p), c = Math.cos(p.dir), sn = Math.sin(p.dir);
+    return segDist(x, y, p.x - c * g.hl, p.y - sn * g.hl, p.x + c * g.hl, p.y + sn * g.hl) < r + g.ht + baseR() * 0.22;
+  }
+  // The bloom event's specials wear the species' other real pigments:
+  // pyoverdine (yellow-green; it fluoresces) swims about twice as fast,
+  // pyorubin (red) fires a fan of three spears (P. aeruginosa really carries
+  // three separate T6SS), and pyomelanin (dark brown; it protects the cell)
+  // takes three hits.
+  var PS_KIND = {
+    norm:{ img:'pseudo', sp:1, turn:1, hp:1, size:1, spears:1 },
+    fast:{ img:'pseudoFast', sp:2.1, turn:1.8, hp:1, size:0.95, spears:1 },
+    tri:{ img:'pseudoRed', sp:1, turn:1, hp:1, size:1.05, spears:3 },
+    tough:{ img:'pseudoDark', sp:0.8, turn:0.9, hp:3, size:1.18, spears:1 }
+  };
+  var PS_FAN = 0.4;
+  // in from any of the four sides
+  function edgeAll(m){
+    var x0 = S.vx0, x1 = S.vx1, y0 = S.vy0, y1 = S.vy1, side = Math.floor(Math.random() * 4);
+    if(side === 0) return [x0 - m, y0 + (y1 - y0) * (0.05 + Math.random() * 0.9)];
+    if(side === 1) return [x1 + m, y0 + (y1 - y0) * (0.05 + Math.random() * 0.9)];
+    if(side === 2) return [x0 + (x1 - x0) * (0.05 + Math.random() * 0.9), y0 - m];
+    return [x0 + (x1 - x0) * (0.05 + Math.random() * 0.9), y1 + m];
+  }
+  function spawnPseudo(inside, kind){
+    kind = kind || 'norm';
+    var K = PS_KIND[kind], R = baseR(), w = (2.4 + Math.random() * 0.3) * K.size;
+    var at = inside ? interiorSpot() : round === 9 ? edgeAll(w * R * 0.3) : edgeSpawn(w * R * 0.3);
+    var h0 = cell ? Math.atan2(cell.y - at[1], cell.x - at[0]) : Math.random() * 6.28;
+    pseudos.push({ x:at[0], y:at[1], wR:w, dir:h0, sp:0, top:(36 + Math.random() * 12) * K.sp, inT:inside ? 5 : 0,
+                   st:'go', stT:0, k:inside ? 0.3 : 1, rel:2.4, ext:0, hit:false, kick:0, wig:Math.random() * 6,
+                   kind:kind, hp:K.hp, flash:0, slimeCd:0 });
+  }
+  // what comes in as the bloom builds: more specials, the stranger ones later,
+  // and each one sure to turn up as soon as it can (6 s, 25 s and 45 s in)
+  var psIntro = {};
+  function bloomKind(){
+    if(bloomT > 6 && !psIntro.fast){ psIntro.fast = true; return 'fast'; }
+    if(bloomT > 25 && !psIntro.tri){ psIntro.tri = true; return 'tri'; }
+    if(bloomT > 45 && !psIntro.tough){ psIntro.tough = true; return 'tough'; }
+    if(Math.random() > 0.2 + 0.45 * bloomK()) return 'norm';
+    var pool = ['fast'];
+    if(bloomT > 25) pool.push('tri');
+    if(bloomT > 45) pool.push('tough');
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  // a hit from a shot, a jab or slime: most die, the tough ones take three
+  function hurtPseudo(j, x, y, col){
+    var p = pseudos[j];
+    p.hp -= 1; p.flash = 0.25;
+    if(p.hp <= 0){ killDrifter(pseudos, j, 'pseudo', col); return true; }
+    pops.push({ x:x, y:y, r:baseR() * 0.4, p:0, col:col || '#D3F25A' });
+    sfx('splat');
+    return false;
+  }
+  function psExt(t){ return t < PS_OUT ? t / PS_OUT : t < PS_OUT + PS_HOLD ? 1 : Math.max(0, 1 - (t - PS_OUT - PS_HOLD) / PS_BACK); }
+  function stepPseudos(dt){
+    var R = baseR(), i, j, p, g, K;
+    if(round === 9){                                  // the bloom: more, faster, from every side
+      if(mode === 'play' && !opened){
+        var bk = bloomK();
+        psT += dt;
+        if(psT >= 2.4 - 1.8 * bk && pseudos.length < Math.round(4 + 8 * bk)){ psT = 0; spawnPseudo(false, bloomKind()); }
+      }
+    } else if(surface && round >= 8 && mode === 'play' && !calm()){
+      psT += dt;
+      var every = freePlay ? 4 : 3, cap = freePlay ? 3 : Math.min(5, 3 + Math.floor(eaten / 4));
+      if(psT >= every && pseudos.length < cap){ psT = 0; spawnPseudo(false); }
+    }
+    for(i = 0; i < pseudos.length; i++){
+      p = pseudos[i]; g = psGeom(p); K = PS_KIND[p.kind];
+      p.inT += dt; p.stT += dt;
+      if(p.flash > 0) p.flash -= dt;
+      if(p.slimeCd > 0) p.slimeCd -= dt;
+      if(p.out !== undefined){ p.out += dt / 1.5; if(p.out >= 1){ pseudos.splice(i, 1); i--; } continue; }
+      var fx = p.x + Math.cos(p.dir) * g.hl, fy = p.y + Math.sin(p.dir) * g.hl;
+      var want = cell ? Math.atan2(cell.y - p.y, cell.x - p.x) : p.dir, top = 0, turn = PS_TURN * K.turn;
+      var dc = cell ? Math.hypot(cell.x - p.x, cell.y - p.y) : 1e9;
+      if(p.st === 'go'){                              // close in, or hang back while reloading
+        if(p.k < 1) p.k = Math.min(1, p.k + dt / p.rel);
+        var stand = g.hl + pR() * 1.3 + PS_REACH * R * (p.k < 1 ? 1.15 : 0.45);
+        top = p.top * clamp((dc - stand) / (R * 1.2), -0.5, 1);
+        if(cell && mode === 'play' && p.k >= 1 && p.inT > 1.5 &&
+           Math.hypot(cell.x - fx, cell.y - fy) < PS_REACH * R + pR() * 0.75 && Math.abs(wrapA(want - p.dir)) < (K.spears > 1 ? 0.6 : 0.35)){
+          p.st = 'wind'; p.stT = 0; sfx('charge');
+        }
+      } else if(p.st === 'wind'){                     // it loads, still turning to follow you
+        top = p.top * 0.15; turn = PS_TURN * K.turn * 0.45;
+        if(p.stT >= PS_WIND){ p.st = 'fire'; p.stT = 0; p.k = 0; p.hit = false; p.kick = -50; sfx('stab'); }
+      } else {                                        // fire: out, hold, and back
+        top = 0; turn = 0;
+        p.ext = psExt(p.stT);
+        if(!p.hit && p.stT < PS_OUT + PS_HOLD && mode === 'play' && invT <= 0){
+          var L = PS_REACH * R * p.ext;
+          for(var sp = 0; sp < K.spears && !p.hit; sp++){   // one spear, or a fan of three
+            var ang = p.dir + (sp - (K.spears - 1) / 2) * PS_FAN, c = Math.cos(ang), sn = Math.sin(ang);
+            for(var q = 0; q <= 6; q++){
+              var sx = fx + c * L * q / 6, sy = fy + sn * L * q / 6;
+              if(pHit(sx, sy, R * 0.05)){ p.hit = true; loseLife(sx, sy); break; }
+            }
+          }
+        }
+        if(p.stT >= PS_OUT + PS_HOLD + PS_BACK){ p.st = 'go'; p.stT = 0; p.ext = 0; p.rel = 2.2 + Math.random() * 0.8; }
+      }
+      p.dir += clamp(wrapA(want - p.dir), -turn * dt, turn * dt);
+      p.sp += (top - p.sp) * (1 - Math.exp(-dt / 0.6));
+      var v = p.sp + p.kick;
+      p.kick *= Math.exp(-dt / 0.25);
+      p.x += Math.cos(p.dir) * v * dt; p.y += Math.sin(p.dir) * v * dt;
+      if(p.inT > 2){                                  // once in, it stays in the water
+        p.x = clamp(p.x, S.vx0 + g.hl * 0.6, S.vx1 - g.hl * 0.6);
+        p.y = clamp(p.y, S.vy0 + g.hl * 0.6, S.vy1 - g.hl * 0.6);
+      }
+    }
+    for(i = 0; i < pseudos.length; i++) for(j = i + 1; j < pseudos.length; j++){   // never stacked
+      var A = pseudos[i], B = pseudos[j], dx = B.x - A.x, dy = B.y - A.y, dd = Math.hypot(dx, dy) || 1;
+      var need = (psGeom(A).hl + psGeom(B).hl) * 0.6;
+      if(dd < need){ var pu = (need - dd) / 2 / dd; A.x -= dx * pu; A.y -= dy * pu; B.x += dx * pu; B.y += dy * pu; }
+    }
+    // they can't be eaten (you have to kill them): a touch only shoves one off
+    if(mode === 'play') for(i = 0; i < pseudos.length; i++){
+      p = pseudos[i];
+      if(p.out !== undefined || !pHit(p.x, p.y, psGeom(p).hl * 0.55)) continue;
+      var dd2 = Math.hypot(p.x - cell.x, p.y - cell.y) || 1;
+      p.x += (p.x - cell.x) / dd2 * 160 * dt; p.y += (p.y - cell.y) / dd2 * 160 * dt;
+    }
+  }
+  // A T6SS in a cell's own frame (+x forward, the front pole at xf). The
+  // sheath lies inside along the axis, long and thin when loaded (k = 1),
+  // short and fat once it has fired (k = 0), with a helix of rings. The spike
+  // (the Hcp tube and its sharp tip) leaves through the front pole, ext of
+  // the way to its reach. hot (0 to 1) is the glow as it loads.
+  function drawT6(xf, len, hw, k, ext, reach, hot, ring, glow, spikeOnly){
+    var Ls = len * (0.5 + 0.5 * k), w = hw * (1.45 - 0.45 * k), x1 = xf - hw * 1.2, x0 = x1 - Ls, i;
+    ctx.save();
+    ctx.lineCap = 'round';
+    if(spikeOnly){ x1 = xf; hot = 0; }
+    if(hot > 0){
+      ctx.save();
+      var hg = ctx.createRadialGradient((x0 + xf) / 2, 0, 0, (x0 + xf) / 2, 0, Ls * 0.9);
+      hg.addColorStop(0, 'rgba(' + glow + ',' + (0.55 * hot).toFixed(3) + ')'); hg.addColorStop(1, 'rgba(' + glow + ',0)');
+      ctx.fillStyle = hg; ctx.beginPath(); ctx.arc((x0 + xf) / 2, 0, Ls * 0.9, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    if(!spikeOnly){
+      ctx.globalAlpha = proA * 0.8;
+      ctx.strokeStyle = 'rgba(6,30,38,0.8)'; ctx.lineWidth = w * 2;
+      ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x1, 0); ctx.stroke();
+      ctx.strokeStyle = 'rgba(' + ring + ',' + (0.6 + 0.4 * hot).toFixed(3) + ')';
+      ctx.lineWidth = Math.max(0.6, w * 0.32);
+      var n = Math.max(3, Math.round(Ls / (w * 1.05)));
+      ctx.beginPath();
+      for(i = 0; i <= n; i++){ var x = x0 + Ls * i / n; ctx.moveTo(x - w * 0.3, -w * 0.8); ctx.lineTo(x + w * 0.3, w * 0.8); }
+      ctx.stroke();
+    }
+    if(ext > 0){
+      var tip = xf + reach * ext, tw = Math.max(0.8, hw * 0.42);
+      ctx.save();
+      ctx.globalAlpha = proA;
+      ctx.strokeStyle = 'rgba(' + glow + ',0.4)'; ctx.lineWidth = tw * 5;
+      ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(tip, 0); ctx.stroke();
+      var tg = ctx.createRadialGradient(tip, 0, 0, tip, 0, tw * 9);
+      tg.addColorStop(0, 'rgba(' + glow + ',0.8)'); tg.addColorStop(1, 'rgba(' + glow + ',0)');
+      ctx.fillStyle = tg; ctx.beginPath(); ctx.arc(tip, 0, tw * 9, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      ctx.globalAlpha = proA;
+      ctx.strokeStyle = '#E9FFF8'; ctx.lineWidth = tw * 2;
+      ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(tip - tw * 3, 0); ctx.stroke();
+      ctx.fillStyle = '#FFFFFF';                       // the sharp tip
+      ctx.beginPath(); ctx.moveTo(tip + tw * 3.2, 0); ctx.lineTo(tip - tw * 4, -tw * 2); ctx.lineTo(tip - tw * 3, 0);
+      ctx.lineTo(tip - tw * 4, tw * 2); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  var PS_RING = '147,230,210', PS_GLOW = '255,92,150';
+  // one or three spears from the front pole: the T6SS, and a fan's side spikes
+  function psSpears(K, xf, len, hw, k, ext, reach, hot){
+    drawT6(xf, len, hw, k, ext, reach, hot, PS_RING, PS_GLOW);
+    for(var sp = 0; sp < K.spears && ext > 0; sp++){
+      var off = (sp - (K.spears - 1) / 2) * PS_FAN;
+      if(!off) continue;
+      ctx.save(); ctx.translate(xf, 0); ctx.rotate(off); ctx.translate(-xf, 0);
+      drawT6(xf, len, hw, k, ext, reach, 0, PS_RING, PS_GLOW, true);
+      ctx.restore();
+    }
+  }
+  function drawPseudo(p){
+    var g = psGeom(p), R0 = baseR(), a = 1 - (p.out || 0), K = PS_KIND[p.kind];
+    var wk = p.st === 'wind' ? Math.min(1, p.stT / PS_WIND) : 0;
+    var dir = p.dir + Math.sin(gT * 2.6 + p.wig) * 0.04;
+    var tr = wk * Math.sin(gT * 70) * g.ht * 0.18, ox = -Math.sin(dir) * tr, oy = Math.cos(dir) * tr;
+    if(p.kind === 'fast'){                            // pyoverdine fluoresces
+      var fr = g.hl * 1.5, fg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, fr);
+      fg.addColorStop(0, 'rgba(214,255,96,' + (0.30 + 0.1 * Math.sin(gT * 5 + p.wig)).toFixed(3) + ')');
+      fg.addColorStop(1, 'rgba(214,255,96,0)');
+      ctx.fillStyle = fg; ctx.beginPath(); ctx.arc(p.x, p.y, fr, 0, Math.PI * 2); ctx.fill();
+    }
+    sprite(K.img, p.x + ox, p.y + oy, g.W, dir, a);
+    if(p.flash > 0){                                  // hit, but not killed
+      ctx.save(); ctx.globalAlpha = 0.6 * p.flash / 0.25;
+      ctx.fillStyle = '#FFE0D8'; ctx.beginPath(); ctx.ellipse(p.x, p.y, g.hl * 1.05, g.ht * 1.4, dir, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    ctx.save();
+    ctx.translate(p.x + ox, p.y + oy); ctx.rotate(dir);
+    ctx.globalAlpha = a;
+    if(wk > 0){                                       // where it will strike
+      ctx.save();
+      ctx.strokeStyle = 'rgba(' + PS_GLOW + ',' + (0.5 * wk).toFixed(3) + ')';
+      ctx.lineWidth = Math.max(1, R0 * 0.05); ctx.setLineDash([R0 * 0.12, R0 * 0.09]);
+      ctx.beginPath();
+      for(var sp = 0; sp < K.spears; sp++){
+        var off = (sp - (K.spears - 1) / 2) * PS_FAN;
+        ctx.moveTo(g.hl, 0); ctx.lineTo(g.hl + Math.cos(off) * PS_REACH * R0, Math.sin(off) * PS_REACH * R0);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+    psSpears(K, g.hl * 0.96, g.hl * 1.35, g.ht * 0.3, p.k, p.ext, PS_REACH * R0, wk);
+    ctx.restore();
+    if(K.hp > 1 && p.hp < K.hp){                      // how much a tough one has left
+      var bw = g.hl * 1.2, by = p.y - g.hl * 0.75;
+      ctx.save(); ctx.globalAlpha = 0.85;
+      ctx.fillStyle = 'rgba(4,8,20,0.8)'; ctx.fillRect(p.x - bw / 2, by, bw, R0 * 0.07);
+      ctx.fillStyle = '#FF8A7A'; ctx.fillRect(p.x - bw / 2, by, bw * p.hp / K.hp, R0 * 0.07);
+      ctx.restore();
+    }
+  }
+  function pseudoStill(spear, kind){
+    kind = kind || 'norm';
+    var key = 'ps_' + kind + (spear ? '_spear' : '');
+    if(stills[key]) return stills[key];
+    var K = PS_KIND[kind], side = 160, c2 = document.createElement('canvas');
+    c2.width = c2.height = side;
+    var keep = ctx; ctx = c2.getContext('2d');
+    var W = spear ? side * 1.05 : side * 1.75, rot = -0.55;
+    var cx = side * (spear ? 0.33 : 0.45), cy = side * (spear ? 0.64 : 0.56), hl = W * 0.223, ht = W * 0.061;
+    if(kind === 'fast'){
+      var fg = ctx.createRadialGradient(cx, cy, 0, cx, cy, hl * 1.6);
+      fg.addColorStop(0, 'rgba(214,255,96,0.35)'); fg.addColorStop(1, 'rgba(214,255,96,0)');
+      ctx.fillStyle = fg; ctx.fillRect(0, 0, side, side);
+    }
+    sprite(K.img, cx, cy, W, rot, 1);
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
+    psSpears(K, hl * 0.96, hl * 1.35, ht * 0.3, spear ? 0 : 1, spear ? 1 : 0, hl * 1.55, spear ? 0.7 : 0);
+    ctx.restore();
+    ctx = keep;
+    return (stills[key] = c2.toDataURL());
+  }
+
   function newHunter(){
     var w = cellSize() * HUNTER_SIZE, p = edgeSpawn(w * 0.6);
     var h0 = cell ? Math.atan2(cell.y - p[1], cell.x - p[0]) : 0;
     return { x:p[0], y:p[1], w:w, heading:h0, sp:40, hp:HUNTER_HP, flash:0, cool:0, inT:0,
              t:Math.random() * 9, menace:0, wob:Math.random() * 6 };
   }
+  // a ciliate by a quorum (or left there by one) guards its place, and
+  // comes for you only when you come close
+  function guards(h){
+    var cx, cy;
+    if(h.qz && h.qx !== undefined){ cx = h.qz.x; cy = h.qz.y; }
+    else if(!h.qz && h.stay){ cx = h.stay.cx; cy = h.stay.cy; }
+    else return false;
+    return Math.hypot(cell.x - cx, cell.y - cy) > baseR() * 5.5;
+  }
   function stepHunters(dt){
+    if(surface && round !== 9 && !freePlay && mode === 'play' && !calm()){      // the odd ciliate up here
+      hunterT += dt;
+      var hEvery = round === 7 ? 16 : 25, hCap = round === 7 ? 2 : 1;
+      if(hunterT >= hEvery && hunters.length < hCap){ hunterT = 0; hunters.push(newHunter()); }
+    }
     if(round === 3){
       var k = roundK(), cap = freePlay ? 3 : 1 + (eaten >= 2 ? 1 : 0) + (eaten >= 4 ? 1 : 0);
       hunterT += dt;
@@ -2486,6 +3694,12 @@
       if(h.slimeCd > 0) h.slimeCd -= dt;
       var want = h.heading, sp = 40;
       if(h.flee){ want = h.fleeDir; sp = 150; }            // leaving: it turns and goes
+      else if(cell && guards(h)){
+        var gx = h.qz ? h.qx : h.stay.x, gy = h.qz ? h.qy : h.stay.y;   // on guard at its place by the quorum
+        var gcx = h.qz ? h.qz.x : h.stay.cx, gcy = h.qz ? h.qz.y : h.stay.cy, gd = Math.hypot(gx - h.x, gy - h.y);
+        want = gd > 6 ? Math.atan2(gy - h.y, gx - h.x) : Math.atan2(gcy - h.y, gcx - h.x) + Math.PI / 2;
+        sp = Math.min(70, 12 + gd * 1.1);
+      }
       else if(cell && mode === 'play'){
         if(h.cool > 0){                                  // backs off after a bite
           want = Math.atan2(h.y - cell.y, h.x - cell.x); sp = HUNTER_SP[0] * 0.8;
@@ -2513,11 +3727,11 @@
       }
     }
   }
-  function hurtHunter(j, x, y, kill){
+  function hurtHunter(j, x, y, kill, dmg, col){
     var h = hunters[j];
-    h.hp = kill ? 0 : h.hp - 1; h.flash = 0.25; sfx('splat');
-    pops.push({ x:x, y:y, r:baseR() * 0.45, p:0, col:kill ? '#C48CF0' : '#D3F25A' });
-    if(h.hp <= 0){
+    h.hp = kill ? 0 : h.hp - (dmg || 1); h.flash = 0.25; sfx('splat');
+    pops.push({ x:x, y:y, r:baseR() * 0.45, p:0, col:col || (kill ? '#C48CF0' : '#D3F25A') });
+    if(h.hp <= 1e-6){
       hunters.splice(j, 1); kills++;
       tokens.push({ x:h.x, y:h.y, key:'hunter', wR:0.85, big:false, rot:0, vx:0, vy:-5, age:0 });
       pops.push({ x:h.x, y:h.y, r:h.w * 0.6, p:0, col:'#FF7A8C' });
@@ -2526,11 +3740,11 @@
   }
 
   // ---- biofilm: the slime trail ------------------------------------------------
-  function hurtAsgard(j, x, y){
+  function hurtAsgard(j, x, y, dmg, col){
     var a = asgs[j];
-    a.hp--; a.flash = 0.25; sfx('splat');
-    pops.push({ x:x, y:y, r:baseR() * 0.4, p:0, col:'#D3F25A' });
-    if(a.hp <= 0){
+    a.hp -= dmg || 1; a.flash = 0.25; sfx('splat');
+    pops.push({ x:x, y:y, r:baseR() * 0.4, p:0, col:col || '#D3F25A' });
+    if(a.hp <= 1e-6){
       asgs.splice(j, 1); kills++;
       tokens.push({ x:a.x, y:a.y, key:'asg', wR:1.0, big:true, rot:0, vx:0, vy:-5, age:0 });
       pops.push({ x:a.x, y:a.y, r:a.w * 0.6, p:0, col:'#D3F25A' });
@@ -2550,7 +3764,7 @@
       if(mode === 'play' && cell && u.age > 0.4 && pHit(u.x, u.y, baseR() * 0.55)){
         ups.splice(i, 1); i--;
         pops.push({ x:u.x, y:u.y, r:baseR() * 1.2, p:0, col:'#5FD08A' });
-        if(lives < LIVES_ENVELOPE){
+        if(lives < maxLives()){
           lives++;
           peels.push({ k:1.0, t:0, grow:true });
           floatText(cell.x, cell.y - pR() * 1.9, '+1 life', '#9FF0C0');
@@ -2618,6 +3832,15 @@
         if(Math.hypot(prey[j].x - b.x, prey[j].y - b.y) < b.r + prey[j].wR * R * 0.3){ killDrifter(prey, j, prey[j].key, '#C48CF0'); j--; }
       for(j = 0; j < spiny.length; j++)
         if(Math.hypot(spiny[j].x - b.x, spiny[j].y - b.y) < b.r + spiny[j].wR * R * 0.4){ killDrifter(spiny, j, 'sar', '#C48CF0'); j--; }
+      for(j = 0; j < cyanos.length; j++)
+        if(Math.hypot(cyanos[j].x - b.x, cyanos[j].y - b.y) < b.r + cyanos[j].wR * R * 0.35){ killDrifter(cyanos, j, 'cyano', '#C48CF0'); j--; }
+      for(j = 0; j < alts.length; j++)
+        if(Math.hypot(alts[j].x - b.x, alts[j].y - b.y) < b.r + R * 0.25){ killDrifter(alts, j, 'alt', '#C48CF0'); j--; }
+      for(j = 0; j < pseudos.length; j++)
+        if(!(pseudos[j].slimeCd > 0) && psHit(pseudos[j], b.x, b.y, b.r * 0.9)){
+          pseudos[j].slimeCd = SLIME_TOUCH;
+          if(hurtPseudo(j, b.x, b.y, '#C48CF0')) j--;
+        }
       for(j = 0; j < viruses.length; j++){
         var v = viruses[j];
         if(Math.hypot(v.x - b.x, v.y - b.y) < b.r + v.size * 0.25){
@@ -2626,15 +3849,19 @@
           addScore(PTS.kill, v.x, v.y); sfx('splat');
         }
       }
-      for(j = 0; j < hunters.length; j++){                  // a hunter dies on touching it
+      for(j = 0; j < hunters.length; j++){                  // a ciliate takes four touches
         var hh = hunters[j];
-        if(hh.inT > 0.5 && Math.hypot(hh.x - b.x, hh.y - b.y) < b.r + hh.w * 0.28){ hurtHunter(j, hh.x, hh.y, true); j--; }
+        if(hh.inT > 0.5 && !(hh.slimeCd > 0) && Math.hypot(hh.x - b.x, hh.y - b.y) < b.r + hh.w * 0.28){
+          hh.slimeCd = SLIME_TOUCH;
+          hurtHunter(j, hh.x, hh.y, false, HUNTER_HP / SLIME_HITS_HUNTER, '#C48CF0');
+          if(hunters.indexOf(hh) < 0) j--;
+        }
       }
-      for(j = 0; j < asgs.length; j++){
+      for(j = 0; j < asgs.length; j++){                     // an Asgard archaeon, eight
         var a = asgs[j];
         if(!(a.slimeCd > 0) && Math.hypot(a.x - b.x, a.y - b.y) < b.r + a.w * 0.3){
-          a.slimeCd = 0.5;
-          hurtAsgard(j, a.x, a.y);
+          a.slimeCd = SLIME_TOUCH;
+          hurtAsgard(j, a.x, a.y, ASG_HP / SLIME_HITS_ASG, '#C48CF0');
           j--;
           if(asgs.indexOf(a) >= 0) j++;
         }
@@ -2647,6 +3874,7 @@
   // Two pumps, one on each flank, fire forward along the heading.
   var PUMP_AT = [0.16, 0.80], pumpFlash = 0;
   function fire(){
+    if(abil.t6){ jab(); return; }
     if(mode !== 'play' || !abil.pumps) return;
     if(toxCd > 0) return;
     if(tox < TOX_SHOT - 1e-6){ sfx('nope'); flashFire(); return; }
@@ -2661,6 +3889,64 @@
     pumpFlash = 0.12;
     sfx('shoot');
     paintHud();
+  }
+  // the T6SS: a spear out of your front, one jab at a time; it kills
+  // whatever it touches
+  function jab(){
+    if(mode !== 'play' || !abil.t6 || paused) return;
+    if(jabT >= 0) return;
+    if(jabs < 1){ sfx('nope'); flashFire(); return; }
+    jabs -= 1; jabT = 0; jabK = 0; jabHit = [];
+    cell.gulp = Math.max(cell.gulp, 0.3);
+    sfx('jab');
+    paintGauges();
+  }
+  function jabExt(t){ return t < JAB_OUT ? t / JAB_OUT : t < JAB_OUT + JAB_HOLD ? 1 : Math.max(0, 1 - (t - JAB_OUT - JAB_HOLD) / JAB_BACK); }
+  function stepJab(dt){
+    if(jabT < 0) return;
+    jabT += dt;
+    if(jabT >= JAB_OUT + JAB_HOLD + JAB_BACK){ jabT = -1; jabK = 0; return; }
+    jabK = jabExt(jabT);
+    if(jabT > JAB_OUT + JAB_HOLD) return;             // only the thrust and the hold strike
+    var R = baseR(), f0 = PRO.hit.front * pR(), L = JAB_REACH * R * jabK, rr = R * 0.1, j, k;
+    var ch = Math.cos(cell.heading), sh = Math.sin(cell.heading);
+    var ax = cell.x + ch * f0, ay = cell.y + sh * f0, bx = ax + ch * L, by = ay + sh * L;
+    var on = function(x, y, r){ return segDist(x, y, ax, ay, bx, by) < r + rr; };
+    var col = '#9FF5E0';
+    for(j = 0; j < prey.length; j++) if(on(prey[j].x, prey[j].y, prey[j].wR * R * 0.42)){ killDrifter(prey, j, prey[j].key, col); j--; }
+    for(j = 0; j < spiny.length; j++) if(on(spiny[j].x, spiny[j].y, spiny[j].wR * R * 0.5)){ killDrifter(spiny, j, 'sar', col); j--; }
+    for(j = 0; j < cyanos.length; j++) if(on(cyanos[j].x, cyanos[j].y, cyanos[j].wR * R * 0.45)){ killDrifter(cyanos, j, 'cyano', col); j--; }
+    for(j = 0; j < alts.length; j++) if(on(alts[j].x, alts[j].y, R * 0.28)){ killDrifter(alts, j, 'alt', col); j--; }
+    for(j = 0; j < pseudos.length; j++){
+      var p = pseudos[j], hit = false;
+      for(k = 0; k <= 6 && !hit; k++){ var u = k / 6; hit = psHit(p, ax + (bx - ax) * u, ay + (by - ay) * u, rr); }
+      if(hit && jabHit.indexOf(p) < 0){ jabHit.push(p); if(hurtPseudo(j, p.x, p.y, col)) j--; }
+    }
+    for(j = 0; j < viruses.length; j++){
+      var v = viruses[j];
+      if(on(v.x, v.y, v.size * 0.3)){
+        viruses.splice(j, 1); j--; kills++;
+        pops.push({ x:v.x, y:v.y, r:v.size * 0.5, p:0, col:col });
+        addScore(PTS.kill, v.x, v.y); sfx('splat');
+      }
+    }
+    for(j = 0; j < hunters.length; j++) if(on(hunters[j].x, hunters[j].y, hunters[j].w * 0.36)){ hurtHunter(j, hunters[j].x, hunters[j].y, true); j--; }
+    for(j = 0; j < asgs.length; j++) if(on(asgs[j].x, asgs[j].y, asgs[j].w * 0.36)){ asgs[j].hp = 1; hurtAsgard(j, asgs[j].x, asgs[j].y); j--; }
+    for(j = 0; j < mats.length; j++){                  // it cuts a big piece off a mat
+      var f = mats[j];
+      if(jabHit.indexOf(f) >= 0 || !on(f.x, f.y, f.r * 0.85)) continue;
+      jabHit.push(f);
+      for(k = 0; k < 3 && mats.indexOf(f) >= 0; k++) hitMat(mats.indexOf(f), f.x, f.y);
+      if(mats.indexOf(f) < 0) j--;
+    }
+  }
+  // your own T6SS, drawn in the protist's frame: the sheath down the front of
+  // the cell, loaded while you have jabs, and the spike when you jab
+  function drawT6Mine(R){
+    if(!abil.t6) return;
+    var ready = jabs >= 1 && jabT < 0;
+    drawT6(PRO.hit.front * R * 0.97, R * 1.1, R * 0.075, jabT >= 0 || jabs < 1 ? 0 : 1, jabK,
+           JAB_REACH / PRO_BODY * R, ready ? 0.22 + 0.12 * Math.sin(gT * 5) : 0, '191,241,245', '150,255,228');
   }
   function killDrifter(list, i, tokenKey, col){
     var p = list[i], R = baseR();
@@ -2678,12 +3964,18 @@
     for(var i = 0; i < shots.length; i++){
       var s = shots[i];
       s.trail.unshift([s.x, s.y]); if(s.trail.length > 6) s.trail.pop();
-      s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
+      s.x += s.vx * dt; s.y += s.vy * dt;          // no range limit: on until off screen
       var hit = false, j;
       for(j = 0; !hit && j < prey.length; j++)
         if(shotHits(s, prey[j].x, prey[j].y, prey[j].wR * R * 0.42)){ killDrifter(prey, j, prey[j].key); hit = true; }
       for(j = 0; !hit && j < spiny.length; j++)
         if(shotHits(s, spiny[j].x, spiny[j].y, spiny[j].wR * R * 0.5)){ killDrifter(spiny, j, 'sar'); hit = true; }
+      for(j = 0; !hit && j < cyanos.length; j++)
+        if(shotHits(s, cyanos[j].x, cyanos[j].y, cyanos[j].wR * R * 0.45)){ killDrifter(cyanos, j, 'cyano'); hit = true; }
+      for(j = 0; !hit && j < alts.length; j++)
+        if(shotHits(s, alts[j].x, alts[j].y, R * 0.28)){ killDrifter(alts, j, 'alt'); hit = true; }
+      for(j = 0; !hit && j < pseudos.length; j++)
+        if(psHit(pseudos[j], s.x, s.y, s.r)){ hurtPseudo(j, s.x, s.y); hit = true; }
       for(j = 0; !hit && j < viruses.length; j++){
         var v = viruses[j];
         if(shotHits(s, v.x, v.y, v.size * 0.3)){
@@ -2701,7 +3993,7 @@
       for(j = 0; !hit && j < mats.length; j++){
         if(shotHits(s, mats[j].x, mats[j].y, mats[j].r * 0.85)){ hit = true; hitMat(j, s.x, s.y); }
       }
-      if(hit || s.life <= 0 || s.x < S.vx0 - 60 || s.x > S.vx1 + 60 || s.y < S.vy0 - 60 || s.y > S.vy1 + 60){
+      if(hit || s.x < S.vx0 - 60 || s.x > S.vx1 + 60 || s.y < S.vy0 - 60 || s.y > S.vy1 + 60){
         shots.splice(i, 1); i--;
       }
     }
@@ -2720,7 +4012,7 @@
       if(mode !== 'play') continue;
       var got = tryEat(t.x, t.y, t.wR * R * 0.35, t.key === 'hunter' ? 'exuRed' : 'exudate',
                        t.wR * (t.big ? 0.6 : 0.8), t.rot);
-      if(got > 0){ tokens.splice(i, 1); i--; ate(t.key, t.big ? 3 : 1); }
+      if(got > 0){ tokens.splice(i, 1); i--; ate(t.key, t.big ? 3 : 1, true); }
       else if(got < 0) nudgeOff(t, dt);
     }
   }
@@ -2766,15 +4058,34 @@
            (TOUCH ? 'Tap Fire toxins.' : 'Press C.') },
     biofilm:{ name:'Biofilm formation', donor:'psb', n:1,
       line:'From purple sulfur bacteria: the genes for their slime. ' + (TOUCH ? 'Hold Biofilm' : 'Hold Z') +
-           ' to trail it; anything that touches it dies.' },
+           ' to trail it. Small cells die on touching it; a ciliate takes ' + SLIME_HITS_HUNTER +
+           ' touches and an Asgard archaeon ' + SLIME_HITS_ASG + '.' },
     flag2:{ name:'A second flagellum', donor:'hunter', n:1,
       line:'From a ciliate: the genes to build another flagellum (cilia and flagella are the same machine). 1.5\u00D7 speed.' },
+    vacuoles:{ name:'Gas vacuoles', donor:'cyano', n:1,
+      line:'From cyanobacteria: gas vesicles, tiny protein balloons that set how high a cell floats. ' +
+           (TOUCH ? 'Tap Rise or Sink' : 'Tap W or \u2191 to shoot up, S or \u2193 to drop') +
+           '. They take the place of your extra flagella.' },
+    symbiont:{ name:'Nitrogen-fixer symbiont', donor:'fix', n:1, eyebrow:'Endosymbiosis',
+      line:'You keep a swallowed nitrogen fixer alive inside you, and it turns N\u2082 into nitrogen you can use ' +
+           '(in one real alga it became an organelle, the nitroplast). ' +
+           'It replaces your envelope: you can now hold 4 lives, and every ' + FIX_LIFE + ' nitrogen fixers you eat adds one.' },
+    quorum:{ name:'Quorum sensing', donor:'alt', n:1,
+      line:'From Alteromonas: the genes to make and sense a signal molecule, which bacteria use to count each other. ' +
+           'Yours draws nearby prey to you for 3 seconds. Eat 5 cells to charge it, then ' + (TOUCH ? 'tap Quorum' : 'press Z') +
+           '. It replaces biofilm.' },
+    t6ss:{ name:'Type VI secretion system', donor:'pseudo', n:1,
+      line:'From Pseudomonas: the T6SS, a spring-loaded spear built like a phage\u2019s tail, which bacteria fire into ' +
+           'their neighbours. It replaces your efflux pumps. ' + (TOUCH ? 'Tap Jab' : 'Press C') +
+           ' to jab. You start with ' + JAB_START + ', and the cells that refilled your toxins now refill it.' },
     flag3:{ name:'A third flagellum', donor:'hunter', n:1,
       line:'One more from the ciliates: three flagella, twice your first top speed.' }
   };
   var HGT_REACH = [0.45, 1.25], HGT_GENES = 1.35, HGT_GLOW = 3.05, HGT_SHOW = 3.45, HGT_END = 4.2;
   var HGT_BEADS = 6, HGT_GAP = 0.17, HGT_RUN = 0.8;     // genes down the one tube
   var HGT_SHOOT = 3.6, HGT_VOLLEY = 0.55;                // the efflux scene: volleys from here on
+  var HGT_JAB = 0.75;                                    // the T6SS scene: a jab this often
+  var SYM_GO = 0.35, SYM_TOUCH = 1.45, SYM_IN = 2.3;     // the symbiont scene: swim up, wrapped, taken in
   var hgtQ = [], hgt = null, hgtEl = null, hgtCv = null, hgtC = null;
   var HGT_W = 520, HGT_H = 260;
   function hgtStart(kind){
@@ -2800,6 +4111,7 @@
     for(var i = 0; i < spots.length; i++)
       hgt.donors.push({ x:spots[i][0], y:spots[i][1], rot:D.n === 1 ? -0.25 : -0.6 + i * 0.7, ph:i * 1.9, lit:0 });
     document.getElementById('pp_hgtName').textContent = D.name;
+    hgtEl.querySelector('.hgt__eyebrow').textContent = D.eyebrow || 'Horizontal gene transfer';
     document.getElementById('pp_hgtLine').textContent = D.line;
     document.getElementById('pp_hgtText').classList.remove('on');
     document.getElementById('pp_hgtBtn').classList.remove('on');
@@ -2828,7 +4140,15 @@
     for(var g = 0; g < h.glow.length; g++) h.glow[g] = Math.max(0, h.glow[g] - dt / 0.9);
     h.gulp = Math.max(0, h.gulp - dt / 0.5);
     // genes arriving: a blip, a mitochondrion lighting up, a swallow
-    for(var i = 0; i < h.donors.length; i++){
+    if(h.kind === 'symbiont'){
+      if(!h.touched && h.t >= SYM_TOUCH){ h.touched = true; h.gulp = 1; sfx('eat'); }
+      for(var mj = 0; mj < h.glow.length; mj++){            // fed: the mitochondria light one by one
+        if(!h.arrived['m' + mj] && h.t >= SYM_IN + 0.1 + mj * 0.12 && h.t < HGT_GLOW){
+          h.arrived['m' + mj] = true; h.glow[mj] = 1; sfx('blip');
+        }
+      }
+    }
+    for(var i = 0; i < h.donors.length && h.kind !== 'symbiont'; i++){
       for(var j = 0; j < HGT_BEADS; j++){
         var key = i + ':' + j, arrive = HGT_GENES + j * HGT_GAP + i * 0.13 + HGT_RUN;
         if(!h.arrived[key] && h.t >= arrive && h.t < HGT_GLOW){
@@ -2845,6 +4165,10 @@
       h.glowed = true;
       sfx('evolve');
       if(h.kind === 'envelope') h.peels.push({ k:1.0, t:0, grow:true });
+      if(h.kind === 'symbiont'){
+        h.peels.push({ k:1.075, t:0, col:'#E8D9A0' });          // the old envelope lets go
+        h.peels.push({ k:1.0, t:0, grow:true, col:'#FFE27A', w:0.03 });
+      }
       if(h.kind === 'biofilm')
         for(var s2 = 0; s2 < 9; s2++) h.slime.push({ x:150 - 70 - s2 * 13, y:130 + Math.sin(s2 * 1.3) * 10,
                                                       r:24 + Math.random() * 8, age:-s2 * 0.07, ph:Math.random() * 6 });
@@ -2854,6 +4178,10 @@
     if(h.kind === 'pumps' && h.t >= HGT_SHOOT){
       var vol = Math.floor((h.t - HGT_SHOOT) / HGT_VOLLEY);
       if(vol !== h.vol && vol < 4){ h.vol = vol; sfx('shoot'); }
+    }
+    if(h.kind === 't6ss' && h.t >= HGT_SHOOT){
+      var jv = Math.floor((h.t - HGT_SHOOT) / HGT_JAB);
+      if(jv !== h.vol && jv < 4){ h.vol = jv; sfx('jab'); }
     }
     if(!h.shown && h.t >= HGT_SHOW){ h.shown = true; document.getElementById('pp_hgtText').classList.add('on'); }
     if(!h.done && h.t >= HGT_END){
@@ -2865,7 +4193,11 @@
   }
   // the ability as it was before this transfer, for the first part of the scene
   function hgtBefore(kind){
-    var a = { envelope:abil.envelope, pumps:abil.pumps, biofilm:abil.biofilm, flag:abil.flag };
+    var a = { envelope:abil.envelope, pumps:abil.pumps, biofilm:abil.biofilm, flag:abil.flag, vac:abil.vac, sym:abil.sym, qs:abil.qs, t6:abil.t6 };
+    if(kind === 't6ss'){ a.t6 = false; a.pumps = true; }
+    if(kind === 'quorum'){ a.qs = false; a.biofilm = true; }
+    if(kind === 'vacuoles'){ a.vac = false; a.flag = vacPrevFlag; }
+    if(kind === 'symbiont'){ a.sym = false; a.envelope = true; }
     if(kind === 'envelope') a.envelope = false;
     if(kind === 'pumps') a.pumps = false;
     if(kind === 'biofilm') a.biofilm = false;
@@ -2913,7 +4245,7 @@
     var R = pR();
     hgt.kindDonor = D.donor;
     // donors, bobbing, lit as each gene leaves them
-    for(var i = 0; i < h.donors.length; i++){
+    for(var i = 0; i < h.donors.length && h.kind !== 'symbiont'; i++){
       var d = h.donors[i], bob = Math.sin(t * 1.6 + d.ph) * 4;
       if(d.lit > 0){
         ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -2921,6 +4253,12 @@
         lg.addColorStop(0, 'rgba(160,255,190,' + (0.45 * d.lit).toFixed(3) + ')'); lg.addColorStop(1, 'rgba(160,255,190,0)');
         ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(d.x, d.y + bob, 78, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
+      }
+      if(h.kind === 't6ss' && t > HGT_GLOW){              // out of the way of the spear
+        var gone6 = clamp((t - HGT_GLOW) / 0.5, 0, 1);
+        sprite(D.donor, d.x + gone6 * 60, d.y + bob - gone6 * 50, 250, d.rot + Math.PI, 1 - gone6);
+        d.y0 = d.y + bob;
+        continue;
       }
       if(h.kind === 'pumps' && t > HGT_GLOW){             // its genes given, the donor drifts off
         var gone = clamp((t - HGT_GLOW) / 0.5, 0, 1);
@@ -2931,14 +4269,15 @@
       if(D.donor === 'hunter')
         drawHunter({ x:d.x + 10, y:d.y + bob, w:160, heading:Math.PI, t:t, inT:5, menace:0.25, hp:HUNTER_HP, flash:0 });
       else
-        sprite(D.donor, d.x, d.y + bob, D.donor === 'psb' ? 112 : 108, d.rot + Math.sin(t + d.ph) * 0.12, 1);
+        sprite(D.donor, d.x, d.y + bob, D.donor === 'psb' ? 112 : D.donor === 'alt' ? 230 : D.donor === 'pseudo' ? 250 : 108,
+               d.rot + Math.sin(t + d.ph) * 0.12 + (D.donor === 'alt' || D.donor === 'pseudo' ? Math.PI : 0), 1);
       d.y0 = d.y + bob;
     }
     // the tubes: reach out, hold while the genes run, then let go
     var reach = t < HGT_REACH[0] ? 0 : t < HGT_REACH[1] ? ease((t - HGT_REACH[0]) / (HGT_REACH[1] - HGT_REACH[0]))
               : t < HGT_GLOW ? 1 : Math.max(0, 1 - ease(Math.min(1, (t - HGT_GLOW) / 0.45)));
     var flowing = t > HGT_GENES && t < HGT_GLOW;
-    for(i = 0; i < h.donors.length && reach > 0; i++){
+    for(i = 0; i < h.donors.length && reach > 0 && h.kind !== 'symbiont'; i++){
       var dd = { x:h.donors[i].x, y:h.donors[i].y0 };
       var curve = hgtTube(dd, i, R), pts = [], n = 26;
       for(var q = 0; q <= n; q++) pts.push(curve(q / n * reach));
@@ -2973,14 +4312,34 @@
     cell = keepCell;
     // the protist itself, before and then after
     var after = t >= HGT_GLOW;
-    var ab = after ? { envelope:abil.envelope, pumps:abil.pumps, biofilm:abil.biofilm, flag:abil.flag } : hgtBefore(h.kind);
-    var lv = ab.envelope ? LIVES_ENVELOPE : 1;
+    var ab = after ? { envelope:abil.envelope, pumps:abil.pumps, biofilm:abil.biofilm, flag:abil.flag, vac:abil.vac, sym:abil.sym, qs:abil.qs, t6:abil.t6 } : hgtBefore(h.kind);
+    var lv = ab.sym || h.kind === 'symbiont' ? lives : ab.envelope ? LIVES_ENVELOPE : 1;
     var pf = after && h.kind === 'pumps' && t < HGT_GLOW + 0.5 ? 0.12 * (1 - (t - HGT_GLOW) / 0.5) : 0;
     if(h.kind === 'pumps' && t >= HGT_SHOOT){               // a muzzle flash on each volley
       var since = (t - HGT_SHOOT) % HGT_VOLLEY;
       if(since < 0.12) pf = 0.12 - since;
     }
+    if(h.kind === 'vacuoles' && after){
+      var fk = Math.min(1, (t - HGT_GLOW) / 0.6);
+      vacLit = fk * (0.55 + 0.45 * Math.sin(t * 5));
+      stand.y -= fk * Math.sin((t - HGT_GLOW) * 1.9) * 22;
+    }
+    if(h.kind === 'symbiont'){ symGhost = after ? 1 : 0; symIn = !after && t >= SYM_IN ? 1 : 0; }
+    var keepJab = [jabs, jabT, jabK];
+    jabs = JAB_START; jabT = -1; jabK = 0;
+    if(h.kind === 't6ss' && t >= HGT_SHOOT){                // then it jabs, again and again
+      var je = (t - HGT_SHOOT) % HGT_JAB;
+      if(je < JAB_OUT + JAB_HOLD + JAB_BACK){ jabT = je; jabK = jabExt(je); }
+    }
     hgtProtist(stand, ab, lv, h.peels, pf);
+    jabs = keepJab[0]; jabT = keepJab[1]; jabK = keepJab[2];
+    vacLit = 0; symGhost = 0; symIn = 0;
+    if(h.kind === 'symbiont' && t < SYM_IN) drawSymTaken(stand, t);
+    if(h.kind === 'quorum' && after){                       // it sends out a signal of its own
+      cell = stand;
+      drawSignal(stand.x, stand.y, pR() * 3.2, Math.min(1, (t - HGT_GLOW) / 0.4), t, QS_MOLS, true);
+      cell = keepCell;
+    }
     if(h.kind === 'pumps' && t >= HGT_SHOOT){               // then they fire, again and again
       cell = stand;
       var Rs = pR(), chs = Math.cos(stand.heading), shs = Math.sin(stand.heading);
@@ -3031,6 +4390,43 @@
     drawGene(hgtGene || (hgtGene = document.getElementById('pp_hgtGene')), reduced ? 1.2 : t + 0.8);
   }
   var hgtGene = null;
+  // the nitrogen fixer swims up, the protist's membrane wraps round it, and
+  // it is drawn inside in a vacuole of its own
+  function drawSymTaken(stand, t){
+    var keep = cell;
+    cell = stand;
+    var R = pR(), cy = stand.y, touchX = stand.x + PRO.hit.front * R + 26;
+    var inX = stand.x + SYM_AT[0] * R, inY = stand.y + SYM_AT[1] * R;
+    var fx, fy, w, bob = Math.sin(t * 1.6) * 4, arms = 0, armA = 1;
+    if(t < SYM_GO){ fx = 398; fy = 130 + bob; w = 84; }
+    else if(t < SYM_TOUCH){
+      var u = ease((t - SYM_GO) / (SYM_TOUCH - SYM_GO));
+      fx = 398 + (touchX - 398) * u; fy = (130 + bob) * (1 - u) + cy * u; w = 84 + (52 - 84) * u;
+    } else {
+      arms = Math.min(1, (t - SYM_TOUCH) / 0.3);
+      var pull = ease(Math.min(1, Math.max(0, (t - SYM_TOUCH - 0.25) / (SYM_IN - SYM_TOUCH - 0.25))));
+      fx = touchX + (inX - touchX) * pull; fy = cy + (inY - cy) * pull; w = 52 + (SYM_W * R - 52) * pull;
+      armA = 1 - Math.max(0, (pull - 0.45) / 0.55);
+    }
+    proA = 1;
+    if(arms > 0 && armA > 0){                                // two pseudopods close round it
+      var rf = w * 0.62;
+      for(var s = -1; s <= 1; s += 2){
+        var base = outlineAt(s * 0.55), pts = [[stand.x + base[0] * R, stand.y + base[1] * R]];
+        var a0 = s * Math.PI * 0.8, a1 = s * Math.PI * 0.8 * (1 - arms);
+        for(var q = 0; q <= 10; q++){ var aa = a0 + (a1 - a0) * q / 10; pts.push([fx + Math.cos(aa) * rf, fy + Math.sin(aa) * rf]); }
+        ribbon(pts, R * 0.13, R * 0.06, PRO_CYTO, 0.92 * armA, null);
+        ribbon(pts, R * 0.05, R * 0.025, PRO_MEMB, 0.8 * armA, null);
+      }
+    }
+    sprite('fix', fx, fy, w, -0.25 + t * 0.2, 1);
+    if(arms >= 1){
+      ctx.globalAlpha = 0.8; ctx.strokeStyle = PRO_MEMB; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(fx, fy, w * 0.48, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    cell = keep;
+  }
 
   // ---- the gene: LUCA's living double helix ----------------------------------
   // The helix turns; a gene (one stretch of it, bracketed) glows while an RNA
@@ -3134,16 +4530,62 @@
     paintHud();
   }
   // something was eaten: n cells' worth (an Asgard's exudate is three)
-  function ate(key, n){
+  // what a token from a kill tops up: the ability that species gave you, if
+  // it has a bar and you have it; otherwise your toxins
+  function fillFor(key){
+    if(key === 'psb' && abil.biofilm) return 'slime';
+    if(key === 'fix' && abil.sym) return 'sym';
+    if(key === 'alt' && abil.qs) return 'qs';
+    if(key === 'pseudo' && abil.t6) return 'jab';
+    return abil.pumps ? 'tox' : abil.t6 ? 'jab' : 'none';   // with the T6SS, what filled toxins fills jabs
+  }
+  var FILL_COL = { tox:'211,242,90', slime:'176,122,216', sym:'255,212,74', qs:'235,248,250', jab:'127,232,210' };
+  // ammunition from a meal: toxins for the pumps, or jabs once the T6SS has
+  // replaced them (one meal bought one shot; now it buys one jab)
+  function ammo(n){
+    if(abil.pumps) tox = Math.min(1, tox + TOX_FILL * n);
+    else if(abil.t6) jabs = Math.min(JAB_MAX, jabs + n);
+  }
+  function ate(key, n, token){
     cellsEaten += n;
     addScore(PTS.eat * n, cell.x, cell.y - pR() * 1.3);
-    if(key === 'psb'){ if(abil.biofilm) slimeBar = Math.min(1, slimeBar + SLIME_FILL * n); }
-    else if(abil.pumps) tox = Math.min(1, tox + TOX_FILL * n);
+    if(token){
+      var to = fillFor(key);
+      if(to === 'slime') slimeBar = Math.min(1, slimeBar + SLIME_FILL * n);
+      else if(to === 'sym'){ fixN += n; while(fixN >= FIX_LIFE){ fixN -= FIX_LIFE; fixLife(); } }
+      else if(to === 'qs') qsBar = Math.min(1, qsBar + QS_FILL * n);
+      else if(to === 'jab') jabs = Math.min(JAB_MAX, jabs + n);
+      else if(abil.pumps) tox = Math.min(1, tox + TOX_FILL * n);
+    }
+    else if(key === 'psb'){ if(abil.biofilm) slimeBar = Math.min(1, slimeBar + SLIME_FILL * n); }
+    else if(key === 'fix' && abil.sym){                    // the symbiont's lives
+      ammo(n);
+      fixN += n;
+      while(fixN >= FIX_LIFE){ fixN -= FIX_LIFE; fixLife(); }
+    }
+    else ammo(n);
+    if(!token && abil.qs) qsBar = Math.min(1, qsBar + QS_FILL * n);    // any meal charges your signal
     if(!freePlay && roundEndT < 0 && key === roundFood()){ eaten += 1; checkGoals(); }
     paintHud();
   }
-  function roundFood(){ return round === 1 ? 'alpha' : round === 2 ? 'psb' : round === 3 ? 'hunter' : null; }
+  function roundFood(){ return round === 1 ? 'alpha' : round === 2 ? 'psb' : round === 3 ? 'hunter' : round === 5 ? 'cyano' : round === 6 ? 'fix' : round === 7 ? 'alt' : round === 8 ? 'pseudo' : null; }
   function checkGoals(){
+    if(round === 8){
+      if(!abil.t6 && eaten >= GOAL_T6) gainT6ss();
+      return;
+    }
+    if(round === 7){
+      if(!abil.qs && eaten >= GOAL_QS) gainQuorum();
+      return;
+    }
+    if(round === 6){
+      if(!abil.sym && eaten >= GOAL_SYM) gainSymbiont();
+      return;
+    }
+    if(round === 5){
+      if(!abil.vac && eaten >= GOAL_VAC) gainVacuoles();
+      return;
+    }
     if(round === 3){
       if(abil.flag < 2 && eaten >= GOAL_FLAG2) gainFlag(2);
       if(abil.flag < 3 && eaten >= GOAL_FLAG3) gainFlag(3);
@@ -3184,6 +4626,28 @@
     if(n === 3) roundEndT = 3.2;
     paintHud(true);
   }
+  // the symbiont takes the envelope's place: the most lives you can hold becomes 4
+  function gainSymbiont(){
+    abil.sym = true; abil.envelope = false;
+    fixN = 0;
+    addScore(PTS.ability, cell.x, cell.y - pR() * 2);
+    hgtStart('symbiont');
+    roundEndT = 3.2;
+    paintHud(true);
+    paintGauges();
+  }
+  // gas vacuoles take the place of the extra flagella: back to one, plus the bursts
+  function gainVacuoles(){
+    vacPrevFlag = abil.flag;
+    abil.vac = true; abil.flag = 1;
+    vacT = 0; vacCd = 0;
+    if(cell) cell.ropes = null;
+    addScore(PTS.ability, cell.x, cell.y - pR() * 2);
+    hgtStart('vacuoles');
+    roundEndT = 3.2;
+    paintHud(true);
+    paintGauges();
+  }
   function gainBiofilm(){
     abil.biofilm = true;
     slimeBar = 1;
@@ -3198,7 +4662,8 @@
     var before = lives;
     lives = Math.max(0, lives - 1);
     invT = INVULN; hurtT = 0.5; shake = 0.35;
-    if(abil.envelope && before >= 2) peels.push({ k:before >= 3 ? 1.16 : 1.075, t:0 });
+    if(abil.sym && before >= 2) peels.push({ k:SYM_K[Math.min(SYM_K.length, before - 1) - 1], t:0, col:'#FFE27A', w:0.03 });
+    else if(abil.envelope && before >= 2) peels.push({ k:before >= 3 ? 1.16 : 1.075, t:0 });
     if(!fromTemp){
       var d = Math.hypot(cell.x - x, cell.y - y) || 1;
       cell.vx += (cell.x - x) / d * 230; cell.vy += (cell.y - y) / d * 230;   // knocked clear
@@ -3273,6 +4738,8 @@
       return;
     }
     if(mode === 'hgt'){ stepHgt(dt); return; }   // the world waits while a gene transfer plays
+    if(mode === 'rise'){ stepRise(dt); return; }
+    if(mode === 'portal'){ stepPortal(dt); return; }
     if(mode !== 'play') return;             // a card holds the water still
 
     runT += dt;
@@ -3280,6 +4747,7 @@
     if(hurtT > 0) hurtT -= dt;
     if(toxCd > 0) toxCd -= dt;
     if(pumpFlash > 0) pumpFlash -= dt;
+    stepVac(dt);
     swim(dt);
     stepFlagella(dt);
     stepTemp(dt);
@@ -3292,10 +4760,17 @@
     stepMats(dt);
     stepShots(dt);
     stepSlime(dt);
+    stepCyanos(dt);
+    stepFixers(dt);
+    stepAlts(dt);
+    stepPseudos(dt);
+    stepJab(dt);
+    if(mode === 'play') stepQsMine(dt);
     stepTokens(dt);
     stepUps(dt);
     stepMeals(dt);
     if(round === 4) stepBloom(dt);
+    if(round === 9) stepBloom9(dt);
     if(exodusT >= 0) stepExodus(dt);
     if(mode !== 'play') return;
     if(roundEndT >= 0){
@@ -3472,7 +4947,7 @@
     }
     ctx.restore();
     // how much it has left, once you can hurt it
-    if(abil.pumps && a.hp < ASG_HP){
+    if(a.hp < ASG_HP - 1e-6){
       var bw = a.w * 0.5, y = a.y - a.w * 0.62;
       ctx.globalAlpha = 0.85;
       ctx.fillStyle = 'rgba(4,8,20,0.8)'; ctx.fillRect(a.x - bw / 2, y, bw, a.w * 0.035);
@@ -3698,6 +5173,7 @@
   // The envelope: a wall (dashed, straw) inside an outer membrane (teal).
   // Each layer is one life beyond the cell's own; a hit peels the outermost.
   function drawEnvelope(R){
+    if(abil.sym){ drawSymLines(R); return; }
     var n = abil.envelope ? Math.max(0, lives - 1) : 0;
     if(n >= 1){
       outlinePath(R, 1.075);
@@ -3782,6 +5258,8 @@
     ctx.globalAlpha = proA;
     if(body) ctx.drawImage(body, ox, oy, bw, bh);
     drawMitos(R);
+    drawVacuoles(R);
+    drawSymbiont(R);
     mealsInside(R);
     glowDraw(R);
     ctx.globalAlpha = proA;
@@ -3792,11 +5270,12 @@
     }
     drawEnvelope(R);
     drawPumps(R);
+    drawT6Mine(R);
     for(var i = 0; i < peels.length; i++){              // a layer peeling away, or a new one forming
       var pe = peels[i], k = pe.grow ? 1.25 - 0.25 * ease(pe.t) : pe.k + 0.35 * ease(pe.t);
       outlinePath(R, k);
       ctx.globalAlpha = (pe.grow ? 0.8 * (1 - pe.t) + 0.2 : 0.9 * (1 - pe.t));
-      ctx.strokeStyle = pe.grow ? '#9FF0C0' : '#FF8A7A'; ctx.lineWidth = R * 0.05; ctx.stroke();
+      ctx.strokeStyle = pe.col || (pe.grow ? '#9FF0C0' : '#FF8A7A'); ctx.lineWidth = R * (pe.w || 0.05); ctx.stroke();
     }
     ctx.restore();
     ctx.globalAlpha = 1;
@@ -4004,7 +5483,7 @@
     ctx.strokeStyle = 'rgba(236,120,152,0.75)'; ctx.lineWidth = Math.max(1, L * 0.016); ctx.stroke();
     ctx.restore();
     // how much it has left, once it is hurt
-    if(h.hp < HUNTER_HP && h.hp > 0){
+    if(h.hp < HUNTER_HP - 1e-6 && h.hp > 1e-6){
       var hw = L * 0.4, hy = h.y - L * 0.55;
       ctx.globalAlpha = 0.85;
       ctx.fillStyle = 'rgba(4,8,20,0.8)'; ctx.fillRect(h.x - hw / 2, hy, hw, L * 0.035);
@@ -4016,7 +5495,7 @@
   // The way out: a gap of daylight at the top, open once the bloom passes.
   function opening(){ var R = baseR(); return { x:(S.vx0 + S.vx1) / 2, y:S.vy0 + R * 1.4, r:R * 1.5 }; }
   function drawOpening(){
-    if(!opened) return;
+    if(!opened || round !== 4) return;              // round 4's way up (round 9 has its portal)
     var o = opening(), k = Math.min(1, openT / 1.5), pulse = 0.88 + 0.12 * Math.sin(gT * 3);
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
@@ -4081,6 +5560,7 @@
   function draw(t){
     ctx.setTransform(1,0,0,1,0,0);
     ctx.clearRect(0,0,cv.width,cv.height);
+    if(surface){ drawSurfaceWater(t); drawRest(t); return; }
     ctx.drawImage(bg, shx, shy);
     applyT(ctx);
     ctx.fillStyle = css(C.snow);
@@ -4106,19 +5586,92 @@
       ctx.drawImage(BUB[idx], xx-rr*2, b.y-rr*2, rr*4, rr*4);
     }
     ctx.globalAlpha = 1;
-
-    var R0 = baseR();
+    drawRest(t);
+  }
+  // the sunlit water: LUCA's surface gradient, then ripples, caustics and rays
+  var bgS = document.createElement('canvas'), bgSc = bgS.getContext('2d');
+  function buildSurfaceWater(){
+    applyT(bgSc);
+    bgSc.clearRect(-4000, -4000, S.LW + 8000, H + 8000);
+    var g = bgSc.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0.00, '#8FD9E8'); g.addColorStop(0.30, '#3E9FC4');
+    g.addColorStop(0.62, '#1B6D97'); g.addColorStop(0.86, '#0E3A5C'); g.addColorStop(1.00, '#08223A');
+    bgSc.fillStyle = g;
+    bgSc.fillRect(-4000, -4000, S.LW + 8000, H + 8000);
+  }
+  function drawSurfaceWater(t){
+    ctx.drawImage(bgS, shx, shy);
+    applyT(ctx);
+    var x0 = S.vx0, x1 = S.vx1, y0 = S.vy0, Hh = S.vy1 - S.vy0, W = x1 - x0, ly = y0 + Hh * 0.7, tt = t * 0.001;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = 'rgba(225,248,255,0.10)';                // the surface seen from below
+    ctx.beginPath(); ctx.moveTo(x0 - 4, y0 - 6);
+    for(var sx = x0 - 4; sx <= x1 + 14; sx += 14)
+      ctx.lineTo(sx, y0 + Hh * 0.025 + Math.sin(sx * 0.018 + tt * 1.3) * Hh * 0.007 + Math.sin(sx * 0.047 - tt) * Hh * 0.004);
+    ctx.lineTo(x1 + 14, y0 - 6); ctx.closePath(); ctx.fill();
+    ctx.lineWidth = Math.max(1, Hh * 0.0028);                 // caustic threads
+    for(var k = 0; k < 5; k++){
+      ctx.strokeStyle = 'rgba(230,252,255,' + (0.06 - k * 0.009).toFixed(3) + ')';
+      ctx.beginPath();
+      for(var cx2 = x0 - 16; cx2 <= x1 + 20; cx2 += 16){
+        var cy2 = y0 + Hh * (0.05 + k * 0.045) + Math.sin(cx2 * 0.012 + tt * 0.9 + k * 1.7) * Hh * 0.012 +
+                  Math.sin(cx2 * 0.033 - tt * 1.25 + k) * Hh * 0.006;
+        if(cx2 === x0 - 16) ctx.moveTo(cx2, cy2); else ctx.lineTo(cx2, cy2);
+      }
+      ctx.stroke();
+    }
+    var sl = (ly - y0) * 0.22;                                // shafts of sunlight, swaying
+    for(var j = 0; j < 7; j++){
+      var bx = x0 + (j + 0.2 + 0.4 * hr(j + 300)) / 7 * W + Math.sin(tt * 0.3 + j * 1.7) * W * 0.012;
+      var bw = W * (0.016 + 0.024 * hr(j + 320)), a = 0.035 + 0.035 * (0.5 + 0.5 * Math.sin(tt * 0.55 + j * 2.1));
+      var gr = ctx.createLinearGradient(0, y0, 0, ly);
+      gr.addColorStop(0, 'rgba(235,252,255,' + a.toFixed(3) + ')');
+      gr.addColorStop(0.7, 'rgba(235,252,255,' + (a * 0.45).toFixed(3) + ')');
+      gr.addColorStop(1, 'rgba(235,252,255,0)');
+      ctx.fillStyle = gr;
+      ctx.beginPath(); ctx.moveTo(bx - bw, y0); ctx.lineTo(bx + bw, y0);
+      ctx.lineTo(bx + bw * 2.2 + sl, ly); ctx.lineTo(bx - bw * 0.6 + sl, ly); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+    ctx.fillStyle = '#E8FBFF';
+    paintParticles(far);
+  }
+  function drawRest(t){
+    var i, R0 = baseR();
+    for(i = 0; i < qGone.length; i++) drawQuorum(qGone[i]);
+    for(i = 0; i < quorums.length; i++) drawQuorum(quorums[i]);
     for(i = 0; i < mats.length; i++) drawMat(mats[i]);
     drawSlime();
     drawOpening();
+    drawPortal();
     drawUps();
     for(i = 0; i < tokens.length; i++){
       var tk = tokens[i], tEnd = tk.key === 'hunter' ? 30 : 14;
       var fade = tk.age > tEnd - 2 ? Math.max(0, (tEnd - tk.age) / 2) : Math.min(1, tk.age * 3);
       var pul = 1 + 0.08 * Math.sin(gT * 4 + i);
+      if((tk.key !== 'hunter' || round !== 3) && FILL_COL[fillFor(tk.key)]){
+        var fc = FILL_COL[fillFor(tk.key)], hr2 = tk.wR * R0 * 1.15 * pul;
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        var tg = ctx.createRadialGradient(tk.x, tk.y, 0, tk.x, tk.y, hr2);
+        tg.addColorStop(0, 'rgba(' + fc + ',' + (0.42 * fade).toFixed(3) + ')'); tg.addColorStop(1, 'rgba(' + fc + ',0)');
+        ctx.fillStyle = tg; ctx.beginPath(); ctx.arc(tk.x, tk.y, hr2, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
       sprite(tk.key === 'hunter' ? 'exuRed' : 'exudate', tk.x, tk.y, tk.wR * R0 * 1.1 * pul, tk.rot, fade);
     }
     for(i = 0; i < prey.length; i++) sprite(prey[i].key, prey[i].x, prey[i].y, prey[i].wR * R0, prey[i].rot, 1);
+    for(i = 0; i < cyanos.length; i++) sprite('cyano', cyanos[i].x, cyanos[i].y, cyanos[i].wR * R0, cyanos[i].rot, 1);
+    for(i = 0; i < mols.length; i++) drawMol(mols[i]);
+    for(i = 0; i < alts.length; i++) sprite('alt', alts[i].x, alts[i].y, alts[i].wR * R0, alts[i].dir + Math.sin(gT * 3 + alts[i].wig) * 0.06, 1);
+    for(i = 0; i < pseudos.length; i++) drawPseudo(pseudos[i]);
+    for(i = 0; i < plumes.length; i++) drawNeuro(plumes[i]);
+    ctx.fillStyle = 'rgba(235,250,255,0.85)';
+    for(i = 0; i < fizz.length; i++){
+      ctx.globalAlpha = 0.8 * (1 - fizz[i].life);
+      ctx.beginPath(); ctx.arc(fizz[i].x, fizz[i].y, fizz[i].r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
     for(i = 0; i < spiny.length; i++){
       ctx.globalAlpha = 1 - (spiny[i].out || 0);
       drawSpines(spiny[i], spiny[i].wR * R0);
@@ -4146,7 +5699,7 @@
     }
     ctx.restore();
 
-    if(cell && mode !== 'title' && mode !== 'dead') drawPlayer();
+    if(cell && mode !== 'title' && mode !== 'dead' && !gone){ drawQsMine(); drawPlayer(); drawConfused(); }
 
     for(i = 0; i < debris.length; i++){
       var dq = debris[i];
@@ -4181,6 +5734,16 @@
     ctx.setTransform(1,0,0,1,0,0);
     ctx.fillStyle = vignette;
     ctx.fillRect(0,0,cv.width,cv.height);
+    if(riseT >= 0){
+      var wa = riseT < 0.7 ? riseT / 0.7 : Math.max(0, 1 - (riseT - 0.7) / 0.9);
+      ctx.fillStyle = 'rgba(236,252,255,' + wa.toFixed(3) + ')';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+    }
+    if(portalT >= 1.0){                                  // the portal takes you: a violet-white flash
+      var pa = portalT < 1.4 ? (portalT - 1.0) / 0.4 : Math.max(0, 1 - (portalT - 1.4) / 0.6);
+      ctx.fillStyle = 'rgba(236,226,255,' + (0.9 * pa).toFixed(3) + ')';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+    }
     drawHgt();
   }
 
@@ -4188,22 +5751,35 @@
   var $ = function(id){ return document.getElementById(id); };
   var hudEl = $('pp_hud'), titleEl = $('pp_titleCard'), cardEl = $('pp_card'), fireEl = $('pp_fireBtn'), slimeEl = $('pp_slimeBtn');
   var bannerEl = $('pp_banner'), bannerQ = [], bannerT = 0;
-  var lastHud = '', lastPips = '';
+  var lastHud = '', lastPips = '', lastFire = '';
   function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
   function fmtTime(s){ var m = Math.floor(s / 60), r = Math.floor(s % 60); return m + ':' + (r < 10 ? '0' : '') + r; }
 
   function paintHud(force){
-    var abilTxt = abil.biofilm ? 'Envelope, pumps, biofilm' : abil.pumps ? 'Envelope, efflux pumps'
-                : abil.envelope ? 'Cell envelope' : 'None';
-    if(abil.flag > 1) abilTxt += ', ' + abil.flag + ' flagella';
+    var parts = [];
+    if(abil.sym) parts.push('symbiont');
+    else if(abil.envelope) parts.push(abil.pumps ? 'envelope' : 'cell envelope');
+    if(abil.pumps) parts.push(abil.biofilm || abil.qs || abil.vac ? 'pumps' : 'efflux pumps');
+    if(abil.t6) parts.push('T6SS');
+    if(abil.biofilm) parts.push('biofilm');
+    if(abil.qs) parts.push('quorum sensing');
+    if(abil.flag > 1) parts.push(abil.flag + ' flagella');
+    if(abil.vac) parts.push('gas vacuoles');
+    var abilTxt = parts.length ? parts.join(', ') : 'none';
+    abilTxt = abilTxt.charAt(0).toUpperCase() + abilTxt.slice(1);
     var key = score + '|' + lives + '|' + abilTxt + '|' + freePlay + '|' + round;
     if(key === lastHud && !force) return;
     lastHud = key;
-    $('pp_hudRound').textContent = freePlay ? 'Round ' + round + ' complete' : 'Round ' + round + ' of ' + ROUNDS.length;
+    var rn = $('pp_hudRoundN');
+    if(rn.textContent !== String(round)){                // a new round: the number slams in
+      rn.textContent = round;
+      rn.classList.remove('pop'); void rn.offsetWidth; rn.classList.add('pop');
+    }
+    $('pp_hudRoundOf').textContent = freePlay ? 'complete' : 'of ' + ROUNDS.length;
     $('pp_hudName').textContent = freePlay ? 'Free play' : ROUNDS[round - 1];
     $('pp_hudScore').textContent = fmt(score);
     $('pp_hudAbil').textContent = abilTxt;
-    var max = abil.envelope ? LIVES_ENVELOPE : 1, h = '';
+    var max = maxLives(), h = '';
     for(var i = 0; i < max; i++) h += '<i' + (i < lives ? '' : ' class="off"') + '></i>';
     var pips = $('pp_hudLives');
     if(h !== lastPips){
@@ -4211,23 +5787,37 @@
       pips.innerHTML = h;
       pips.setAttribute('aria-label', lives + (lives === 1 ? ' life' : ' lives'));
     }
-    $('pp_gGoal').hidden = freePlay || round === 4;
-    $('pp_bloomClock').hidden = round !== 4 || mode === 'title' || !!opened;   // the light itself says go
+    $('pp_gGoal').hidden = freePlay || round === 4 || round === 9;
+    $('pp_bloomClock').hidden = (round !== 4 && round !== 9) || mode === 'title' || !!opened;   // the light itself says go
     $('pp_gTox').hidden = !abil.pumps;
-    fireEl.hidden = !abil.pumps;
+    $('pp_gJab').hidden = !abil.t6;
+    fireEl.hidden = !abil.pumps && !abil.t6;
+    var fl = abil.t6 ? (TOUCH ? 'Jab' : 'Jab<kbd>C</kbd>') : (TOUCH ? 'Fire toxins' : 'Fire toxins<kbd>C</kbd>');
+    if(fl !== lastFire){ lastFire = fl; fireEl.innerHTML = fl; fireEl.classList.toggle('jabbtn', abil.t6); }
     $('pp_gSlime').hidden = !abil.biofilm;
     slimeEl.hidden = !abil.biofilm;
-    var icon = round === 1 ? 'assets/images/microbe_sar11.png' : round === 2 ? 'assets/images/microbe_purple_sulfur.png' : hunterStill();
-    $('pp_gGoalLabel').textContent = round === 3 ? 'Tokens' : 'Eaten';
+    $('pp_gVac').hidden = !abil.vac;
+    $('pp_vacRow').hidden = !abil.vac || !TOUCH;               // keys need no buttons; a phone does
+    $('pp_gSym').hidden = !abil.sym;
+    $('pp_gQs').hidden = $('pp_qsBtn').hidden = !abil.qs;
+    $('pp_gTemp').hidden = surface;                          // no vent, no heat
+    var icon = round === 1 ? 'assets/images/microbe_sar11.png' : round === 2 ? 'assets/images/microbe_purple_sulfur.png'
+             : round === 5 ? 'assets/images/microbe_cyanobacterium.png' : round === 6 ? 'assets/images/microbe_nitrogen_fixer.png'
+             : round === 7 ? altStill() : round === 8 ? pseudoStill(false) : hunterStill();
+    $('pp_gGoalLabel').textContent = round === 3 || round === 8 ? 'Tokens' : 'Eaten';
     if($('pp_gGoalIcon').getAttribute('src') !== icon) $('pp_gGoalIcon').setAttribute('src', icon);
   }
   function paintGauges(){
-    var next = round === 3 ? (abil.flag >= 2 ? GOAL_FLAG3 : GOAL_FLAG2)
+    var next = round === 8 ? GOAL_T6 : round === 7 ? GOAL_QS : round === 6 ? GOAL_SYM : round === 5 ? GOAL_VAC : round === 3 ? (abil.flag >= 2 ? GOAL_FLAG3 : GOAL_FLAG2)
              : round === 2 ? GOAL_BIOFILM : abil.envelope ? GOAL_PUMPS : GOAL_ENVELOPE;
     $('pp_gGoalVal').textContent = eaten;
     $('pp_gGoalMax').textContent = next;
     $('pp_gGoalFill').style.width = Math.min(100, eaten / next * 100).toFixed(1) + '%';
-    $('pp_gGoalState').textContent = round === 3 ? (abil.flag >= 3 ? 'Done' : abil.flag >= 2 ? 'Next: third flagellum' : 'Next: 2nd flagellum')
+    $('pp_gGoalState').textContent = round === 8 ? (abil.t6 ? 'Done' : 'Next: T6SS')
+      : round === 7 ? (abil.qs ? 'Done' : 'Next: quorum sensing')
+      : round === 6 ? (abil.sym ? 'Done' : 'Next: symbiont')
+      : round === 5 ? (abil.vac ? 'Done' : 'Next: gas vacuoles')
+      : round === 3 ? (abil.flag >= 3 ? 'Done' : abil.flag >= 2 ? 'Next: third flagellum' : 'Next: 2nd flagellum')
       : round === 2 ? (abil.biofilm ? 'Done' : 'Next: biofilm')
       : abil.pumps ? 'Done' : abil.envelope ? 'Next: efflux pumps' : 'Next: cell envelope';
     if(abil.biofilm){
@@ -4238,7 +5828,29 @@
       slimeEl.classList.toggle('low', !sl);
       slimeEl.classList.toggle('on', sl && slimeHeld);
     }
-    if(round === 4){
+    if(abil.vac){
+      var vk = vacT > 0 ? vacT / VAC_BURST : 1 - vacCd / VAC_CD;
+      $('pp_gVacFill').style.width = (vk * 100).toFixed(1) + '%';
+      $('pp_gVacState').textContent = vacT > 0 ? (vacDir < 0 ? 'Rising' : 'Sinking') : vacCd > 0 ? 'Refilling'
+                                 : 'Ready';
+      var vlow = vacT > 0 || vacCd > 0;
+      $('pp_riseBtn').classList.toggle('low', vlow); $('pp_sinkBtn').classList.toggle('low', vlow);
+    }
+    if(abil.qs){
+      $('pp_gQsVal').textContent = Math.round(qsBar * 100);
+      $('pp_gQsFill').style.width = (qsBar * 100).toFixed(1) + '%';
+      var qLeft = Math.ceil((1 - qsBar) / QS_FILL - 1e-6);
+      $('pp_gQsState').textContent = qsT > 0 ? 'Calling' : qsBar >= 1 - 1e-6 ? (TOUCH ? 'Ready' : 'Ready \u00B7 Z')
+                                : 'Eat ' + qLeft + (qLeft === 1 ? ' cell' : ' cells');
+      $('pp_qsBtn').classList.toggle('low', qsT > 0 || qsBar < 1 - 1e-6);
+    }
+    if(abil.sym){
+      $('pp_gSymVal').textContent = fixN;
+      $('pp_gSymMax').textContent = FIX_LIFE;
+      $('pp_gSymFill').style.width = (fixN / FIX_LIFE * 100).toFixed(1) + '%';
+      $('pp_gSymState').textContent = lives < maxLives() ? 'Next: a life' : 'Lives full: +' + PTS.asg;
+    }
+    if(round === 4 || round === 9){
       $('pp_bloomVal').textContent = opened ? 'Go up' : fmtTime(Math.ceil(Math.max(0, BLOOM_SECS - bloomT)));
       $('pp_bloomLabel').textContent = opened ? 'The bloom has passed' : 'Survive the bloom';
       $('pp_bloomClock').classList.toggle('clock--out', !!opened);
@@ -4249,6 +5861,12 @@
     $('pp_gTempVal').textContent = Math.round(tempC(temp));
     $('pp_gTempState').textContent = sev < 0.30 ? 'Optimal' : sev < 0.70 ? (temp < 0.5 ? 'Cooling' : 'Overheating')
                                  : (temp < 0.5 ? 'Critical cold' : 'Critical heat');
+    if(abil.t6){
+      $('pp_gJabVal').textContent = jabs;
+      $('pp_gJabFill').style.width = (jabs / JAB_MAX * 100).toFixed(1) + '%';
+      $('pp_gJabState').textContent = jabs >= 1 ? (TOUCH ? 'Ready' : 'Ready \u00B7 C') : 'Eat to refill';
+      fireEl.classList.toggle('low', jabs < 1 || jabT >= 0);
+    }
     if(abil.pumps){
       var ready = tox >= TOX_SHOT - 1e-6;
       $('pp_gToxVal').textContent = Math.round(tox * 100);
@@ -4285,10 +5903,14 @@
   }
 
   // ---- cards -----------------------------------------------------------------
-  var cardDo = null, cardDo2 = null;
+  var cardDo = null, cardDo2 = null, cardRound = 0, cardRoundName = '';
   function showCard(o){
     drag.on = false;
     $('pp_cardTag').textContent = o.tag || '';
+    cardRound = o.round || 0; cardRoundName = o.title || '';
+    var cr = $('pp_cardRound');
+    cr.hidden = true;
+    if(cardRound){ cr.textContent = 'Round ' + cardRound; void cr.offsetWidth; cr.hidden = false; }
     $('pp_cardTitle').textContent = o.title || '';
     var sc = $('pp_cardScore');
     sc.hidden = o.score === undefined;
@@ -4335,7 +5957,22 @@
     setTimeout(function(){ try { $('pp_cardBtn').focus({ preventScroll:true }); } catch(e){} }, 30);
   }
   function hideCard(){ cardEl.hidden = true; if(typeof focusGame === 'function') focusGame(); }
-  $('pp_cardBtn').addEventListener('click', function(){ sfxInit(); sfx('tick'); hideCard(); if(cardDo) cardDo(); });
+  $('pp_cardBtn').addEventListener('click', function(){
+    var rn = cardRound, rname = cardRoundName;           // (the button may open the next card)
+    sfxInit(); sfx('tick'); hideCard(); if(cardDo) cardDo();
+    if(rn && mode === 'play') roundSplash(rn, rname);
+  });
+  // ROUND 8, in big letters across the water as the round starts
+  var splashT = null;
+  function roundSplash(n, name){
+    var el = $('pp_roundSplash');
+    $('pp_rsplashN').textContent = 'Round ' + n;
+    $('pp_rsplashName').textContent = name || '';
+    el.hidden = true; void el.offsetWidth; el.hidden = false;
+    sfx('go');
+    clearTimeout(splashT);
+    splashT = setTimeout(function(){ el.hidden = true; }, 1750);
+  }
   $('pp_hgtBtn').addEventListener('click', function(){ sfx('tick'); if(hgt && hgt.done){ hgtNext(); focusGame(); } });
   $('pp_cardBtn2').addEventListener('click', function(){ sfx('tick'); hideCard(); if(cardDo2) cardDo2(); });
 
@@ -4375,7 +6012,7 @@
   function roundCard(){
     mode = 'card';
     showCard({
-      tag:'Round 1 of ' + ROUNDS.length,
+      tag:'Protist Predator \u00B7 ' + ROUNDS.length + ' rounds', round:1,
       title:'The purple vent',
       body:'Eat alphaproteobacteria. A touch from anything below costs a life, and so does too long ' +
            'in the hot plume or the cold open water.',
@@ -4396,7 +6033,7 @@
     mode = 'card';
     if(round === 1){
       showCard({
-        tag:'Round 1 complete \u00B7 +' + PTS.round + ' \u00B7 Round 2 of ' + ROUNDS.length,
+        tag:'Round 1 complete \u00B7 +' + PTS.round, round:2,
         title:'The mats',
         body:'Eat purple sulfur bacteria. Mats hold you, and ' + MAT_STUCK + ' seconds stuck costs a life: ' +
              'shoot them apart. Five hits kill the Asgard archaeon, which drops a 1UP.',
@@ -4411,9 +6048,9 @@
     }
     if(round === 2){
       showCard({
-        tag:'Round 2 complete \u00B7 +' + PTS.round + ' \u00B7 Round 3 of ' + ROUNDS.length,
+        tag:'Round 2 complete \u00B7 +' + PTS.round, round:3,
         title:'Predators',
-        body:'Ciliate hunters chase you. Three toxin hits or one touch of slime kills one; eat the ' +
+        body:'Ciliate hunters chase you. Three toxin hits or four touches of slime kill one; eat the ' +
              'red token it leaves.',
         figs:[{ src:hunterStill(), verb:'Avoid', name:'Ciliate hunters', bad:true },
               { src:IMG.exuRed.im.toDataURL(), verb:'Eat', name:'Their tokens' },
@@ -4421,6 +6058,62 @@
               { src:'assets/images/microbe_sar11.png', verb:'Eat', name:'Alphas: refill toxins' }],
         btn:'Start round 3',
         onBtn:startRound3
+      });
+      return;
+    }
+    if(round === 5){
+      showCard({
+        tag:'Round 5 complete \u00B7 +' + PTS.round, round:6,
+        title:'Nitrogen fixers',
+        body:'Eat 10 nitrogen fixers. Their yellow neurotoxin plumes scramble your swimming for 3 seconds.',
+        figs:[{ src:'assets/images/microbe_nitrogen_fixer.png', verb:'Eat', name:'Nitrogen fixers' },
+              { src:neuroStill(), verb:'Avoid', name:'Neurotoxin plumes', bad:true },
+              { src:'assets/images/microbe_cyanobacterium.png', verb:'Eat', name:'Cyano\u00ADbacteria' },
+              { src:molStill(), verb:'Avoid', name:'Microcystin', bad:true }],
+        btn:'Start round 6',
+        onBtn:startRound6
+      });
+      return;
+    }
+    if(round === 6){
+      showCard({
+        tag:'Round 6 complete \u00B7 +' + PTS.round, round:7,
+        title:'Quorum sensing',
+        body:'Eat 10 Alteromonas. When three gather they signal, and their defenders pack in close around them.',
+        figs:[{ src:altStill(), verb:'Eat', name:'Alteromonas' },
+              { src:quorumStill(), verb:'Avoid', name:'Their quorum', bad:true },
+              { src:spinyStill(), verb:'Avoid', name:'Spiny SAR202', bad:true },
+              { src:hunterStill(), verb:'Avoid', name:'Ciliate hunters', bad:true }],
+        btn:'Start round 7',
+        onBtn:startRound7
+      });
+      return;
+    }
+    if(round === 7){
+      showCard({
+        tag:'Round 7 complete \u00B7 +' + PTS.round, round:8,
+        title:'Pseudomonas',
+        body:'Kill 10 Pseudomonas and eat their tokens: they can\u2019t be eaten whole. They close in slowly, ' +
+             'and when one glows it is about to fire its spear, the T6SS.',
+        figs:[{ src:pseudoStill(false), verb:'Kill', name:'Pseudomonas' },
+              { src:pseudoStill(true), verb:'Avoid', name:'Their T6SS spear', bad:true }],
+        btn:'Start round 8',
+        onBtn:startRound8
+      });
+      return;
+    }
+    if(round === 8){
+      showCard({
+        tag:'Round 8 complete \u00B7 +' + PTS.round, round:9,
+        title:'Bloom event',
+        body:'Survive two minutes. Pseudomonas pour in from every side with cyanobacteria and their microcystin, ' +
+             'and some carry other pigments.',
+        figs:[{ src:pseudoStill(false, 'fast'), verb:'Avoid', name:'Pyoverdine: fast', bad:true },
+              { src:pseudoStill(true, 'tri'), verb:'Avoid', name:'Pyorubin: three spears', bad:true },
+              { src:pseudoStill(false, 'tough'), verb:'Avoid', name:'Pyomelanin: three hits', bad:true },
+              { src:molStill(), verb:'Avoid', name:'Microcystin', bad:true }],
+        btn:'Start round 9',
+        onBtn:startRound9
       });
       return;
     }
@@ -4446,22 +6139,58 @@
     paintGauges();
     paintHud(true);
   }
+  // Into the light: the screen goes white, the vent falls away, and the cell
+  // comes out into the sunlit surface water for round 5.
   function reachOpening(){
     opened = 'out';
-    mode = 'card';
     drag.on = false;
     banner(null);
     sfx('round');
     score += PTS.round + OUT_BONUS;
     paintHud(true);
+    mode = 'rise'; riseT = 0; riseSwapped = false;
+  }
+  function stepRise(dt){
+    riseT += dt;
+    if(!riseSwapped && riseT >= 0.7){ riseSwapped = true; enterSurface(); }
+    if(riseT >= 1.6){ riseT = -1; surfaceCard(); }
+  }
+  function enterSurface(){
+    surface = true; round = 5; eaten = 0; freePlay = false; opened = false;
+    $('pp_bloomClock').hidden = true;
+    viruses.length = mats.length = spiny.length = asgs.length = hunters.length = 0;
+    tokens.length = ups.length = shots.length = slime.length = prey.length = cyanos.length = mols.length = plumes.length = 0;
+    alts.length = quorums.length = qGone.length = pseudos.length = 0;
+    confT = 0; confImm = 0;
+    asgBackT = -1; hunterT = 0; matT = 0; preyT = 0; alphaT = 0; cyanoT = 0; temp = 0.5; tempBad = 0;
+    cell.x = (S.vx0 + S.vx1) / 2; cell.y = S.vy0 + (S.vy1 - S.vy0) * 0.55; cell.vx = cell.vy = 0; cell.ropes = null;
+    for(var i = 0; i < 3; i++){ spawnPrey(true, 'alpha'); spawnPrey(true, 'psb'); spawnCyano(true); }
+    spawnMat(-1, true);
+    setTrack('surface');
+    paintHud(true);
+    paintGauges();
+  }
+  function surfaceCard(){
+    mode = 'card';
     showCard({
-      tag:'Round 4 complete \u00B7 +' + PTS.round + ' \u00B7 Way out +' + OUT_BONUS,
-      title:'Next: the surface',
-      body:'You came through the bloom and swam up toward the light. The surface round is still ' +
-           'to come; for now this is the end of the run.',
-      btn:'See your score',
-      onBtn:function(){ showResult(true); }
+      tag:'Round 4 complete \u00B7 +' + (PTS.round + OUT_BONUS), round:5,
+      title:'The surface',
+      body:'Eat 10 cyanobacteria. They rise and sink, and leave big microcystin molecules behind: a touch costs a life.',
+      figs:[{ src:'assets/images/microbe_cyanobacterium.png', verb:'Eat', name:'Cyano\u00ADbacteria' },
+            { src:molStill(), verb:'Avoid', name:'Microcystin', bad:true },
+            { src:'assets/images/microbe_purple_sulfur.png', verb:'Eat', name:'Purple sulfur: refill biofilm' },
+            { src:'assets/images/microbe_sar11.png', verb:'Eat', name:'Alphas: refill toxins' }],
+      btn:'Start round 5',
+      onBtn:function(){ mode = 'play'; paintHud(true); }
     });
+  }
+  function molStill(){
+    if(stills.mol) return stills.mol;
+    var side = 200, c2 = document.createElement('canvas');
+    c2.width = c2.height = side;
+    var g = c2.getContext('2d');
+    drawMol({ x:side * 0.45, y:side / 2, r:side * 0.42, rot:0.2, t:5, life:99 }, g);
+    return (stills.mol = c2.toDataURL());
   }
   // which way out: the nearest of the two sides and the top (the seabed is no door)
   function exitDir(x, y){
@@ -4508,7 +6237,7 @@
     prey.length = 0; viruses.length = 0;
     mode = 'card';
     showCard({
-      tag:'Round 3 complete \u00B7 +' + PTS.round + ' \u00B7 Round 4 of ' + ROUNDS.length,
+      tag:'Round 3 complete \u00B7 +' + PTS.round, round:4,
       title:'The viruses are coming',
       body:'Survive two minutes of viruses, then swim up into the light.',
       figs:[{ src:'assets/images/microbe_bacteriophage.png', verb:'Avoid', name:'Viruses', bad:true },
@@ -4520,6 +6249,7 @@
   }
   function startRound4(){
     round = 4; eaten = 0; freePlay = false;
+    setTrack('virus');
     bloomT = 0; bloomAcc = 0; opened = false; openT = 0; crawlT = 0;
     preyT = 0; alphaT = 0; roundEndT = -1; virT = 0.6;
     // everything but the viruses drifts off
@@ -4527,6 +6257,143 @@
     fade(mats); fade(spiny); fade(asgs); fade(hunters);
     for(var fi = 0; fi < 3; fi++){ spawnPrey(true, 'alpha'); spawnPrey(true, 'psb'); }
     asgBackT = -1;
+    mode = 'play';
+    paintHud(true);
+    paintGauges();
+  }
+  // Round 9, the bloom event: two minutes as Pseudomonas pour in from every
+  // side with cyanobacteria and their microcystin. Everything else drifts
+  // off; food keeps coming. Then a portal opens on the left.
+  function startRound9(){
+    round = 9; eaten = 0; freePlay = false;
+    setTrack('virus');
+    bloomT = 0; bloomAcc = 0; opened = false; openT = 0;
+    preyT = 0; alphaT = 0; roundEndT = -1; psT = 0.8; cyanoT = 0; psIntro = {};
+    while(quorums.length) endQuorum(quorums[0]);
+    var fade = function(list){ for(var i = 0; i < list.length; i++) list[i].out = 0; };
+    fade(mats); fade(spiny); fade(hunters);
+    for(var i = 0; i < prey.length; i++) if(prey[i].key === 'fix'){
+      prey[i].flee = true; prey[i].fleeDir = exitDir(prey[i].x, prey[i].y); prey[i].age = Math.max(prey[i].age, 5);
+    }
+    for(i = 0; i < alts.length; i++){ alts[i].flee = true; alts[i].dir = exitDir(alts[i].x, alts[i].y); }
+    for(i = 0; i < 2; i++) spawnCyano(true);
+    mode = 'play';
+    paintHud(true);
+    paintGauges();
+  }
+  function portal(){ var R = baseR(); return { x:S.vx0 + R * 1.7, y:(S.vy0 + S.vy1) / 2, r:R * 1.9 }; }
+  function stepBloom9(dt){
+    if(!opened){
+      bloomT += dt;
+      bloomAcc += dt;
+      while(bloomAcc >= 1){ bloomAcc -= 1; score += BLOOM_PTS; }   // points for every second you last
+      if(bloomT >= BLOOM_SECS) openPortal();
+    } else if(opened === true){
+      openT += dt;
+      var o = portal();
+      if(openT > 0.8 && pHit(o.x, o.y, o.r * 0.5)) enterPortal();
+    }
+    paintHud();
+  }
+  function openPortal(){
+    opened = true; openT = 0; bloomT = BLOOM_SECS;
+    sfx('evolve');
+    banner('good', 'You survived the bloom', 'A portal has opened', 'Swim into it, on the left.');
+    paintGauges();
+    paintHud(true);
+  }
+  // into the portal: the cell is drawn in, spinning and shrinking, a flash,
+  // and the run ends as a win
+  function enterPortal(){
+    opened = 'in';
+    drag.on = false;
+    banner(null);
+    sfx('round');
+    score += PTS.round + OUT_BONUS;
+    paintHud(true);
+    mode = 'portal'; portalT = 0;
+    portalFrom = { x:cell.x, y:cell.y, w:cell.w, h:cell.heading };
+  }
+  function stepPortal(dt){
+    portalT += dt; openT += dt;
+    var o = portal(), e = ease(Math.min(1, portalT / 1.3));
+    cell.x = portalFrom.x + (o.x - portalFrom.x) * e; cell.y = portalFrom.y + (o.y - portalFrom.y) * e;
+    cell.w = portalFrom.w * (1 - 0.9 * e); cell.heading = portalFrom.h + e * 9;
+    if(portalT >= 1.3) gone = true;
+    if(portalT >= 2.0){ portalT = -1; showResult(true); }
+  }
+  // the portal: a violet vortex at the left edge, arms turning in, sparks
+  // drawn into its dark eye, and arrows pointing the way
+  function drawPortal(){
+    if(round !== 9 || !opened) return;
+    var o = portal(), k = Math.min(1, openT / 1.2), kk = 0.2 + 0.8 * ease(k), i;
+    var rx = o.r * 0.62 * kk, ry = o.r * 1.15 * kk, t = gT;
+    ctx.save();
+    var g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r * 2.6);
+    g.addColorStop(0, 'rgba(206,176,255,' + (0.55 * k).toFixed(3) + ')');
+    g.addColorStop(0.5, 'rgba(126,92,232,' + (0.22 * k).toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(126,92,232,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(o.x, o.y, o.r * 1.9, o.r * 2.6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.translate(o.x, o.y);
+    ctx.save(); ctx.scale(rx, ry);
+    var eye = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+    eye.addColorStop(0, 'rgba(18,6,44,' + (0.95 * k).toFixed(3) + ')');
+    eye.addColorStop(0.7, 'rgba(70,36,150,' + (0.9 * k).toFixed(3) + ')');
+    eye.addColorStop(1, 'rgba(180,150,255,0)');
+    ctx.fillStyle = eye; ctx.beginPath(); ctx.arc(0, 0, 1, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    ctx.lineCap = 'round';
+    for(i = 0; i < 5; i++){                            // arms turning in
+      ctx.beginPath();
+      for(var q = 0; q <= 24; q++){
+        var u = q / 24, ang = i * Math.PI * 2 / 5 + t * 1.6 + u * 4.2, rad = 1.05 - u * 0.95;
+        var px = Math.cos(ang) * rad * rx, py = Math.sin(ang) * rad * ry;
+        if(q === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = 'rgba(226,210,255,' + (0.55 * k).toFixed(3) + ')';
+      ctx.lineWidth = Math.max(1, o.r * 0.05); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(240,232,255,' + (0.85 * k).toFixed(3) + ')';
+    ctx.lineWidth = Math.max(1, o.r * 0.07);
+    ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#F4EEFF';                         // sparks drawn in
+    for(i = 0; i < 16; i++){
+      var f = (t * 0.45 + hr(i + 500)) % 1, ra = 2.1 * (1 - f) + 0.1, an = hr(i + 520) * 6.28 + f * 2.5;
+      ctx.globalAlpha = Math.min(1, 4 * f * (1 - f)) * k;
+      ctx.beginPath(); ctx.arc(Math.cos(an) * rx * ra, Math.sin(an) * ry * ra * 0.8, Math.max(1, o.r * 0.045), 0, Math.PI * 2); ctx.fill();
+    }
+    if(opened === true){                               // this way
+      ctx.strokeStyle = '#F4EEFF'; ctx.lineWidth = Math.max(1.5, o.r * 0.09);
+      for(i = 0; i < 3; i++){
+        var ph = (t * 1.4 - i * 0.33) % 1;
+        ctx.globalAlpha = k * (0.25 + 0.75 * Math.max(0, Math.sin(ph * Math.PI)));
+        var cx2 = o.r * (1.5 + i * 0.6), ch = o.r * 0.35;
+        ctx.beginPath(); ctx.moveTo(cx2 + ch * 0.6, -ch); ctx.lineTo(cx2, 0); ctx.lineTo(cx2 + ch * 0.6, ch); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  function startRound8(){
+    round = 8; eaten = 0; freePlay = false;
+    preyT = 0; alphaT = 0; roundEndT = -1; psT = 0; hunterT = 0;
+    spawnPseudo(true); spawnPseudo(true); spawnPseudo(false);
+    mode = 'play';
+    paintHud(true);
+    paintGauges();
+  }
+  function startRound7(){
+    round = 7; eaten = 0; freePlay = false;
+    preyT = 0; alphaT = 0; roundEndT = -1; altT = 0; hunterT = 8; spinyT = 3;
+    for(var i = 0; i < 4; i++) spawnAlt(true);
+    spawnSpiny();
+    mode = 'play';
+    paintHud(true);
+    paintGauges();
+  }
+  function startRound6(){
+    round = 6; eaten = 0; freePlay = false;
+    preyT = 0; alphaT = 0; roundEndT = -1; fixT = 1.2;
+    for(var i = 0; i < 3; i++) spawnFixer(true);
     mode = 'play';
     paintHud(true);
     paintGauges();
@@ -4589,10 +6456,11 @@
     $('pp_bloomClock').hidden = true;
     showCard({
       tag:done ? 'Run complete' : 'Run over',
-      title:done ? (isBest ? 'Out of the bloom, and a new best' : 'Out of the bloom') :
+      title:done ? (isBest ? 'Through the portal, and a new best' : 'Through the portal') :
             isBest && score > 0 ? 'A new best' : 'The vent got you',
       score:score,
-      stats:[['Round reached', done ? 'All 4 \u00B7 complete' :
+      body:done ? 'You made it through every round. That\u2019s the end, for now.' : '',
+      stats:[['Round reached', done ? 'All ' + ROUNDS.length + ' \u00B7 complete' :
                                freePlay ? round + ' \u00B7 complete' : round + ' \u00B7 ' + ROUNDS[round - 1]],
              ['Cells eaten', String(cellsEaten)],
              ['Kills', String(kills)],
@@ -4737,14 +6605,19 @@
   function clearWorld(){
     hgtQ.length = 0; hgt = null; if(hgtEl) hgtEl.hidden = true; ROOT.classList.remove('hgt-on');
     prey.length = spiny.length = viruses.length = asgs.length = shots.length = tokens.length = ups.length = 0;
-    mats.length = slime.length = hunters.length = 0; inMat = false; stuckT = 0;
+    mats.length = slime.length = hunters.length = cyanos.length = mols.length = fizz.length = plumes.length = 0; inMat = false; stuckT = 0;
+    alts.length = quorums.length = qGone.length = pseudos.length = 0;
     meals.length = sparks.length = floats.length = peels.length = debris.length = pops.length = 0;
   }
 
   function newRun(){
-    round = 1; freePlay = false;
+    round = 1; freePlay = false; surface = false; riseT = -1; portalT = -1; gone = false;
+    setTrack('deep');
+    vacT = 0; vacCd = 0; fizz.length = 0;
     score = 0; eaten = 0; kills = 0; runT = 0;
-    lives = 1; abil = { envelope:false, pumps:false, biofilm:false, flag:1 }; hunting = false; hunterT = 0;
+    lives = 1; abil = { envelope:false, pumps:false, biofilm:false, flag:1, vac:false, sym:false, qs:false, t6:false }; hunting = false; hunterT = 0;
+    jabs = 0; jabT = -1; jabK = 0; jabHit = null; psT = 0;
+    fixN = 0; fixT = 0; confT = 0; confImm = 0; qsBar = 0; qsT = 0; qsSaid = false; altT = 0;
     bloomT = 0; bloomAcc = 0; opened = false; openT = 0; exodusT = -1; $('pp_bloomClock').hidden = true;
     cellsEaten = 0; slimeBar = 0; slimeHeld = false; matT = 0; alphaT = 0; stuckSaid = -9;
     tox = 0; toxCd = 0; temp = 0.5; tempBad = 0; tempSaid = -9; invT = 0; hurtT = 0;
@@ -4754,7 +6627,7 @@
     cell = newPlayer();
     updateBox();
     for(var i = 0; i < 5; i++) spawnPrey(true);
-    var a = newAsgard(); a.x = S.vx1 - a.w * 0.7; a.y = S.vy0 + (S.vy1 - S.vy0) * 0.62; a.inT = 0;
+    var a = newAsgard(); a.x = a.x > (S.vx0 + S.vx1) / 2 ? S.vx1 - a.w * 0.7 : S.vx0 + a.w * 0.7; a.inT = 0;
     asgs.push(a);
     titleEl.hidden = true;
     hudEl.hidden = false;
@@ -4806,6 +6679,7 @@
     try { slimeEl.setPointerCapture(ev.pointerId); } catch(e){}
   });
   slimeEl.addEventListener('pointerup', function(){ slimeOn(false); });
+  $('pp_qsBtn').addEventListener('pointerdown', function(ev){ ev.preventDefault(); sfxInit(); focusGame(); qsFire(); });
   slimeEl.addEventListener('pointercancel', function(){ slimeOn(false); });
   document.addEventListener('keyup', function(ev){ if(active && (ev.key === 'z' || ev.key === 'Z')) slimeOn(false); });
   window.addEventListener('blur', function(){ slimeOn(false); drag.on = false; });
@@ -4813,6 +6687,14 @@
   // Shift+K finishes the goal at hand, for testing
   function skipGoal(){
     if(mode !== 'play' || freePlay || roundEndT >= 0) return;
+    if(round === 5){ eaten = GOAL_VAC - 1; ate('cyano', 1); return; }
+    if(round === 6){ eaten = GOAL_SYM - 1; ate('fix', 1); return; }
+    if(round === 7){ eaten = GOAL_QS - 1; ate('alt', 1); return; }
+    if(round === 8){ eaten = GOAL_T6 - 1; ate('pseudo', 1); return; }
+    if(round === 9){                    // the bloom ends now; again, and you go through
+      if(!opened) openPortal(); else if(opened === true) enterPortal();
+      return;
+    }
     if(round === 4){                    // the bloom ends now; again, and you are out
       if(!opened) openUp(); else if(opened === true) reachOpening();
       return;
@@ -4844,8 +6726,15 @@
   }
   document.addEventListener('keydown', function(ev){
     if(!active || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    if(((ev.key === 'p' || ev.key === 'P') && !ev.shiftKey) || ev.key === 'Escape'){
+      if(!ev.repeat && (paused || mode === 'play')){ ev.preventDefault(); setPaused(!paused); }
+      return;
+    }
+    if(paused) return;
     if(ev.key === 'c' || ev.key === 'C'){ ev.preventDefault(); fire(); return; }
-    if(ev.key === 'z' || ev.key === 'Z'){ ev.preventDefault(); slimeOn(true); return; }
+    if(ev.key === 'z' || ev.key === 'Z'){ ev.preventDefault(); if(abil.qs){ if(!ev.repeat) qsFire(); } else slimeOn(true); return; }
+    if(ev.key === 'w' || ev.key === 'W' || ev.key === 'ArrowUp'){ ev.preventDefault(); if(!ev.repeat) vacBurst(-1); return; }
+    if(ev.key === 's' || ev.key === 'S' || ev.key === 'ArrowDown'){ ev.preventDefault(); if(!ev.repeat) vacBurst(1); return; }
     if(ev.shiftKey && (ev.key === 'K' || ev.key === 'k')){ ev.preventDefault(); if(!ev.repeat) devSkip(); }
   });
 
@@ -4853,7 +6742,9 @@
     sfxInit(); startMusic(); sfx('tick');
     newRun();
   });
-  if(TOUCH){ fireEl.innerHTML = 'Fire toxins'; slimeEl.innerHTML = 'Biofilm'; }
+  if(TOUCH){ fireEl.innerHTML = 'Fire toxins'; slimeEl.innerHTML = 'Biofilm'; $('pp_qsBtn').innerHTML = 'Quorum'; $('pp_riseBtn').innerHTML = 'Rise'; $('pp_sinkBtn').innerHTML = 'Sink'; }
+  $('pp_riseBtn').addEventListener('pointerdown', function(ev){ ev.preventDefault(); sfxInit(); focusGame(); vacBurst(-1); });
+  $('pp_sinkBtn').addEventListener('pointerdown', function(ev){ ev.preventDefault(); sfxInit(); focusGame(); vacBurst(1); });
 
   // ---- loop -------------------------------------------------------------------
   var elErr = $('pp_errbar'), errShown = false;
@@ -4868,6 +6759,7 @@
   function frame(now){
     var dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
     last = now;
+    if(paused){ requestAnimationFrame(frame); return; }      // the water holds
     try { step(dt, now); draw(now); } catch(e){ reportError(e); }
     requestAnimationFrame(frame);
   }
@@ -4883,6 +6775,29 @@
     last = performance.now();
     requestAnimationFrame(frame);
   }
+  // ---- pause ---------------------------------------------------------------------
+  // The Pause button beside Sound, or P or Esc. Everything stops, the music too;
+  // Resume, P or Esc carries on. Only mid-round: cards already hold the water.
+  var paused = false;
+  function setPaused(on){
+    if(on && (paused || mode !== 'play')) return;
+    if(!on && !paused) return;
+    paused = on;
+    $('pp_pauseView').hidden = !on;
+    $('pp_pauseBtn').setAttribute('aria-pressed', String(on));
+    drag.on = false; slimeOn(false);
+    if(on){ music.pause(); $('pp_resumeBtn').focus(); }
+    else { startMusic(); last = performance.now(); focusGame(); }
+  }
+  $('pp_pauseBtn').addEventListener('click', function(){ sfxInit(); setPaused(true); });
+  $('pp_resumeBtn').addEventListener('click', function(){ setPaused(false); });
+  $('pp_pauseQuit').textContent = EMBED ? 'Main menu' : 'Title';
+  $('pp_pauseQuit').addEventListener('click', function(){
+    paused = false; $('pp_pauseView').hidden = true;
+    if(EMBED) exitGame(); else { music.pause(); showTitle(); }
+  });
+  if(TOUCH) $('pp_pauseKeys').hidden = true;
+
   function exitGame(){
     music.pause();
     if(onExit) onExit(); else location.reload();
@@ -5719,6 +7634,23 @@
       ? cell.heading : cell.rot + GEO.axis;
   }
 
+  // One cell of the cyanobacteria chain, with the head's own shape
+  function segHit(sg, x, y, r){
+    var G = geo();
+    var hl = cell.w * G.half_len, ht = cell.w * G.half_thick, seg = Math.max(0, hl - ht);
+    var ca = Math.cos(sg.ang), sa = Math.sin(sg.ang), dx = x - sg.x, dy = y - sg.y;
+    var lx = dx*ca + dy*sa, ly = -dx*sa + dy*ca, qx = Math.max(-seg, Math.min(seg, lx));
+    return Math.hypot(lx - qx, ly) <= ht + r;
+  }
+  // The whole body: the cell, and in the oxygenic stage every cell of its chain,
+  // so any of them can be grabbed to steer and any of them collects.
+  function colonyHit(x, y, r){
+    if(cellHit(x, y, r)) return true;
+    if(phase !== 'oxygenic' || !cell) return false;
+    for(var i = 0; i < chainSegs.length; i++) if(segHit(chainSegs[i], x, y, r)) return true;
+    return false;
+  }
+
   function cellHit(x, y, r){
     if(!cell) return false;
     if(bodyKind === 'protist') return proHit(x, y, r);
@@ -5903,13 +7835,14 @@
     if(phase === 'euphotic') return { spec:RX_SPECS.purple };
     if(phase === 'oxygenic') return { spec:RX_SPECS.cyano };
     if(phase === 'hetero') return { spec:RX_SPECS.resp };
-    if(phase === 'predation') return { spec:RX_SPECS.resp, small:true };
+    // the chase: the reaction stays as a faint reminder, never lit by what you collect
+    if(phase === 'predation') return { spec:RX_SPECS.resp, small:true, quiet:true };
     return null;
   }
   // what is in hand, keyed like the flasks
   function rxHand(){
     if(phase === 'feed' || swimming() || phase === 'acceptorIntro') return held;
-    if(phase === 'predation') return { o2:acceptors };      // sugar is burned on the spot
+    if(phase === 'predation') return {};                   // nothing lights up in the chase
     return rxHeld;
   }
   function rxImg(o){
@@ -5918,7 +7851,7 @@
     var sl = o.key && IMG[o.key];
     return sl && sl.ok ? sl.im : null;
   }
-  var rxBg = { a:0, spec:null, lv:[], sun:0, arrow:0, en:0, done:0, last:0, sk:0, hudTop:0, hudAt:-1e9 };
+  var rxBg = { a:0, spec:null, lv:[], sun:0, arrow:0, en:0, done:0, last:0, sk:0, quiet:0, hudTop:0, hudAt:-1e9 };
   var elGaugesBox = document.querySelector('.gauges');
   function rxa(c, a){ return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + Math.max(0, a).toFixed(3) + ')'; }
 
@@ -5937,6 +7870,7 @@
     }
     rxBg.a += ((show ? 1 : 0) - rxBg.a) * (1 - Math.exp(-dt / 0.6));
     if(show) rxBg.sk += ((show.small ? 1 : 0) - rxBg.sk) * (1 - Math.exp(-dt / 0.5));
+    if(show) rxBg.quiet += ((show.quiet ? 1 : 0) - rxBg.quiet) * (1 - Math.exp(-dt / 0.5));
     var spec = rxBg.spec;
     if(!spec) return;
     if(rxBg.done > 0) rxBg.done = Math.max(0, rxBg.done - dt);
@@ -5978,7 +7912,7 @@
       toks.push({ t:'out', i:i, w:i ? 0.72 : 1 }); units += i ? 0.72 : 1;
     }
 
-    var Wc = cv.width / S.dpr, Hc = cv.height / S.dpr, A = rxBg.a;
+    var Wc = cv.width / S.dpr, Hc = cv.height / S.dpr, A = rxBg.a * (1 - 0.6 * rxBg.quiet);   // quiet: faded
     if(t - rxBg.hudAt > 250){
       rxBg.hudAt = t;
       var gb = elGaugesBox.getBoundingClientRect();
@@ -5996,7 +7930,7 @@
     ctx.textAlign = 'center';
     if(ek > 0.5){
       var bw = units * D + D * 0.7, bh = D * 1.9, bx = Wc / 2 - bw / 2, by = cy - D * 0.72;
-      ctx.globalAlpha = A * (ek - 0.5) * 2;
+      ctx.globalAlpha = A * (ek - 0.5) * 2 * (1 - rxBg.quiet);   // no backing when quiet
       ctx.fillStyle = 'rgba(2,10,18,0.55)';
       ctx.beginPath();
       if(ctx.roundRect) ctx.roundRect(bx, by, bw, bh, D * 0.3); else ctx.rect(bx, by, bw, bh);
@@ -6157,13 +8091,14 @@
   // 0 at the edge of the sunlit zone, 1 at the surface
   function lightLevel(){
     if(!cell || !inLight()) return 0;
-    var L = lightBand();
-    return clamp((L.y1 - cell.y) / (L.y1 - L.y0), 0, 1);
+    var L = lightBand(), top = cell.y;                  // the colony's best-lit cell
+    if(phase === 'oxygenic') for(var i = 0; i < chainSegs.length; i++) top = Math.min(top, chainSegs[i].y);
+    return clamp((L.y1 - top) / (L.y1 - L.y0), 0, 1);
   }
   function takeMotes(list, k){
     for(var i = list.length - 1; i >= 0; i--){
       var m = list[i];
-      if(rxWants(k) && cellHit(m.x, m.y, m.size * 0.30)){
+      if(rxWants(k) && colonyHit(m.x, m.y, m.size * 0.30)){
         pops.push({ x:m.x, y:m.y, r:m.size * 0.55, col:k, p:0 });
         list.splice(i, 1);
         rxHeld[k] = (rxHeld[k] || 0) + 1;
@@ -6258,7 +8193,28 @@
     var want = lit ? 0.3 + 0.55 * lightLevel() : 0;
     if(run) want = Math.min(1, want + 0.3);
     photoGlow += (want - photoGlow) * 0.08;
-    if(photoGlow < 0.02) return;
+    if(photoGlow < 0.02 || !cellLit(c)) return;
+    photoGlowAt(c, cw, t, run);
+  }
+  // the glow on one cell in the light (the chain's cells glow too)
+  // In the respiration stage your SAR202 divides into cells that look just
+  // like it; a slow, turning dashed ring marks the one you control.
+  function drawYouRing(c, cw, t){
+    var pulse = 0.5 + 0.5 * Math.sin(t * 0.004), r = cw * 0.66;
+    ctx.save();
+    var g = ctx.createRadialGradient(c.x, c.y, r * 0.55, c.x, c.y, r * 1.3);
+    g.addColorStop(0, 'rgba(159,224,234,0)');
+    g.addColorStop(0.7, 'rgba(159,224,234,' + (0.10 + 0.08 * pulse).toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(159,224,234,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c.x, c.y, r * 1.3, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(214,242,248,' + (0.45 + 0.3 * pulse).toFixed(3) + ')';
+    ctx.lineWidth = Math.max(1.5, cw * 0.028);
+    ctx.setLineDash([cw * 0.10, cw * 0.065]);
+    ctx.lineDashOffset = -t * 0.02;
+    ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+  function photoGlowAt(c, cw, t, run){
     var col = phase === 'oxygenic' ? '150,255,170' : '255,160,235';
     var pulse = run ? 0.82 + 0.18 * Math.sin(t * 0.009) : 1;
     var rr = cw * (0.7 + 0.3 * photoGlow);
@@ -7470,9 +9426,11 @@
     phase = 'predation';
     asgDupT = 0; asgDups = 0;
     var w = cellSize() * 1.30;
-    var x = S.vx1 - w * 0.60;                // in from the bottom right
-    asgs.push(newAsgard(x, Math.min(S.vy1 - w * 0.55, floorY(x) - w * 0.60),
-                        Math.PI * 1.18));
+    // in from the corner farthest from you, heading into the water
+    var mx = (S.vx0 + S.vx1) / 2, my = (S.vy0 + S.vy1) / 2;
+    var x = !cell || cell.x < mx ? S.vx1 - w * 0.60 : S.vx0 + w * 0.60;
+    var y = !cell || cell.y < my ? Math.min(S.vy1 - w * 0.55, floorY(x) - w * 0.60) : S.vy0 + w * 0.60;
+    asgs.push(newAsgard(x, y, Math.atan2(my - y, mx - x)));
     asgClock = 0;
     showBars('predation');               // now with the clock
     paintGauge();
@@ -10781,10 +12739,16 @@
              y0: S.vy0, y1: S.vy0 + (S.vy1 - S.vy0) * 0.50 };
   }
 
+  function cellLit(c){
+    var L = lightBand();
+    return c.x > L.x0 && c.x < L.x1 && c.y > L.y0 && c.y < L.y1;
+  }
+  // any cell of the chain in the light lets the colony photosynthesize
   function inLight(){
     if(!cell) return false;
-    var L = lightBand();
-    return cell.x > L.x0 && cell.x < L.x1 && cell.y > L.y0 && cell.y < L.y1;
+    if(cellLit(cell)) return true;
+    if(phase === 'oxygenic') for(var i = 0; i < chainSegs.length; i++) if(cellLit(chainSegs[i])) return true;
+    return false;
   }
 
   // At the vents the seabed is the real bottom of the water. The surface
@@ -12066,6 +14030,7 @@
         var csz = cell.w;
         for(var ki=chainSegs.length-1; ki>=0; ki--){  // nearest drawn last, on top
           var cp = chainSegs[ki];
+          if(photoGlow >= 0.02 && cellLit(cp)) photoGlowAt(cp, csz, t, inLight() && rxReady());
           ctx.save();
           ctx.translate(cp.x, cp.y);
           ctx.rotate(cp.ang - bs2.g.axis);
@@ -12107,6 +14072,7 @@
       } else if(bsp && bsp.ok){
         var pah = bsp.im.naturalHeight / bsp.im.naturalWidth || 0.8;
         if(phase === 'euphotic' || phase === 'oxygenic') drawPhotoGlow(cell, cw, t);
+        if(phase === 'hetero') drawYouRing(cell, cw, t);   // which SAR202 is yours
         ctx.save();
         if(phase === 'engulfed') ctx.globalAlpha = 0.82;   // seen through it
         ctx.translate(cell.x, cell.y);
@@ -12814,6 +14780,7 @@
     var dt = Math.min((t - last)/1000, 0.05);
     last = t;
     if(window.PP_ACTIVE){ requestAnimationFrame(frame); return; }   // Protist Predator has the screen
+    if(paused){ requestAnimationFrame(frame); return; }            // the frame holds
     if(mode !== 'field'){        // paused: the cell should not starve off screen
       requestAnimationFrame(frame);
       return;
@@ -12875,8 +14842,8 @@
       ev.preventDefault();
       return;
     }
-    if(steerable()){                        // the cell is the handle now
-      if(!cellHit(p.x, p.y, 0)) return;
+    if(steerable()){                        // the cell (any cell of a chain) is the handle now
+      if(!colonyHit(p.x, p.y, 0)) return;
       swimDrag.on = true;
       setSwimTarget(p);
       cv.classList.add('grabbing');
@@ -12901,7 +14868,7 @@
     }
     if(steerable()){
       if(swimDrag.on) setSwimTarget(p);
-      else cv.classList.toggle('grab', cellHit(p.x, p.y, 0));
+      else cv.classList.toggle('grab', colonyHit(p.x, p.y, 0));
       return;
     }
     if(grabbed){
@@ -13154,7 +15121,7 @@
         pS.textContent = off + (pb > 0 ? ' Your best on this device: ' + pts(pb) + '.' : '');
         return;
       }
-      boardsLoad('scores', 'best', eL, eS, fmtClock, 'No times yet. Play the mini game to set the first one.');
+      boardsLoad('scores', 'best', eL, eS, fmtClock, 'No times yet. Play the arcade game to set the first one.');
       boardsLoad('minigame', 'best', pL, pS, pts, 'No scores yet. Play Protist Predator to set the first one.');
     });
   }
@@ -13213,6 +15180,62 @@
     }).then(lbLoad);
   }
   document.getElementById('miniBtn').addEventListener('click', startMini);
+
+  // ---- Pause ---------------------------------------------------------------------
+  // The Pause button (beside Sound), P or Esc. The world and every clock stop,
+  // the music too; Resume, P or Esc carries on, Main menu starts over.
+  var paused = false;
+  var elPause = document.getElementById('pauseView'), elPauseBtn = document.getElementById('pauseBtn');
+  function canPause(){
+    return !window.PP_ACTIVE && document.getElementById('titleCard').hidden && elCredits.hidden && elBoards.hidden;
+  }
+  function setPaused(on){
+    if(on && (paused || !canPause())) return;
+    if(!on && !paused) return;
+    paused = on;
+    elPause.hidden = !on;
+    elPauseBtn.setAttribute('aria-pressed', String(on));
+    swimDrag.on = false; grabbed = null;
+    cv.classList.remove('grabbing');
+    if(on){
+      for(var i = 0; i < TRACKS.length; i++) TRACKS[i].pause();
+      document.getElementById('resumeBtn').focus();
+    } else {
+      if(!muted && musicOn){ var pr = current.play(); if(pr && pr.catch) pr.catch(function(){}); }
+      last = performance.now();
+    }
+  }
+  if(TOUCH) document.getElementById('pauseKeys').hidden = true;
+  elPauseBtn.addEventListener('click', function(){ setPaused(true); });
+  document.getElementById('resumeBtn').addEventListener('click', function(){ setPaused(false); });
+  document.getElementById('pauseMenuBtn').addEventListener('click', function(){ location.reload(); });
+  document.addEventListener('keydown', function(ev){
+    if(window.PP_ACTIVE || ev.metaKey || ev.ctrlKey || ev.altKey || ev.repeat) return;
+    var p = (ev.key === 'p' || ev.key === 'P') && !ev.shiftKey;     // Shift+P is a debug jump
+    if(p || (ev.key === 'Escape' && (paused || elPrompt.hidden))){
+      if(!paused && !canPause()) return;
+      ev.preventDefault();
+      setPaused(!paused);
+    }
+  });
+
+  // ---- What Ga means ---------------------------------------------------------------
+  var elEraInfo = document.getElementById('eraInfo'), elEraBtn = document.getElementById('eraInfoBtn');
+  function eraText(){
+    var v = document.getElementById('rdEra').textContent.trim(), m = /([\d.]+)\s*Ga/.exec(v);
+    return 'Ga stands for giga-annum, a billion years. ' +
+           (m ? v + ' means ' + m[1] + ' billion years ago. ' : '') +
+           'Earth itself formed about 4.5 billion years ago.';
+  }
+  function eraInfo(open){
+    elEraInfo.hidden = !open;
+    elEraBtn.setAttribute('aria-expanded', String(open));
+    if(open) elEraInfo.textContent = eraText();
+  }
+  elEraBtn.addEventListener('click', function(ev){ ev.stopPropagation(); eraInfo(elEraInfo.hidden); });
+  document.addEventListener('pointerdown', function(ev){
+    if(!elEraInfo.hidden && ev.target !== elEraBtn && !elEraInfo.contains(ev.target)) eraInfo(false);
+  }, true);
 
   // ---- Protist Predator ----------------------------------------------------------
   // The second mini game lives in its own block of this page (copied in from
