@@ -32,7 +32,7 @@
   }
   #scene{position:fixed;inset:0;width:100%;height:100%;display:block;
          touch-action:none;cursor:default}
-  #scene.grab{cursor:grab}
+  #scene.grab{cursor:pointer}
   #scene.grabbing{cursor:grabbing}
 
   .overlay{position:fixed;inset:0;pointer-events:none}
@@ -686,12 +686,103 @@
   .title__btn2{animation-delay:.42s}
   .boards{z-index:8}
   .boards__card{
-    width:min(460px,100%);max-height:calc(100dvh - 32px);overflow:auto;box-sizing:border-box;
+    width:min(940px,100%);max-height:calc(100dvh - 32px);overflow:auto;box-sizing:border-box;
     padding:clamp(18px,3vw,32px);background:#020B14;border:1px solid var(--rule);border-radius:6px;
     display:flex;flex-direction:column;align-items:center;text-align:center;
   }
   .boards__card h2{margin:6px 0 0;font-weight:400;font-size:clamp(22px,4vw,32px)}
+  .boards__cols{display:grid;grid-template-columns:1fr 1fr;gap:clamp(18px,3vw,34px);width:100%;margin-top:6px;align-items:start}
+  @media (max-width:720px){ .boards__cols{grid-template-columns:1fr} }
   .boards__col{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;width:100%;margin-top:18px}
+  /* each arcade game's cover: a live scene, its title, and Play */
+  .cover{
+    position:relative;display:block;width:100%;aspect-ratio:16/9;margin:0 0 10px;padding:0;overflow:hidden;
+    background:#020812;border:1px solid var(--rule);border-radius:6px;cursor:pointer;color:var(--ink);
+    transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+  }
+  .cover canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .cover:hover,.cover:focus-visible{transform:translateY(-2px);border-color:rgba(255,210,74,.65);
+    box-shadow:0 12px 36px rgba(255,170,60,.2);outline:none}
+  .cover__head{
+    position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;align-items:center;gap:4px;
+    padding:12px 10px 26px;background:linear-gradient(180deg,rgba(2,6,16,.78),rgba(2,6,16,0));pointer-events:none;
+  }
+  .cover__title{
+    font-family:var(--mono);font-weight:600;font-size:clamp(20px,3.1vw,30px);line-height:1;letter-spacing:.06em;
+    text-transform:uppercase;color:#FFD24A;background:linear-gradient(180deg,#FFF6C8 0%,#FFD24A 48%,#F28A2E 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 10px rgba(255,190,70,.45)) drop-shadow(0 2px 0 rgba(120,40,0,.6));
+  }
+  .cover__tag{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#E8F4F8;
+    text-shadow:0 1px 6px rgba(0,0,0,.8)}
+  .cover__play{
+    position:absolute;right:12px;bottom:12px;display:flex;align-items:center;gap:8px;padding:8px 15px 8px 13px;
+    font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+    color:#2A1600;background:#FFD24A;border-radius:999px;pointer-events:none;
+    box-shadow:0 0 0 1px rgba(255,230,150,.7),0 0 18px rgba(255,190,70,.5);animation:coverPlay 1.6s ease-in-out infinite;
+  }
+  .cover__play::before{content:"";width:0;height:0;border-left:9px solid #2A1600;border-top:6px solid transparent;border-bottom:6px solid transparent}
+  @keyframes coverPlay{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+  @media (prefers-reduced-motion:reduce){ .cover__play{animation:none} .cover{transition:none} }
+  /* the evasion arcade game: an attract screen, then 3, 2, 1, GO! */
+  .evintro{
+    position:fixed;inset:0;z-index:7;display:flex;align-items:center;justify-content:center;padding:16px;
+    background:radial-gradient(ellipse at center,rgba(2,8,20,.6),rgba(2,6,16,.9));
+  }
+  .evintro__box{width:min(540px,100%);max-height:calc(100dvh - 32px);overflow:auto;box-sizing:border-box;
+    display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:4px}
+  .evintro__eyebrow{margin:0;font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-dim)}
+  .evintro__title{
+    margin:0;font-family:var(--mono);font-weight:600;font-size:clamp(54px,14vw,108px);line-height:.95;
+    letter-spacing:.06em;text-transform:uppercase;color:#FFD24A;background:linear-gradient(180deg,#FFF6C8 0%,#FFD24A 48%,#F28A2E 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 14px rgba(255,190,70,.45)) drop-shadow(0 3px 0 rgba(120,40,0,.6));animation:evSlam .55s cubic-bezier(.2,1.5,.4,1) both;
+  }
+  @keyframes evSlam{from{opacity:0;transform:scale(1.8)}55%{opacity:1}to{opacity:1;transform:none}}
+  .evintro__sub{margin:0;font-family:var(--mono);font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink)}
+  .evintro__scores{display:flex;gap:clamp(18px,6vw,40px);justify-content:center;margin:12px 0 4px;font-family:var(--mono)}
+  .evintro__scores p{margin:0;display:flex;flex-direction:column;align-items:center;gap:3px}
+  .evintro__scores span{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-dim)}
+  .evintro__scores b{font-size:clamp(22px,5vw,28px);font-weight:600;color:#FFE07A;text-shadow:0 0 12px rgba(255,190,70,.45)}
+  .evintro__scores small{min-height:1.2em;font-size:11px;letter-spacing:.16em;color:var(--ink)}
+  .evintro__how{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:9px;width:100%;text-align:left}
+  .evintro__how li{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--rule);border-radius:4px;
+    background:rgba(207,230,238,.03);font-size:12.5px;line-height:1.35;color:var(--ink)}
+  .evintro__how img{width:40px;height:40px;object-fit:contain;flex:none}
+  .evintro__pair{display:flex;flex:none;width:40px;justify-content:center}
+  .evintro__pair img{width:24px;height:24px}
+  .evintro__key{flex:none;min-width:40px;box-sizing:border-box;padding:6px 4px;border:1px solid #FFD24A;border-radius:4px;text-align:center;
+    font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.1em;color:#FFD24A;text-transform:uppercase}
+  .evintro__start{
+    margin-top:14px;padding:13px 32px;border:0;border-radius:999px;background:#FFD24A;color:#2A1600;cursor:pointer;
+    font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;
+    box-shadow:0 0 0 1px rgba(255,230,150,.7),0 0 26px rgba(255,190,70,.55);
+  }
+  .evintro__start:hover{background:#FFE07A}
+  .evintro__start:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+  .evintro__keys{margin:0;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint)}
+  .evintro__menu{margin-top:4px;padding:6px 10px;background:none;border:0;cursor:pointer;
+    font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim)}
+  .evintro__menu:hover{color:var(--ink)}
+  .evcount{position:fixed;inset:0;z-index:7;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .evcount__n{font-family:var(--mono);font-weight:600;font-size:clamp(110px,30vw,240px);line-height:1;color:#FFD24A;background:linear-gradient(180deg,#FFF6C8 0%,#FFD24A 48%,#F28A2E 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 14px rgba(255,190,70,.45)) drop-shadow(0 3px 0 rgba(120,40,0,.6));animation:evCount .65s ease-out both}
+  .evcount__n.go{font-size:clamp(90px,24vw,200px);animation:evGo .75s ease-out both}
+  @keyframes evCount{0%{opacity:0;transform:scale(2.2)}25%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(.85)}}
+  @keyframes evGo{0%{opacity:0;transform:scale(.5)}25%{opacity:1;transform:scale(1.12)}70%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.35)}}
+  @media (max-width:520px){ .evintro__how{grid-template-columns:1fr} }
+  @media (prefers-reduced-motion:reduce){ .evintro__title,.evintro__start,.evcount__n,.evcount__n.go{animation:none} }
+  /* Submit score: the one way onto the board, big and green */
+  .boardsubmit{
+    font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:#04210F;background:#5FD08A;border:0;border-radius:999px;padding:11px 22px;cursor:pointer;
+    box-shadow:0 0 0 1px rgba(95,208,138,.7),0 0 16px rgba(95,208,138,.4);animation:boardSubmit 1.6s ease-in-out infinite;
+  }
+  .boardsubmit:hover{background:#7EE3A4}
+  .boardsubmit:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  .board__form .boardsubmit:disabled{animation:none;opacity:.6;box-shadow:none}
+  @keyframes boardSubmit{
+    0%,100%{box-shadow:0 0 0 1px rgba(95,208,138,.7),0 0 12px rgba(95,208,138,.3)}
+    50%{box-shadow:0 0 0 1px rgba(95,208,138,.95),0 0 30px rgba(95,208,138,.75)}
+  }
+  @media (prefers-reduced-motion:reduce){ .boardsubmit{animation:none} }
   .boards__col h3{margin:0;font-weight:500;font-size:16px}
   .boards__sub{margin:0 0 6px;font-size:12px;line-height:1.5;color:var(--ink-dim)}
   .boards__col .ghost{margin-top:10px}
@@ -853,7 +944,7 @@
     <form class="board__form" id="boardForm" autocomplete="off">
       <label for="boardInit">Your name</label>
       <input id="boardInit" maxlength="12" spellcheck="false" autocapitalize="characters" aria-describedby="boardStatus">
-      <button class="ghost" id="boardBtn" type="submit">Submit</button>
+      <button class="boardsubmit" id="boardBtn" type="submit">Submit score</button>
     </form>
     <p class="board__status" id="boardStatus" aria-live="polite"></p>
     <ol class="board" id="board" aria-label="Leaderboard"></ol>
@@ -916,8 +1007,14 @@
 <div class="spec boards" id="boards" hidden role="dialog" aria-modal="true" aria-labelledby="boardsTitle">
   <div class="boards__card">
     <p class="eyebrow">LUCA</p>
-    <h2 id="boardsTitle">Leaderboards</h2>
+    <h2 id="boardsTitle">Arcade games &amp; leaderboards</h2>
+    <div class="boards__cols">
     <section class="boards__col">
+      <button class="cover" id="coverEvade" type="button" aria-label="Play Evasion, the evasion arcade game">
+        <canvas aria-hidden="true"></canvas>
+        <span class="cover__head"><span class="cover__title">Evasion</span><span class="cover__tag">Outswim the Asgard archaeon</span></span>
+        <span class="cover__play">Play</span>
+      </button>
       <h3>Time evaded</h3>
       <p class="boards__sub">How long you held out against the Asgard archaea, in the game or the arcade game</p>
       <ol class="board" id="boardsEvade" aria-label="Time evaded leaderboard"></ol>
@@ -925,12 +1022,18 @@
       <button class="ghost" id="miniBtn" type="button">Play the evasion arcade game</button>
     </section>
     <section class="boards__col">
+      <button class="cover" id="coverPP" type="button" aria-label="Play Protist Predator">
+        <canvas aria-hidden="true"></canvas>
+        <span class="cover__head"><span class="cover__title">Protist Predator</span><span class="cover__tag">Eat &middot; Evolve &middot; Survive &middot; 9 rounds</span></span>
+        <span class="cover__play">Play</span>
+      </button>
       <h3>Protist Predator</h3>
       <p class="boards__sub">Points in the protist arcade game: eat, evolve and survive nine rounds, from the vent to the sunlit surface</p>
       <ol class="board" id="boardsPP" aria-label="Protist Predator leaderboard"></ol>
       <p class="board__status" id="boardsPPStatus" aria-live="polite"></p>
       <button class="ghost" id="ppBtn" type="button">Play Protist Predator</button>
     </section>
+    </div>
     <button class="ghost boards__close" id="boardsClose" type="button">Back</button>
   </div>
 </div>
@@ -1085,6 +1188,23 @@
   <p class="era__date" id="eraDate"></p>
   <h2 class="era__name" id="eraName"></h2>
 </div>
+
+<div class="evintro" id="evIntro" hidden role="dialog" aria-modal="true" aria-labelledby="evIntroTitle">
+  <div class="evintro__box">
+    <p class="evintro__eyebrow">LUCA arcade</p>
+    <h2 class="evintro__title" id="evIntroTitle">Evasion</h2>
+    <p class="evintro__sub">Outswim the Asgard archaeon</p>
+    <ul class="evintro__how">
+      <li><img id="evImgYou" src="assets/images/microbe_sar11.png" alt=""><span id="evYouLine">You. Click and hold anywhere to swim toward it.</span></li>
+      <li><img id="evImgAsg" src="assets/images/microbe_asgard_body.png" alt="">Stay out of its reach. It divides and speeds up.</li>
+      <li><span class="evintro__pair"><img id="evImgO2" alt=""><img id="evImgSugar" alt=""></span>Collect O&#8322; and sugar. Run out of energy and you starve.</li>
+      <li><span class="evintro__key" id="evKey">Space</span><span id="evBoostLine">Full energy: press Space for 6 s of speed.</span></li>
+    </ul>
+    <button class="evintro__start" id="evStart" type="button">Begin</button>
+    <button class="evintro__menu" id="evMenu" type="button">Main menu</button>
+  </div>
+</div>
+<div class="evcount" id="evCount" hidden aria-hidden="true"><span class="evcount__n" id="evCountN">3</span></div>
 
 <div class="prompt" id="prompt" hidden>
   <div class="prompt__card">
@@ -1325,6 +1445,18 @@
     border:1px solid var(--rule);border-radius:3px}
   #ppRoot .ppform input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   #ppRoot .ppform input:disabled,#ppRoot .ppform button:disabled{opacity:.5;cursor:default}
+  #ppRoot .ppsubmit{
+    font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:#04210F;background:#5FD08A;border:0;border-radius:999px;padding:10px 20px;cursor:pointer;
+    box-shadow:0 0 0 1px rgba(95,208,138,.7),0 0 16px rgba(95,208,138,.4);animation:ppSubmitGlow 1.6s ease-in-out infinite;
+  }
+  #ppRoot .ppsubmit:hover{background:#7EE3A4}
+  #ppRoot .ppsubmit:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  #ppRoot .ppform .ppsubmit:disabled{animation:none;opacity:.6;box-shadow:none}
+  @keyframes ppSubmitGlow{
+    0%,100%{box-shadow:0 0 0 1px rgba(95,208,138,.7),0 0 12px rgba(95,208,138,.3)}
+    50%{box-shadow:0 0 0 1px rgba(95,208,138,.95),0 0 30px rgba(95,208,138,.75)}
+  }
   #ppRoot .ppstatus{margin:0;font-size:12px;line-height:1.5;color:var(--ink-dim)}
   #ppRoot .ppboard{list-style:none;margin:0;padding:0;width:100%;font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums}
   #ppRoot .ppboard li{display:grid;grid-template-columns:4ch 1fr auto;gap:12px;padding:6px 8px;border-bottom:1px solid var(--rule);color:var(--ink-dim)}
@@ -1445,7 +1577,7 @@
   #ppRoot .btnrow{gap:8px}
 }
   @media (prefers-reduced-motion:reduce){
-  #ppRoot .banner,#ppRoot .card__box,#ppRoot .title > *,#ppRoot .pips.hit i,#ppRoot .card__round,#ppRoot .rsplash,#ppRoot .rsplash__n,#ppRoot .rsplash__name,#ppRoot .rbadge__n.pop{animation:none}
+  #ppRoot .banner,#ppRoot .card__box,#ppRoot .title > *,#ppRoot .pips.hit i,#ppRoot .ppsubmit,#ppRoot .card__round,#ppRoot .rsplash,#ppRoot .rsplash__n,#ppRoot .rsplash__name,#ppRoot .rbadge__n.pop{animation:none}
 }
 </style>
 <div id="ppRoot">
@@ -1599,7 +1731,7 @@
     <form class="ppform" id="pp_cardForm" hidden autocomplete="off">
       <label for="pp_cardName">Your name</label>
       <input id="pp_cardName" maxlength="12" spellcheck="false" autocapitalize="characters" aria-describedby="pp_cardLbStatus">
-      <button class="ghost" id="pp_cardSave" type="submit">Save</button>
+      <button class="ppsubmit" id="pp_cardSave" type="submit">Submit score</button>
     </form>
     <p class="ppstatus" id="pp_cardLbStatus" hidden aria-live="polite"></p>
     <ol class="ppboard" id="pp_cardBoard" hidden aria-label="Protist Predator leaderboard"></ol>
@@ -2229,7 +2361,7 @@
   var meals = [], sparks = [], floats = [], peels = [], debris = [], pops = [];
   var preyT = 0, virT = 0, spinyT = 0, asgBackT = -1, roundEndT = -1, deadT = 0, bubAcc = 0;
   var gT = 0, proA = 1, asgFade = 1;
-  var drag = { on:false, tx:0, ty:0 };
+  var drag = { on:false, held:false, tx:0, ty:0 };
 
   // how mean the water is, 0 to 1. Round 1 gets meaner as you eat; in round 2
   // the mats are the main threat and the rest ease off a little.
@@ -6476,10 +6608,10 @@
   }
 
   // ---- the leaderboard ---------------------------------------------------------
-  // Played from LUCA, a run is saved to LUCA's 'minigame' board (on claude.ai
+  // Played from LUCA, a run can go on LUCA's 'minigame' board (on claude.ai
   // the artifact's database; on the public site the Supabase adapter): one row
-  // per player with their best points, under the last name they used. It is
-  // written at the end of every run; the name box only renames it.
+  // per player with their best points. Only when the player types a name and
+  // presses Submit score (the owner's rule): nothing is saved on its own.
   var LB_COLL = 'minigame', NAME_KEY = 'luca.name';
   var lb = { db:null, uid:null, rows:[], saveErr:null, saving:false };
   var lbEl = { form:$('pp_cardForm'), name:$('pp_cardName'), save:$('pp_cardSave'), status:$('pp_cardLbStatus'), board:$('pp_cardBoard') };
@@ -6511,14 +6643,14 @@
                                   : 'Play from LUCA\u2019s main menu to put your score on the leaderboard.');
   }
   function lbOpen(){
-    lb.saving = false; lb.saveErr = null;
-    lbEl.name.disabled = false; lbEl.save.disabled = false;
+    lb.saving = false; lb.saveErr = null; lb.done = false;
+    lbEl.name.disabled = false; lbEl.save.disabled = false; lbEl.save.textContent = 'Submit score';
     lbEl.name.value = savedName();
     lbEl.board.innerHTML = '';
-    lbEl.status.textContent = 'Saving your score\u2026';
+    lbEl.status.textContent = 'Loading the leaderboard\u2026';
     lbInit().then(function(){
       if(!lb.db){ lbEl.form.hidden = true; lbEl.board.hidden = true; lbEl.status.textContent = lbOffline(); return; }
-      return lbSave(null).catch(function(e){ lb.saveErr = e && e.code; }).then(lbLoad);
+      return lbLoad();
     });
   }
   function lbLoad(){
@@ -6558,15 +6690,20 @@
       lbEl.board.appendChild(lbRow(me, rows[me], true));
     }
     lbEl.board.hidden = !rows.length;
-    if(me >= 0 && lb.saveErr !== 'not_granted'){
-      if(rows[me].initials !== 'PLAYER' && !lbEl.name.value) lbEl.name.value = rows[me].initials;
-      lbEl.status.textContent = 'You\u2019re #' + (me + 1) + ' of ' + rows.length +
-        (rows[me].best > score ? ', with your best of ' + fmt(rows[me].best) + '.' : '.') +
-        ' Your score is saved' + (rows[me].initials === 'PLAYER' ? '; type a name to put on it.' : '.');
-    } else if(lb.saveErr === 'not_granted'){
+    if(me >= 0 && rows[me].initials !== 'PLAYER' && !lbEl.name.value) lbEl.name.value = rows[me].initials;
+    if(lb.saveErr === 'not_granted'){
       lbEl.status.textContent = VIEW_ONLY;
+    } else if(lb.done && me >= 0){
+      lbEl.status.textContent = 'You\u2019re #' + (me + 1) + ' of ' + rows.length +
+        (rows[me].best > score ? ', with your best of ' + fmt(rows[me].best) : '') + '. Your score is on the board.';
+    } else if(me >= 0 && rows[me].best >= score){
+      lbEl.status.textContent = 'Your best of ' + fmt(rows[me].best) + ' is #' + (me + 1) + ' on the board; this run doesn\u2019t beat it.';
     } else {
-      lbEl.status.textContent = rows.length ? 'Add your name to join the board.' : 'No one is on the board yet. Add your name to be first.';
+      var place = 1;
+      for(i = 0; i < rows.length; i++) if(rows[i].id !== lb.uid && rows[i].best > score) place++;
+      lbEl.status.textContent = rows.length
+        ? 'This score would place #' + place + '. Type your name and press Submit score to put it on the board.'
+        : 'No one is on the board yet. Type your name and press Submit score to be first.';
     }
   }
   lbEl.name.addEventListener('input', function(){
@@ -6582,7 +6719,7 @@
     try { localStorage.setItem(NAME_KEY, ini); } catch(e){}
     lb.saving = true; lbEl.save.disabled = true;
     lbEl.status.textContent = 'Saving\u2026';
-    lbSave(ini).then(function(){ lbEl.name.disabled = true; lbLoad(); }).catch(function(e){
+    lbSave(ini).then(function(){ lb.done = true; lbEl.name.disabled = true; lbEl.save.textContent = 'Saved'; lbLoad(); }).catch(function(e){
       lb.saving = false; lbEl.save.disabled = false;
       lbEl.status.textContent = (e && e.code === 'not_granted') ? VIEW_ONLY
         : 'Could not save your score (' + ((e && e.code) || 'error') + ').';
@@ -6657,13 +6794,13 @@
     sfxInit();
     focusGame();
     if(mode !== 'play') return;
-    drag.on = true;
+    drag.on = true; drag.held = true;      // hold anywhere: the cell swims toward the pointer
     setTarget(toScene(ev));
     try { cv.setPointerCapture(ev.pointerId); } catch(e){}
     ev.preventDefault();
   });
-  cv.addEventListener('pointermove', function(ev){ if(drag.on) setTarget(toScene(ev)); });
-  function release(){ drag.on = false; }
+  cv.addEventListener('pointermove', function(ev){ if(drag.held) setTarget(toScene(ev)); });
+  function release(){ drag.on = drag.held = false; }   // let go: it stops steering
   cv.addEventListener('pointerup', release);
   cv.addEventListener('pointercancel', release);
   fireEl.addEventListener('pointerdown', function(ev){ ev.preventDefault(); sfxInit(); focusGame(); fire(); });
@@ -6682,7 +6819,7 @@
   $('pp_qsBtn').addEventListener('pointerdown', function(ev){ ev.preventDefault(); sfxInit(); focusGame(); qsFire(); });
   slimeEl.addEventListener('pointercancel', function(){ slimeOn(false); });
   document.addEventListener('keyup', function(ev){ if(active && (ev.key === 'z' || ev.key === 'Z')) slimeOn(false); });
-  window.addEventListener('blur', function(){ slimeOn(false); drag.on = false; });
+  window.addEventListener('blur', function(){ slimeOn(false); drag.on = drag.held = false; });
 
   // Shift+K finishes the goal at hand, for testing
   function skipGoal(){
@@ -6802,12 +6939,129 @@
     music.pause();
     if(onExit) onExit(); else location.reload();
   }
+
+  // ---- a cover for LUCA's arcade menu ---------------------------------------------
+  // A small live scene drawn with the game's own code, into a canvas LUCA
+  // gives it: from the violet vent below to the sunlit water above, the
+  // protist (a symbiont aboard, gas vesicles lit) jabs a Pseudomonas with its
+  // T6SS again and again, while a red one loads its three spears and a
+  // yellow-green one glows. Drawn in a 640 x 360 frame, scaled to fit.
+  function coverPseudo(kind, x, y, dir, W, k, ext, hot){
+    var K = PS_KIND[kind], hl = W * 0.223, ht = W * 0.061, R0 = W * 0.4;
+    if(kind === 'fast'){
+      var fg = ctx.createRadialGradient(x, y, 0, x, y, hl * 1.6);
+      fg.addColorStop(0, 'rgba(214,255,96,' + (0.32 + 0.1 * Math.sin(gT * 5)).toFixed(3) + ')');
+      fg.addColorStop(1, 'rgba(214,255,96,0)');
+      ctx.fillStyle = fg; ctx.beginPath(); ctx.arc(x, y, hl * 1.6, 0, Math.PI * 2); ctx.fill();
+    }
+    sprite(K.img, x, y, W, dir, 1);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(dir);
+    if(hot > 0){
+      ctx.strokeStyle = 'rgba(' + PS_GLOW + ',' + (0.55 * hot).toFixed(3) + ')';
+      ctx.lineWidth = 2.5; ctx.setLineDash([9, 7]);
+      ctx.beginPath();
+      for(var sp = 0; sp < K.spears; sp++){
+        var off = (sp - (K.spears - 1) / 2) * PS_FAN;
+        ctx.moveTo(hl, 0); ctx.lineTo(hl + Math.cos(off) * R0 * 1.3, Math.sin(off) * R0 * 1.3);
+      }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    psSpears(K, hl * 0.96, hl * 1.35, ht * 0.3, k, ext, R0 * 1.3, hot);
+    ctx.restore();
+  }
+  function drawCover(g, Wc, Hc, t){
+    var keep = { ctx:ctx, gT:gT, proA:proA, jabs:jabs, jabT:jabT, jabK:jabK, vacLit:vacLit, symGhost:symGhost, symIn:symIn };
+    ctx = g; gT = t; proA = 1; symGhost = 0; symIn = 0;
+    try {
+      var k = Wc / 640, i;
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+      var bg = g.createLinearGradient(0, 0, 0, Hc);           // sunlit above, the vent below
+      bg.addColorStop(0, '#3C93B8'); bg.addColorStop(0.32, '#145377'); bg.addColorStop(0.68, '#0B1F48'); bg.addColorStop(1, '#1A0B33');
+      g.fillStyle = bg; g.fillRect(0, 0, Wc, Hc);
+      g.setTransform(k, 0, 0, k, 0, 0);
+      for(i = 0; i < 6; i++){                                   // shafts of sunlight
+        var bx = 40 + i * 115 + Math.sin(t * 0.3 + i * 1.7) * 12, bw = 16 + 14 * hr(i + 40);
+        var sg = g.createLinearGradient(0, 0, 0, 260);
+        sg.addColorStop(0, 'rgba(235,252,255,' + (0.10 + 0.05 * Math.sin(t * 0.6 + i)).toFixed(3) + ')');
+        sg.addColorStop(1, 'rgba(235,252,255,0)');
+        g.fillStyle = sg;
+        g.beginPath(); g.moveTo(bx - bw, 0); g.lineTo(bx + bw, 0); g.lineTo(bx + bw * 2.4 + 50, 260); g.lineTo(bx - bw * 0.4 + 50, 260); g.closePath(); g.fill();
+      }
+      g.strokeStyle = 'rgba(230,250,255,0.35)'; g.lineWidth = 1.5;   // the surface, seen from below
+      g.beginPath();
+      for(var x = -10; x <= 650; x += 10){ var yy = 10 + Math.sin(x * 0.03 + t * 1.4) * 3; if(x === -10) g.moveTo(x, yy); else g.lineTo(x, yy); }
+      g.stroke();
+      var vg = g.createRadialGradient(90, 390, 10, 90, 390, 260);  // the purple vent's glow
+      vg.addColorStop(0, 'rgba(176,96,255,0.45)'); vg.addColorStop(1, 'rgba(176,96,255,0)');
+      g.fillStyle = vg; g.fillRect(0, 0, 640, 360);
+      g.fillStyle = '#E8FBFF';                                  // marine snow
+      for(i = 0; i < 36; i++){
+        g.globalAlpha = 0.15 + 0.3 * hr(i + 7);
+        var px = (hr(i) * 640 + t * (5 + 9 * hr(i + 3))) % 640, py = (hr(i + 11) * 360 + t * (6 + 10 * hr(i + 5))) % 360;
+        g.beginPath(); g.arc(px, py, 0.8 + 1.4 * hr(i + 9), 0, Math.PI * 2); g.fill();
+      }
+      g.globalAlpha = 1;
+      // food and trouble drifting by
+      sprite('alpha', 66 + Math.sin(t * 0.5) * 8, 112, 46, 0.6 + Math.sin(t * 0.7) * 0.2, 0.9);
+      sprite('psb', 128, 292 + Math.sin(t * 0.6) * 6, 40, -0.4 + t * 0.15, 0.9);
+      sprite('cyano', 170, 56 + Math.sin(t * 0.45) * 8, 44, t * 0.1, 0.9);
+      sprite('phage', 345, 64 + Math.sin(t * 0.8) * 5, 40, t * 0.3, 0.85);
+      drawMol({ x:604, y:208 + Math.sin(t * 0.4) * 8, r:30, rot:t * 0.12, t:5, life:99 });
+      // the red one loads its fan of spears, fires, and rebuilds
+      var rc = t % 2.8, rhot = rc < 1.3 ? rc / 1.3 : 0, rext = rc >= 1.3 && rc < 1.75 ? psExt(rc - 1.3) : 0;
+      coverPseudo('tri', 560, 96, Math.PI - 0.5, 158, rc >= 1.3 ? 0 : 1, rext, rhot);
+      coverPseudo('fast', 372 + Math.sin(t * 0.8) * 10, 300, Math.PI + 0.75 + Math.sin(t * 1.3) * 0.08, 140, 1, 0, 0);
+      // the protist, jabbing the Pseudomonas in front of it; it is back
+      // before the next jab
+      var cyc = t % 2.2, hit = cyc > 0.06 && cyc < 1.0;
+      var tgx = 478 + Math.sin(t * 0.9) * 4, tgy = 186;
+      if(!hit){
+        proA = cyc >= 1.0 && cyc < 1.35 ? (cyc - 1.0) / 0.35 : 1;     // fading back in
+        coverPseudo('norm', tgx, tgy, Math.PI, 156, 1, 0, 0);
+        proA = 1;
+      }
+      else {
+        var pk = Math.min(1, (cyc - 0.06) / 0.45);
+        if(pk < 1){
+          g.strokeStyle = 'rgba(159,245,224,' + (0.9 * (1 - pk)).toFixed(3) + ')'; g.lineWidth = 4;
+          g.beginPath(); g.arc(tgx, tgy, 20 + 46 * pk, 0, Math.PI * 2); g.stroke();
+        }
+        var tg = g.createRadialGradient(tgx, tgy, 0, tgx, tgy, 24);  // its token, glowing teal
+        tg.addColorStop(0, 'rgba(127,232,210,0.7)'); tg.addColorStop(1, 'rgba(127,232,210,0)');
+        g.fillStyle = tg; g.beginPath(); g.arc(tgx, tgy, 24, 0, Math.PI * 2); g.fill();
+        sprite('exudate', tgx, tgy, 26, t * 0.3, 1);
+      }
+      var stand = { x:235, y:186 + Math.sin(t * 1.2) * 5, w:205, heading:Math.sin(t * 0.7) * 0.03, vx:0, vy:0,
+                    eff:0.6, wig:t * 3.2, turn:0, prevH:0, gulp:cyc < 0.3 ? 0.6 : 0,
+                    glow:PRO.mitos.map(function(m, j){ return 0.35 + 0.35 * Math.sin(t * 2 + j); }), box:{ x0:0, x1:0, y0:0, y1:0 } };
+      jabs = 5; jabT = cyc < JAB_OUT + JAB_HOLD + JAB_BACK ? cyc : -1; jabK = jabT >= 0 ? jabExt(jabT) : 0;
+      vacLit = 0.35 + 0.25 * Math.sin(t * 2.4);
+      hgtProtist(stand, { envelope:false, pumps:false, biofilm:false, flag:1, vac:true, sym:true, qs:false, t6:true }, 4, [], 0);
+      // the score, ticking up
+      g.font = '600 22px "IBM Plex Mono", ui-monospace, monospace';
+      g.textBaseline = 'alphabetic';
+      g.fillStyle = 'rgba(2,6,16,0.55)'; g.fillRect(14, 324, 196, 26);
+      g.fillStyle = '#FFD24A'; g.shadowColor = 'rgba(255,190,70,0.6)'; g.shadowBlur = 8;
+      g.fillText('SCORE ' + fmt(Math.floor(t * 7) * 10 % 100000), 22, 344);
+      g.shadowBlur = 0;
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      var vig = g.createRadialGradient(Wc / 2, Hc / 2, Hc * 0.35, Wc / 2, Hc / 2, Wc * 0.65);
+      vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(0,0,0,0.42)');
+      g.fillStyle = vig; g.fillRect(0, 0, Wc, Hc);
+    } finally {
+      ctx = keep.ctx; gT = keep.gT; proA = keep.proA; jabs = keep.jabs; jabT = keep.jabT; jabK = keep.jabK;
+      vacLit = keep.vacLit; symGhost = keep.symGhost; symIn = keep.symIn;
+    }
+  }
+
   if(!EMBED){
     boot();
     showTitle();
   } else {
     ROOT.hidden = true;
     window.ProtistPredator = {
+      cover: drawCover,
       open: function(opts){
         opts = opts || {};
         onExit = opts.onExit || null;
@@ -7161,7 +7415,7 @@
   var asgs = [], asgWarned = false, asgDupT = 0, asgDups = 0;
   var engT = 0, engFrom = null, engBy = null;
 
-  var virus = null, vDrag = { on:false, tx:0, ty:0 };
+  var virus = null, vDrag = { on:false, held:false, tx:0, ty:0 };
   var targets = [], targetTotal = 0, cellSize0 = 120, chainsV = [];
 
   var COLONY = {
@@ -7180,7 +7434,7 @@
   var T_HEAT = 0.14, T_COOL = 0.11, T_RECOVER = 0.06;
   var temp = 0.5;
   var TC_OK = [95,208,138], TC_WARN = [224,138,42], TC_BAD = [224,72,60];
-  var swimDrag = { on:false, tx:0, ty:0 };
+  var swimDrag = { on:false, held:false, tx:0, ty:0 };   // on: heading for (tx, ty); held: the pointer is down
   var FLAG = mixA(C.memb, rgb('#123C4A'), 0.40);
 
   // A second vent field: same geometry, same generators, lit violet. Held as an
@@ -7528,6 +7782,14 @@
       } else if(name === 'alert'){            // the Evolve button appears
         sTone('triangle', 659, 659, now, 0.14, 0.16);
         sTone('triangle', 988, 988, now + 0.15, 0.26, 0.16);
+      } else if(name === 'coin'){             // the evasion's Press start: an arcade coin
+        sTone('square', 988, 988, now, 0.06, 0.06);
+        sTone('square', 1319, 1319, now + 0.06, 0.22, 0.06);
+      } else if(name === 'count'){            // 3, 2, 1
+        sTone('square', 523, 523, now, 0.12, 0.07);
+      } else if(name === 'go'){               // GO!
+        sTone('square', 784, 784, now, 0.09, 0.07);
+        sTone('square', 1047, 1047, now + 0.09, 0.34, 0.08);
       } else if(name === 'tick'){             // a button
         sTone('sine', 1250, 1100, now, 0.035, 0.09);
       }
@@ -7728,6 +7990,20 @@
         if(Math.abs(n.kx) + Math.abs(n.ky) < 3){ n.kx = 0; n.ky = 0; }
       }
       if(n === grabbed) continue;        // held lipids do not drift
+      if(n.home){                        // tapped: it flies to the cloud, or into the cell
+        var hx = phase === 'gather' ? cloud.x : cell ? cell.x : null, hy = phase === 'gather' ? cloud.y : cell ? cell.y : null;
+        if(hx === null || !draggable() || n.rej > 0){ n.home = false; }
+        else {
+          var hdx = hx - n.x, hdy = hy - n.y, hd = Math.hypot(hdx, hdy) || 1;
+          n.hv = Math.min(900, n.hv + dt * 1800);
+          var stp = Math.min(hd, n.hv * dt);
+          n.x += hdx / hd * stp; n.y += hdy / hd * stp;
+          n.rot += n.rsp * dt * 3;
+          if(phase === 'gather'){ if(hd < cloud.r * 0.72) absorb(n); }
+          else if(cellHit(n.x, n.y, n.size * 0.30)) intoCell(n);
+          continue;
+        }
+      }
       n.p += dt / n.life;
       n.y -= n.rise * dt;
       n.x += n.drift*dt + Math.sin(t*0.0006*n.wf + n.ph) * n.amp * dt * 0.5;
@@ -8230,6 +8506,7 @@
   var floatGap = 0;
   function rejectMote(n, msg){
     if(n === grabbed) grabbed = null;
+    n.home = false;                             // it bounces off, and stays out
     var ox = cell ? cell.x : n.x, oy = cell ? cell.y : n.y + 1;
     var dx = n.x - ox, dy = n.y - oy, d = Math.hypot(dx, dy) || 1;
     n.kx = dx / d * 190; n.ky = dy / d * 190;
@@ -9489,8 +9766,7 @@
     evadeSecs = asgClock;                // the run's score
     boosts.length = 0;
     saveLocalBest(evadeSecs);
-    lbInit().then(function(){ return lbSave(null); })   // on the board the moment it is set
-      .catch(function(e){ lb.saveErr = e && e.code; });  // signed out or view-only: the credits say so
+    lbInit();                            // the board waits for the player's Submit score
     engGrow = { x: by.x, y: by.y, w: by.w };
     by.sp = 0;                           // it stops where it caught you
     // every other archaeon dissipates; the one holding the cell stays
@@ -13619,7 +13895,7 @@
 
     if(phase === 'feed' && energy >= 1){
       phase = 'flagellum';
-      showPrompt('Evolution', 'Early cells evolved flagella: whip-like tails that spin to push the cell along. This let them find food and move into the right conditions. (Click and drag the cell to move, and don\u2019t get too hot or too cold!)', 'Continue', startSwim, null,
+      showPrompt('Evolution', 'Early cells evolved flagella: whip-like tails that spin to push the cell along. This let them find food and move into the right conditions. (' + (TOUCH ? 'Touch' : 'Click') + ' and hold anywhere to steer the cell toward it, and don\u2019t get too hot or too cold!)', 'Continue', startSwim, null,
           { src:'assets/images/gene_ui.png', alt:'A gene: a segment of double-stranded DNA',
             title:'You\u2019ve evolved the genes for motility!' });
     }
@@ -14229,7 +14505,7 @@
     if(!elPrompt.hidden || mode !== 'field' || phase === 'dead') return null;
     if(phase === 'gather')
       return hintDone.lipid ? null
-           : { k:'lipid', text:'Drag phospholipids here', x:cloud.x, y:cloud.y, r:0 };
+           : { k:'lipid', text:'Tap phospholipids to send them here', x:cloud.x, y:cloud.y, r:0 };
     if(phase === 'virus')
       return (hintDone.virus || !virus) ? null
            : { k:'virus', text:'Infect the cyanobacteria', x:virus.x, y:virus.y, r:26 };
@@ -14238,8 +14514,8 @@
       return hintDone[k] ? null
            : { k:k, text:text, x:cell.x, y:cell.y, r:cell.w * 0.55, warn:!!warn };
     };
-    if(phase === 'genome') return at('genome', 'Drag nucleotides into your cell');
-    if(phase === 'feed')   return at('feed', 'Drag H\u2082 and CO\u2082 into your cell');
+    if(phase === 'genome') return at('genome', 'Tap nucleotides to send them into your cell');
+    if(phase === 'feed')   return at('feed', 'Tap H\u2082 and CO\u2082 to send them into your cell');
     if(swimming()){
       var sev = Math.abs(temp - 0.5) * 2;        // the same scale as the gauge
       if(sev < 0.70){ hintDone.hot = hintDone.cold = false; }   // re-arm the warning
@@ -14248,7 +14524,7 @@
                            : at('cold', 'Too cold! Swim back toward the vents', true);
         if(w) return w;
       }
-      return phase === 'swim' ? at('swim', 'Drag your cell to swim') : null;
+      return phase === 'swim' ? at('swim', (TOUCH ? 'Touch' : 'Click') + ' and hold anywhere to swim toward it') : null;
     }
     if(phase === 'euphotic'){
       if(!rxReady()) return at('h2s', 'Collect 2 H\u2082S from below and 1 CO\u2082');
@@ -14374,9 +14650,8 @@
     elCredits.hidden = false;
     elCredits.scrollTop = 0;
     document.getElementById('crTime').textContent = fmtClock(evadeSecs);
-    lbInit().then(function(){
-      return lbSave(null).catch(function(e){ lb.saveErr = e && e.code; });   // in case the save at capture missed
-    }).then(lbLoad);
+    lbFresh();
+    lbInit().then(lbLoad);               // shown, not saved: that waits for Submit score
     crTimer = setTimeout(function(){ crGo('crScore'); }, 3800);
 
     // the tree plays when it comes into view, however the player got there
@@ -14463,7 +14738,7 @@
       lb.rows.sort(function(a, b){ return b.best - a.best; });
       lb.mine = null;
       for(var j = 0; j < lb.rows.length; j++) if(lb.rows[j].id === lb.uid) lb.mine = lb.rows[j];
-      if(lb.mine && !elBoardInit.value) elBoardInit.value = lb.mine.initials;
+      if(!elBoardInit.value) elBoardInit.value = lb.mine && lb.mine.initials !== 'PLAYER' ? lb.mine.initials : savedName();
       renderBoard();
     }).catch(function(e){
       clearTimeout(timer);
@@ -14481,18 +14756,19 @@
       html += boardRow(myIdx, rows[myIdx], true);
     }
     elBoard.innerHTML = html;
-    if(myIdx >= 0){
-      elBoardStatus.textContent = 'You\u2019re #' + (myIdx + 1) + ' of ' + rows.length +
-        (rows[myIdx].best > evadeSecs + 0.05 ? ', with your best of ' + fmtClock(rows[myIdx].best) + '.' : '.') +
-        ' Your time is saved' + (rows[myIdx].initials === 'PLAYER' ? '; type a name to put on it.' : '.');
-    } else if(lb.saveErr === 'not_granted'){
+    if(lb.saveErr === 'not_granted'){
       elBoardStatus.textContent = 'Your access to this game is view-only, so your time can\u2019t be saved. Ask the owner to share it with you as a Contributor.';
+    } else if(lbDone && myIdx >= 0){
+      elBoardStatus.textContent = 'You\u2019re #' + (myIdx + 1) + ' of ' + rows.length +
+        (rows[myIdx].best > evadeSecs + 0.05 ? ', with your best of ' + fmtClock(rows[myIdx].best) : '') + '. Your time is on the board.';
+    } else if(myIdx >= 0 && rows[myIdx].best >= evadeSecs){
+      elBoardStatus.textContent = 'Your best of ' + fmtClock(rows[myIdx].best) + ' is #' + (myIdx + 1) + ' on the board; this run doesn\u2019t beat it.';
     } else {
       var place = 1;
-      for(i = 0; i < rows.length; i++) if(rows[i].best > evadeSecs) place++;
+      for(i = 0; i < rows.length; i++) if(rows[i].id !== lb.uid && rows[i].best > evadeSecs) place++;
       elBoardStatus.textContent = rows.length
-        ? 'Your time would place #' + place + ' of ' + (rows.length + 1) + '. Add your name to join.'
-        : 'No one is on the board yet. Add your name to be first.';
+        ? 'Your time would place #' + place + '. Type your name and press Submit score to put it on the board.'
+        : 'No one is on the board yet. Type your name and press Submit score to be first.';
     }
   }
 
@@ -14506,10 +14782,16 @@
     return li.outerHTML;
   }
 
-  // A player's row is written the moment they are caught, under the last name
-  // they used (or PLAYER), so the time is kept even if they never reach the
-  // credits; the name box at the end just renames that row.
-  var NAME_KEY = 'luca.name';
+  // A player's time goes on the board only when they type a name and press
+  // Submit score (the owner's rule, 15 Nov 2026; it used to be saved the
+  // moment they were caught). Their best on this device is kept either way.
+  var NAME_KEY = 'luca.name', lbDone = false;
+  function lbFresh(){
+    lbSaving = false; lbDone = false; lb.saveErr = null;
+    elBoardInit.disabled = false;
+    var bb = document.getElementById('boardBtn');
+    bb.disabled = false; bb.textContent = 'Submit score';
+  }
   function savedName(){ try { return localStorage.getItem(NAME_KEY) || ''; } catch(e){ return ''; } }
   function lbSave(name){
     if(!lb.db || !lb.uid) return Promise.reject({ code:'signed_out' });
@@ -14535,7 +14817,9 @@
     document.getElementById('boardBtn').disabled = true;
     elBoardStatus.textContent = 'Saving\u2026';
     lbSave(ini).then(function(){
+      lbDone = true;
       elBoardInit.disabled = true;
+      document.getElementById('boardBtn').textContent = 'Saved';
       lbLoad();
       if(!miniMode) crTimer = setTimeout(function(){ if(!crMoved) crGo('crTree'); }, 4200);
     }).catch(function(e){
@@ -14815,8 +15099,10 @@
     return best;
   }
 
-  // Every stage where the cell is steered by dragging it. One predicate, so a
-  // new stage cannot be wired into the physics but left out of the input.
+  // Every stage where the cell is steered. One predicate, so a new stage
+  // cannot be wired into the physics but left out of the input. Press and hold
+  // anywhere and the cell swims toward the pointer; let go and it stops
+  // steering (Protist Predator's way, the owner's rule for every game).
   function steerable(){
     return swimming() || surfaceStage() || phase === 'predation' ||
            (phase === 'protist' && !proFinale);
@@ -14835,16 +15121,15 @@
   cv.addEventListener('pointerdown', function(ev){
     sfxInit();
     var p = toScene(ev);
-    if(phase === 'virus'){            // steer from anywhere: it is a chase
-      vDrag.on = true; vDrag.tx = p.x; vDrag.ty = p.y;
+    if(phase === 'virus'){            // hold anywhere: the virus heads that way
+      vDrag.on = true; vDrag.held = true; vDrag.tx = p.x; vDrag.ty = p.y;
       cv.classList.add('grabbing');
       try { cv.setPointerCapture(ev.pointerId); } catch(e){}
       ev.preventDefault();
       return;
     }
-    if(steerable()){                        // the cell (any cell of a chain) is the handle now
-      if(!colonyHit(p.x, p.y, 0)) return;
-      swimDrag.on = true;
+    if(steerable()){                        // hold anywhere: the cell swims toward it
+      swimDrag.on = true; swimDrag.held = true;
       setSwimTarget(p);
       cv.classList.add('grabbing');
       try { cv.setPointerCapture(ev.pointerId); } catch(e){}
@@ -14852,53 +15137,30 @@
       return;
     }
     if(!draggable()) return;
-    var n = lipidAt(p);
-    if(!n) return;
-    grabbed = n;
-    cv.classList.add('grabbing');
-    try { cv.setPointerCapture(ev.pointerId); } catch(e){}
+    var n = lipidAt(p);                     // tap a molecule: it flies in by itself
+    if(!n || n.home || n.rej > 0) return;
+    n.home = true; n.hv = 160;
+    sfx('tick');
     ev.preventDefault();
   });
 
   cv.addEventListener('pointermove', function(ev){
     var p = toScene(ev);
     if(phase === 'virus'){
-      if(vDrag.on){ vDrag.tx = p.x; vDrag.ty = p.y; }
+      if(vDrag.held){ vDrag.tx = p.x; vDrag.ty = p.y; }
       return;
     }
     if(steerable()){
-      if(swimDrag.on) setSwimTarget(p);
-      else cv.classList.toggle('grab', colonyHit(p.x, p.y, 0));
+      if(swimDrag.held) setSwimTarget(p);
+      cv.classList.remove('grab');
       return;
     }
-    if(grabbed){
-      grabbed.x = p.x; grabbed.y = p.y;
-      // dropped in by touching the target, rather than needing a precise release
-      if(phase === 'gather'){
-        if(Math.hypot(p.x - cloud.x, p.y - cloud.y) < cloud.r*0.72) absorb(grabbed);
-      } else if(cellHit(p.x, p.y, grabbed.size*0.30)){
-        intoCell(grabbed);
-      }
-    } else if(draggable()){
-      cv.classList.toggle('grab', !!lipidAt(p));
-    }
+    cv.classList.toggle('grab', draggable() && !!lipidAt(p));
   });
 
+  // letting go stops the steering
   function drop(ev){
-    if(vDrag.on){
-      vDrag.on = false;
-      cv.classList.remove('grabbing');
-      try { cv.releasePointerCapture(ev.pointerId); } catch(e){}
-      return;
-    }
-    if(swimDrag.on){
-      swimDrag.on = false;
-      cv.classList.remove('grabbing');
-      try { cv.releasePointerCapture(ev.pointerId); } catch(e){}
-      return;
-    }
-    if(!grabbed) return;
-    grabbed = null;
+    vDrag.on = vDrag.held = false; swimDrag.on = swimDrag.held = false; grabbed = null;
     cv.classList.remove('grabbing');
     try { cv.releasePointerCapture(ev.pointerId); } catch(e){}
   }
@@ -15106,6 +15368,7 @@
   }
   function openBoards(){
     elBoards.hidden = false;
+    startCovers();
     document.getElementById('boardsClose').focus();
     var eS = document.getElementById('boardsEvadeStatus'), eL = document.getElementById('boardsEvade');
     var pS = document.getElementById('boardsPPStatus'), pL = document.getElementById('boardsPP');
@@ -15150,20 +15413,55 @@
     sfxInit();
     jumpToPredation();                   // to the second vent field, then miniIntro()
   }
+  // An arcade intro (the owner's request): EVASION in gold, four short rules
+  // and Begin (Enter or Space too); then 3, 2, 1, GO! with beeps, and the
+  // Asgard arrives on GO. The field holds (phase predIntro) until then.
+  var elEvIntro = document.getElementById('evIntro'), elEvCount = document.getElementById('evCount');
+  var evCounting = false, evIcons = false;
   function miniIntro(){
-    phase = 'predIntro';                 // the field holds while the card is up
+    phase = 'predIntro';
     asgWarned = true;
     energy = 0.80;
     paintGauge();
-    showPrompt('Evasion',
-      'How long can you hold out? An Asgard archaeon is hunting you, and it ' +
-      'divides and speeds up as time goes on. Stay out of its reach. Collect ' +
-      'O\u2082 and sugar to keep your energy up. When your energy bar is full, ' +
-      (TOUCH ? 'tap Boost' : 'press the space bar') + ' for a 6-second speed boost. ' +
-      'If your energy runs out, you starve.',
-      'Start', spawnAsgard, null,
-      { src: asgardStill(), alt:'An Asgard archaeon', title:'Asgard archaeon', alarm:true });
+    if(!evIcons){
+      evIcons = true;
+      if(ICON.o2) document.getElementById('evImgO2').src = ICON.o2.toDataURL();
+      if(ICON.sugar) document.getElementById('evImgSugar').src = ICON.sugar.toDataURL();
+      if(TOUCH){
+        document.getElementById('evKey').textContent = 'Boost';
+        document.getElementById('evBoostLine').textContent = 'Full energy: tap Boost for 6 s of speed.';
+        document.getElementById('evYouLine').textContent = 'You. Touch and hold anywhere to swim toward it.';
+      }
+    }
+    var asgSrc = asgardStill();
+    if(asgSrc) document.getElementById('evImgAsg').src = asgSrc;
+    elEvCount.hidden = true;
+    elEvIntro.hidden = true; void elEvIntro.offsetWidth; elEvIntro.hidden = false;   // the title slams in again
+    setTimeout(function(){ try { document.getElementById('evStart').focus({ preventScroll:true }); } catch(e){} }, 30);
   }
+  function evStart(){
+    if(elEvIntro.hidden || evCounting) return;
+    sfxInit(); sfx('coin');
+    elEvIntro.hidden = true;
+    evCounting = true;
+    var steps = ['3', '2', '1', 'GO!'], k = 0, el = document.getElementById('evCountN');
+    (function next(){
+      if(k >= steps.length){ elEvCount.hidden = true; evCounting = false; return; }
+      var go = steps[k] === 'GO!';
+      el.textContent = steps[k];
+      el.className = 'evcount__n' + (go ? ' go' : '');
+      elEvCount.hidden = true; void elEvCount.offsetWidth; elEvCount.hidden = false;
+      if(go){ sfx('go'); spawnAsgard(); } else sfx('count');
+      k++;
+      setTimeout(next, go ? 750 : 650);
+    })();
+  }
+  document.getElementById('evStart').addEventListener('click', evStart);
+  document.getElementById('evMenu').addEventListener('click', function(){ location.reload(); });
+  document.addEventListener('keydown', function(ev){
+    if(elEvIntro.hidden || evCounting) return;
+    if(ev.key === 'Enter' || ev.key === ' ' || ev.code === 'Space'){ ev.preventDefault(); evStart(); }
+  });
   function miniResult(){
     mode = 'credits';                    // the scene holds its last frame behind
     elHint.classList.remove('on');
@@ -15172,12 +15470,8 @@
     elCredits.hidden = false;
     elCredits.scrollTop = 0;
     document.getElementById('crTime').textContent = fmtClock(evadeSecs);
-    lbSaving = false;                    // a fresh name box for this run
-    elBoardInit.disabled = false;
-    document.getElementById('boardBtn').disabled = false;
-    lbInit().then(function(){
-      return lbSave(null).catch(function(e){ lb.saveErr = e && e.code; });
-    }).then(lbLoad);
+    lbFresh();                           // a fresh name box for this run
+    lbInit().then(lbLoad);
   }
   document.getElementById('miniBtn').addEventListener('click', startMini);
 
@@ -15187,7 +15481,8 @@
   var paused = false;
   var elPause = document.getElementById('pauseView'), elPauseBtn = document.getElementById('pauseBtn');
   function canPause(){
-    return !window.PP_ACTIVE && document.getElementById('titleCard').hidden && elCredits.hidden && elBoards.hidden;
+    return !window.PP_ACTIVE && document.getElementById('titleCard').hidden && elCredits.hidden && elBoards.hidden &&
+           elEvIntro.hidden && !evCounting;
   }
   function setPaused(on){
     if(on && (paused || !canPause())) return;
@@ -15253,6 +15548,106 @@
   document.getElementById('ppBtn').addEventListener('click', startPP);
   document.getElementById('miniAgain').addEventListener('click', startMini);
   document.getElementById('miniMenu').addEventListener('click', function(){ location.reload(); });
+  // ---- Covers for the arcade games ----------------------------------------------
+  // Each cover is a small live scene drawn the way its game draws: Evasion
+  // here (the Asgard's arms are never baked, so they wave live), Protist
+  // Predator by its own code (ProtistPredator.cover). They run only while
+  // this screen is open. Both draw in a 640 x 360 frame, scaled to fit.
+  var coverEv = document.getElementById('coverEvade'), coverPP = document.getElementById('coverPP');
+  var coverRaf = 0, coverT0 = 0;
+  function cvr(i){ var x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+  function evadeCover(g, Wc, Hc, t){
+    var k = Wc / 640, i;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.globalAlpha = 1;
+    var bgG = g.createLinearGradient(0, 0, 0, Hc);             // the dark water of the second vent field
+    bgG.addColorStop(0, '#0C2147'); bgG.addColorStop(0.6, '#06132D'); bgG.addColorStop(1, '#020610');
+    g.fillStyle = bgG; g.fillRect(0, 0, Wc, Hc);
+    g.setTransform(k, 0, 0, k, 0, 0);
+    var vg = g.createRadialGradient(500, 420, 10, 500, 420, 280);   // a vent glowing far below
+    vg.addColorStop(0, 'rgba(255,122,51,' + (0.32 + 0.05 * Math.sin(t * 1.3)).toFixed(3) + ')');
+    vg.addColorStop(1, 'rgba(255,122,51,0)');
+    g.fillStyle = vg; g.fillRect(0, 0, 640, 360);
+    g.fillStyle = '#030A17';                                    // chimneys in silhouette
+    var ch = [[430, 360, 28, 120], [480, 360, 20, 170], [520, 360, 34, 95], [600, 360, 24, 140], [40, 360, 30, 80]];
+    for(i = 0; i < ch.length; i++){
+      var c = ch[i];
+      g.beginPath(); g.moveTo(c[0] - c[2], c[1]); g.lineTo(c[0] - c[2] * 0.45, c[1] - c[3]);
+      g.lineTo(c[0] + c[2] * 0.45, c[1] - c[3]); g.lineTo(c[0] + c[2], c[1]); g.closePath(); g.fill();
+    }
+    g.fillStyle = '#DCEBF5';                                    // marine snow
+    for(i = 0; i < 40; i++){
+      g.globalAlpha = 0.12 + 0.3 * cvr(i + 3);
+      var px = (cvr(i) * 640 - t * (6 + 10 * cvr(i + 5)) + 6400) % 640, py = (cvr(i + 9) * 360 + t * (5 + 8 * cvr(i + 7))) % 360;
+      g.beginPath(); g.arc(px, py, 0.8 + 1.4 * cvr(i + 1), 0, Math.PI * 2); g.fill();
+    }
+    g.globalAlpha = 1;
+    var food = [[300, 70, 'sugar'], [560, 230, 'o2'], [250, 300, 'o2'], [590, 60, 'sugar'], [380, 290, 'sugar']];
+    for(i = 0; i < food.length; i++){                           // sugar and oxygen to collect
+      var f = food[i], ic = ICON[f[2]];
+      if(ic) g.drawImage(ic, f[0] - 22, f[1] - 22 + Math.sin(t * 1.2 + i) * 5, 44, 44);
+    }
+    // SAR11, fleeing on a boost: gold streaks and a glow
+    var sx = 448 + Math.sin(t * 1.3) * 16, sy = 150 + Math.sin(t * 0.9) * 20, sw = 110;
+    var gl = g.createRadialGradient(sx, sy, 0, sx, sy, 80);
+    gl.addColorStop(0, 'rgba(255,214,110,0.42)'); gl.addColorStop(1, 'rgba(255,214,110,0)');
+    g.fillStyle = gl; g.beginPath(); g.arc(sx, sy, 80, 0, Math.PI * 2); g.fill();
+    g.lineCap = 'round';
+    for(i = 0; i < 6; i++){
+      var ly = sy - 22 + i * 9, ph = (t * 2.2 + cvr(i + 20)) % 1, len = 60 + 70 * cvr(i + 30);
+      g.strokeStyle = 'rgba(255,214,110,' + (0.55 * (1 - ph)).toFixed(3) + ')'; g.lineWidth = 2.2;
+      g.beginPath(); g.moveTo(sx - 48 - ph * 40, ly); g.lineTo(sx - 48 - ph * 40 - len, ly); g.stroke();
+    }
+    if(s11Ready){
+      var sh = sw * cellS11.naturalHeight / cellS11.naturalWidth;
+      g.save(); g.translate(sx, sy); g.rotate(-0.12 + Math.sin(t * 1.1) * 0.08);
+      g.drawImage(cellS11, -sw / 2, -sh / 2, sw, sh); g.restore();
+    }
+    // the Asgard archaeon, arms reaching after it
+    if(asgReady){
+      var ax = 175 + Math.sin(t * 0.7) * 12, ay = 205 + Math.sin(t * 0.5) * 14, aw = 150;
+      g.save(); g.translate(ax, ay); g.rotate(t * 0.15);
+      asgArms(g, aw * ASG.r, t);
+      g.globalAlpha = 1;
+      g.drawImage(cellAsg, -aw / 2, -aw / 2, aw, aw);
+      g.restore();
+    }
+    g.font = '600 22px "IBM Plex Mono", ui-monospace, monospace';    // the clock, as in the chase
+    g.textBaseline = 'alphabetic';
+    g.fillStyle = 'rgba(2,6,16,0.55)'; g.fillRect(14, 324, 176, 26);
+    g.fillStyle = '#FFD24A'; g.shadowColor = 'rgba(255,190,70,0.6)'; g.shadowBlur = 8;
+    g.fillText('TIME ' + fmtClock(t % 600), 22, 344);
+    g.shadowBlur = 0;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    var vig = g.createRadialGradient(Wc / 2, Hc / 2, Hc * 0.35, Wc / 2, Hc / 2, Wc * 0.65);
+    vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(0,0,0,0.45)');
+    g.fillStyle = vig; g.fillRect(0, 0, Wc, Hc);
+  }
+  function coverCanvas(btn){
+    var cv = btn.querySelector('canvas'), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = Math.max(1, Math.round(cv.clientWidth * dpr)), h = Math.max(1, Math.round(cv.clientHeight * dpr));
+    if(cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
+    return cv;
+  }
+  function drawCovers(now){
+    var t = (now - coverT0) / 1000, a = coverCanvas(coverEv), b = coverCanvas(coverPP);
+    evadeCover(a.getContext('2d'), a.width, a.height, t);
+    if(window.ProtistPredator && window.ProtistPredator.cover) window.ProtistPredator.cover(b.getContext('2d'), b.width, b.height, t);
+  }
+  function coverLoop(now){
+    coverRaf = 0;
+    if(elBoards.hidden) return;
+    try { drawCovers(now); } catch(e){ reportError(e); return; }
+    if(!reduced) coverRaf = requestAnimationFrame(coverLoop);
+  }
+  function startCovers(){
+    coverT0 = performance.now() - 6000;
+    if(!coverRaf) coverRaf = requestAnimationFrame(coverLoop);
+    if(reduced) setTimeout(function(){ if(!elBoards.hidden) drawCovers(performance.now()); }, 400);  // once the art has loaded
+  }
+  coverEv.addEventListener('click', function(){ document.getElementById('miniBtn').click(); });
+  coverPP.addEventListener('click', function(){ document.getElementById('ppBtn').click(); });
+  window.addEventListener('resize', function(){ if(!elBoards.hidden && reduced) drawCovers(performance.now()); });
   function closeBoards(){
     if(elBoards.hidden) return;
     elBoards.hidden = true;

@@ -21,8 +21,8 @@ to the sunlit surface: eat, gain new abilities by horizontal gene transfer,
 and survive a viral bloom and a Pseudomonas bloom. Both have online
 leaderboards.
 
-**How to play:** use a mouse or a finger. Drag molecules into your cell, and
-once it can swim, drag to steer. It works on desktop and phone; turn the
+**How to play:** use a mouse or a finger. Tap molecules to send them into
+your cell, and once it can swim, press and hold anywhere to steer it that way. It works on desktop and phone; turn the
 sound on.
 
 ### [Tell us what you think](https://docs.google.com/forms/d/e/1FAIpQLSepA4ICjhTP8cG5VEY5lKMHGh22i5fXCaXumTIoNHqBbYiNBA/viewform?usp=sharing&ouid=108468382461997714450)
