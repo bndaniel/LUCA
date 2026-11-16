@@ -1653,8 +1653,8 @@
       <button class="slimebtn qsbtn" id="pp_qsBtn" type="button" hidden>Quorum<kbd>Z</kbd></button>
     </div>
     <div class="btnrow" id="pp_vacRow" hidden>
-      <button class="firebtn vacbtn" id="pp_riseBtn" type="button">Rise<kbd>W</kbd></button>
-      <button class="firebtn vacbtn" id="pp_sinkBtn" type="button">Sink<kbd>S</kbd></button>
+      <button class="firebtn vacbtn" id="pp_riseBtn" type="button">Rise<kbd>S</kbd></button>
+      <button class="firebtn vacbtn" id="pp_sinkBtn" type="button">Sink<kbd>X</kbd></button>
     </div>
     <div class="gauge" id="pp_gTox" hidden style="--bar:#D3F25A">
       <div class="gauge__head">
@@ -4234,7 +4234,7 @@
       line:'From a ciliate: the genes to build another flagellum (cilia and flagella are the same machine). 1.5\u00D7 speed.' },
     vacuoles:{ name:'Gas vacuoles', donor:'cyano', n:1,
       line:'From cyanobacteria: gas vesicles, tiny protein balloons that set how high a cell floats. ' +
-           (TOUCH ? 'Tap Rise or Sink' : 'Tap W or \u2191 to shoot up, S or \u2193 to drop') +
+           (TOUCH ? 'Tap Rise or Sink' : 'Tap S or \u2191 to shoot up, X or \u2193 to drop') +
            '. They take the place of your extra flagella.' },
     symbiont:{ name:'Nitrogen-fixer symbiont', donor:'fix', n:1, eyebrow:'Endosymbiosis',
       line:'You keep a swallowed nitrogen fixer alive inside you, and it turns N\u2082 into nitrogen you can use ' +
@@ -6912,8 +6912,9 @@
     if(paused) return;
     if(ev.key === 'c' || ev.key === 'C'){ ev.preventDefault(); fire(); return; }
     if(ev.key === 'z' || ev.key === 'Z'){ ev.preventDefault(); if(abil.qs){ if(!ev.repeat) qsFire(); } else slimeOn(true); return; }
-    if(ev.key === 'w' || ev.key === 'W' || ev.key === 'ArrowUp'){ ev.preventDefault(); if(!ev.repeat) vacBurst(-1); return; }
-    if(ev.key === 's' || ev.key === 'S' || ev.key === 'ArrowDown'){ ev.preventDefault(); if(!ev.repeat) vacBurst(1); return; }
+    // gas vacuoles: S rises and X sinks, beside Z and C (the owner's keys), or the arrows
+    if(ev.key === 's' || ev.key === 'S' || ev.key === 'ArrowUp'){ ev.preventDefault(); if(!ev.repeat) vacBurst(-1); return; }
+    if(ev.key === 'x' || ev.key === 'X' || ev.key === 'ArrowDown'){ ev.preventDefault(); if(!ev.repeat) vacBurst(1); return; }
     if(ev.shiftKey && (ev.key === 'K' || ev.key === 'k')){ ev.preventDefault(); if(!ev.repeat) devSkip(); }
   });
 
