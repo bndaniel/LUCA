@@ -10,7 +10,8 @@
    to be public; the rules in schema.sql only let players add runs and read
    the board. Left blank, the game runs with no online board and shows each
    player their best on this device. Protist Predator, the second mini game,
-   keeps its points in a second table (pp_scores, also in schema.sql). */
+   keeps its points in a second table (pp_scores, also in schema.sql), and
+   LUCA on the GRID, the third, in a third (grid_scores). */
 (function(){
   'use strict';
   var SUPABASE_URL = 'https://imesiyxvvkiqjyxjqihf.supabase.co';
@@ -68,13 +69,15 @@
   }
   var NONE = { exists: false, data: function(){ return {}; } };
   var COLS = 'select=player,name,best';
-  // Two boards: time evaded ('scores', the game and the evasion mini game) and
-  // Protist Predator's points ('minigame'). schema.sql makes both. Until the
-  // Protist Predator table exists its board reads as empty rather than broken.
+  // Three boards: time evaded ('scores', the game and the evasion mini game),
+  // Protist Predator's points ('minigame') and LUCA on the GRID's ('grid').
+  // schema.sql makes them all. Until a sidequest's table exists its board
+  // reads as empty rather than broken.
   var TABLES = { scores: { table: 'scores', board: 'board' },
-                 minigame: { table: 'pp_scores', board: 'pp_board', whole: true } };
+                 minigame: { table: 'pp_scores', board: 'pp_board', whole: true },
+                 grid: { table: 'grid_scores', board: 'grid_board', whole: true } };
   function missingOk(name){
-    return function(e){ if(name === 'minigame' && e && e.code === 'http_404') return []; throw e; };
+    return function(e){ if(name !== 'scores' && e && e.code === 'http_404') return []; throw e; };
   }
 
   var db = {
@@ -93,7 +96,7 @@
       return q;
     },
     doc: function(path){
-      var m = /^(scores|minigame)\/(.+)$/.exec(path), T = m && TABLES[m[1]], pid = m && m[2];
+      var m = /^(scores|minigame|grid)\/(.+)$/.exec(path), T = m && TABLES[m[1]], pid = m && m[2];
       return {
         get: function(){
           if(!pid) return Promise.resolve(NONE);

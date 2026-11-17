@@ -15,11 +15,13 @@ the present day.
 The science is meant to be real, and each stage teaches as you play. All of
 the art is drawn by code.
 
-**Arcade games:** from the main menu, try the evasion chase or **Protist
+**Arcade games:** from the main menu, try the evasion chase, **Protist
 Predator**, a nine-round arcade game that starts at a deep-sea vent and rises
 to the sunlit surface: eat, gain new abilities by horizontal gene transfer,
-and survive a viral bloom and a Pseudomonas bloom. Both have online
-leaderboards.
+and survive a viral bloom and a Pseudomonas bloom, or **LUCA on the GRID**:
+LUCA gets into a computer, glows blue and lays a glowing plume across a neon
+grid; trap the red cells in it, wave after wave, with a giant archaeon on
+wave 5. All three have online leaderboards.
 
 **How to play:** use a mouse or a finger. Tap molecules to send them into
 your cell, and once it can swim, press and hold anywhere to steer it that way. It works on desktop and phone; turn the
